@@ -18,6 +18,7 @@ var lispEmitFunctionsMap = {
     "vardef": lispEmitVardef,
     "setprop": lispEmitSetprop,
     "invoke": lispEmitInvoke,
+    "set": lispEmitSet,
 }
 
 function lispEmitFunapp(jr) {
@@ -68,6 +69,10 @@ function lispEmitInvoke(jr) {
     var args = [ "__lispX_this" ].concat(jr.params.slice(1).map(lispEmit));
     return lispOnce("__lispX_this", receiver, 
                     "return __lispX_this." + jr.name + "(" + args.join(", ") + ")");
+}
+
+function lispEmitSet(jr) {
+    return "(" + jr.name + " = " + lispEmit(jr.value) + ")";
 }
 
 // Prevents multiple evaluation.

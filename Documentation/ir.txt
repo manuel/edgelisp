@@ -51,8 +51,6 @@ lambda_ir: IR for the function's body
 
 Registers a function in the global environment.
 
-** let
-
 ** flet
 
 ** function, #'
@@ -117,7 +115,9 @@ Creates an instance of a class.
 
 ** throw
 
-** setq
+** set
+
+{ irt: "set", name: <<string>>, value: <<value_ir>> }
 
 ** call-with-escape-continuation, call/ec
 

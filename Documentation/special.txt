@@ -65,3 +65,16 @@ class: a form, evaluated
 *** Description
 
 Creates a new instance of a class
+
+** let
+
+(let (&rest bindings) &rest body)
+
+binding ::= (name value)
+
+** set
+
+(set name value)
+
+name: a symbol
+value: a form, evaluated

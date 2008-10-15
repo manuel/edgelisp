@@ -21,6 +21,7 @@ var lispCompileFunctionsMap = {
     "string": lispCompileString,
     "var": lispCompileVar,
     "progn": lispCompileProgn,
+    "set": lispCompileSet,
 }
 
 function lispCompileDefun(ir) {
@@ -82,4 +83,8 @@ function lispCompileInvokeMethod(ir) {
 
 function lispCompileProgn(ir) {
     return { jrt: "multi", exprs: ir.exprs.map(lispCompile) };
+}
+
+function lispCompileSet(ir) {
+    return { jrt: "set", name: lispEnvMangleVarName(ir.name), value: lispCompile(ir.value) };
 }

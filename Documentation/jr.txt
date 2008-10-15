@@ -43,3 +43,6 @@ proto: JR for __proto__
 
 params: JRs for parameters (object is first element)
 
+** set -- update variable
+
+{ jrt: "set", name: <<string>>, value: <<value_jr>> }

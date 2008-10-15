@@ -46,6 +46,7 @@ var lispDecodeCompoundFunctionsTable = {
     "function": lispDecodeFunction,
     "lambda": lispDecodeLambda,
     "new": lispDecodeNew,
+    "set": lispDecodeSet,
 };
 
 function lispDecodeLambda(form) {
@@ -127,4 +128,10 @@ function lispDecodeDef(form) {
 function lispDecodeNew(form) {
     var cls_ir = lispDecode(form.elts[1]);
     return { irt: "make-instance", "class": cls_ir };
+}
+
+function lispDecodeSet(form) {
+    var name = form.elts[1].name;
+    var value_ir = lispDecode(form.elts[2]);
+    return { irt: "set", name: name, value: value_ir };
 }
