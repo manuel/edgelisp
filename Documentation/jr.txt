@@ -2,14 +2,26 @@
 
 * JavaScript Representation (JR)
 
-** funapp
+** vardef -- define a variable
+
+{ jrt: "vardef", name: <<string>>, value: <<jr>> }
+
+** funapp -- call a function
 
 { jrt: "funapp", fun: <<fun_jr>>, args: <<arg_jrs>> }
 
-** function
+** function -- create anonymous function
 
 { jrt: "function", params: <<param_names>>, body: <<body_jr>> }
 
-** string
+** string -- string literal
 
 { jrt: "string", s: <<string>> }
+
+** var -- access a variable's value
+
+{ jrt: "var", name: <<string>> }
+
+** multi -- multiple expressions in a row
+
+{ jrt: "seq", exprs: <<jrs>> }

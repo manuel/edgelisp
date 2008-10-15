@@ -1,5 +1,7 @@
 // Transforms intermediate representation to JavaScript representation.
 
+load("lisp-env.js");
+
 function lispCompile(ir) {
     var compileFunction = lispCompileFunctionsMap[ir.irt];
     if (compileFunction) return compileFunction(ir);
@@ -7,9 +9,18 @@ function lispCompile(ir) {
 }
 
 var lispCompileFunctionsMap = {
+    "defun": lispCompileDefun,
     "funcall": lispCompileFuncall,
+    "function": lispCompileFunction,
     "lambda": lispCompileLambda,
-    "string": lispCompileString
+    "string": lispCompileString,
+}
+
+function lispCompileDefun(ir) {
+    var funName = lispEnvMangleFunName(ir.name);
+    var funJR = lispCompile(ir.lambda);
+    return { jrt: "multi", exprs: [ { jrt: "vardef", name: funName, value: funJR },
+                                    { jrt: "var", name: funName } ] };
 }
 
 function lispCompileFuncall(ir) {
@@ -22,4 +33,8 @@ function lispCompileLambda(ir) {
 
 function lispCompileString(ir) {
     return { jrt: "string", s: ir.s };
+}
+
+function lispCompileFunction(ir) {
+    return { jrt: "var", name: lispEnvMangleFunName(ir.name) };
 }

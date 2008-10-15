@@ -1,5 +1,7 @@
 // Transforms JavaScript representation into JavaScript text.
 
+load("lisp-env.js");
+
 function lispEmit(jr) {
     var emitFunction = lispEmitFunctionsMap[jr.jrt];
     if (emitFunction) return emitFunction(jr);
@@ -9,7 +11,10 @@ function lispEmit(jr) {
 var lispEmitFunctionsMap = {
     "funapp": lispEmitFunapp,
     "function": lispEmitFunction,
-    "string": lispEmitString
+    "string": lispEmitString,
+    "multi": lispEmitMulti,
+    "var": lispEmitVar,
+    "vardef": lispEmitVardef,
 }
 
 function lispEmitFunapp(jr) {
@@ -22,4 +27,16 @@ function lispEmitFunction(jr) {
 
 function lispEmitString(jr) {
     return "(" + jr.s.toSource() + ")";
+}
+
+function lispEmitVar(jr) {
+    return jr.name;
+}
+
+function lispEmitVardef(jr) {
+    return "var " + jr.name + " = " + lispEmit(jr.value);
+}
+
+function lispEmitMulti(jr) {
+    return jr.exprs.map(lispEmit).join(";");
 }

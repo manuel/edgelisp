@@ -32,12 +32,15 @@ function lispDecodeCompound(form) {
 }
 
 function lispDecodeFunctionApplication(form) {
-    throw "Function application isn't implemented yet " + uneval(form);
+    var funRefIR = { irt: "function", name: form.elts[0].name };
+    return { irt: "funcall", fun: funRefIR };
 }
 
 var lispDecodeCompoundFunctionsTable = {
-    "lambda": lispDecodeLambda,
+    "defun": lispDecodeDefun,
     "funcall": lispDecodeFuncall,
+    "function": lispDecodeFunction,
+    "lambda": lispDecodeLambda,
 };
 
 function lispDecodeLambda(form) {
@@ -55,4 +58,17 @@ function lispDecodeLambda(form) {
 function lispDecodeFuncall(form) {
     var fun_ir = lispDecode(form.elts[1]);
     return { irt: "funcall", fun: fun_ir };
+}
+
+function lispDecodeFunction(form) {
+    var funName = form.elts[1].name;
+    return { irt: "function", name: funName };
+}
+
+function lispDecodeDefun(form) {
+    var name = form.elts[1].name;
+    var lambdaParams = form.elts[2].elts.map(function(paramForm) { return paramForm.name; });
+    var lambdaBody = lispDecode(form.elts[3]);
+    var lambda_ir = { irt: "lambda", req_params: lambdaParams, body: lambdaBody };
+    return { irt: "defun", name: name, lambda: lambda_ir };
 }

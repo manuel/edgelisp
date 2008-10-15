@@ -27,11 +27,29 @@ First-class function abstraction.
 
 ** defun
 
+{ irt: "defun", name: <<name>>, lambda: <<lambda_ir>> }
+
+name: a string
+lambda_ir: IR for the function's body
+
+*** Description
+
+Registers a function in the global environment.
+
 ** let
 
 ** flet
 
 ** function
+
+{ irt: "function", name: <<name>> }
+
+name: the function name, a string
+
+*** Description
+
+Accesses the function binding with the given name, i.e. performs a
+lookup in the function namespace.
 
 ** funcall
 
@@ -41,7 +59,7 @@ fun_ir: IR for function to call, evaluated
 
 *** Description
 
-Calls a function with an array of arguments.
+Calls a function supplied as parameter.
 
 ** defmethod
 

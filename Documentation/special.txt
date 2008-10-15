@@ -12,3 +12,13 @@ body: a form
 ** funcall
 
 (funcall fun)
+
+fun: a function, evaluated
+
+** defun
+
+(defun name lambda-list body)
+
+name: a symbol
+lambda-list: a list of symbols
+body: a form
