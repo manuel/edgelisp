@@ -17,7 +17,13 @@ var LispSymbolForm = action(LispSymbolChars,
 var LispCompoundForm = action(sequence("(", repeat0(LispForm), ")"),
                               lispCompoundFormAction);
 
-var LispForm = whitespace(choice(LispStringLiteral, LispSymbolForm, LispCompoundForm));
+var LispFunctionForm = action(sequence("#'", LispSymbolForm),
+                              lispFunctionFormAction);
+
+var LispForm = whitespace(choice(LispFunctionForm,
+                                 LispStringLiteral, 
+                                 LispSymbolForm, 
+                                 LispCompoundForm));
 var LispForms = repeat0(LispForm);
 
 function lispParse(text) {
@@ -34,4 +40,9 @@ function lispSymbolFormAction(jsparse_ast) {
 
 function lispCompoundFormAction(jsparse_ast) {
     return { formt: "compound", elts: jsparse_ast[1] };
+}
+
+function lispFunctionFormAction(jsparse_ast) {
+    return { formt: "compound", elts: [ { formt: "symbol", name: "function" },
+                                        jsparse_ast[1] ] };
 }
