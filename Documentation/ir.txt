@@ -85,8 +85,6 @@ Calls a function supplied as a parameter.
 
 Binds a method in the class' vtable.
 
-** defgeneric
-
 ** make-class
 
 { irt: "make-class", name: <<string>>, members: <<member_names>> }

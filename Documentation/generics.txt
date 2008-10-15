@@ -26,11 +26,6 @@ Method lookup is done via JavaScript's built-in __proto__ dispatch.
 (say-something (new <dog>)) ;; call generic function. it looks up the method internally
 (say-something (new <cat>))
 
-In this example, we create two classes, and each has a method named
-SAY-SOMETHING.  This means that the vtables of the classes <DOG> and
-<CAT> contain a mapping from the name SAY-SOMETHING to a lambda that
-returns "wooof" for a dog, and "meoow" for a cat.
-
 DEF creates a method by installing a lambda in the receiver class'
 vtable _and_ DEFUNs a generic function called SAY-SOMETHING in the
 global environment.
