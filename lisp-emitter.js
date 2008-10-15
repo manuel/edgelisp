@@ -25,7 +25,7 @@ function lispEmitFunapp(jr) {
 }
 
 function lispEmitFunction(jr) {
-    return "(function(" + jr.params + ") { return " + lispEmit(jr.body) + "})";
+    return "(function(" + jr.params + ") { return " + lispEmit(jr.body) + "; })";
 }
 
 function lispEmitString(jr) {

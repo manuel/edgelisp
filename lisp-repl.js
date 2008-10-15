@@ -13,7 +13,7 @@ while(1) {
         
         if (lispText == "/d") {
             lispDebugToggle = !lispDebugToggle;
-            print("Debugging " + (lispDebug ? "ON" : "OFF"));
+            print("Debugging " + (lispDebugToggle ? "ON" : "OFF"));
             continue;
         } else if (lispText[0] == "{") {
             print(uneval(eval(lispText)));
