@@ -38,11 +38,14 @@ function lispDecodeFunctionApplication(form) {
 }
 
 var lispDecodeCompoundFunctionsTable = {
+    "defclass": lispDecodeDefclass,
+    "def": lispDecodeDef,
     "defun": lispDecodeDefun,
     "defvar": lispDecodeDefvar,
     "apply": lispDecodeApply,
     "function": lispDecodeFunction,
     "lambda": lispDecodeLambda,
+    "new": lispDecodeNew,
 };
 
 function lispDecodeLambda(form) {
@@ -80,4 +83,48 @@ function lispDecodeDefvar(form) {
     var name = form.elts[1].name;
     var value_ir = lispDecode(form.elts[2]);
     return { irt: "defvar", name: name, value: value_ir };
+}
+
+function lispDecodeDefclass(form) {
+    var name = form.elts[1].name;
+    var member_names = form.elts.slice(2).map(function (member_form) { return member_form.name; });
+    return { irt: "defvar", 
+             name: name,
+             value: { irt: "make-class", name: name, member_names: member_names } };
+}
+
+function lispDecodeDef(form) {
+    // extract form data
+    var name = form.elts[1].name;
+    var args = form.elts[2];
+    var body = form.elts[3];
+
+    var the_arg = args.elts[0];
+    var other_args = args.elts.slice(1);
+    
+    var cls = the_arg.elts[1];
+    var inst = the_arg.elts[2].name;
+    var cls_ir = lispDecode(cls);
+
+    var param_names = [ inst ].concat(other_args.map(function(arg) { return arg.name; }));
+
+    // create method and generic function lambdas
+    var lambda_ir = { irt: "lambda", 
+                      req_params: param_names,
+                      body: lispDecode(body) };
+
+    var param_refs = param_names.map(function(param) { return { irt: "var", name: param }; });
+    var gf_ir = { irt: "lambda",
+                  req_params: param_names,
+                  body: { irt: "invoke-method", name: name, params: param_refs } };
+
+    // create set-method and defun (for the generic)
+    return { irt: "progn",
+            exprs: [ { irt: "set-method", name: name, "class": cls_ir, lambda: lambda_ir },
+                     { irt: "defun", name: name, lambda: gf_ir } ] };
+}
+
+function lispDecodeNew(form) {
+    var cls_ir = lispDecode(form.elts[1]);
+    return { irt: "make-instance", "class": cls_ir };
 }

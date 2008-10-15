@@ -29,3 +29,39 @@ body: a form
 (function name)
 
 name: a symbol
+
+** defclass
+
+(defclass name &rest member_names)
+
+name: symbol
+member_names: a list of symbols
+
+*** Description
+
+Creates a class and binds it in the global environment.
+
+** def
+
+(def name ((the class instance) &rest params) body)
+
+name: a symbol
+class: a form, evaluated
+instance: a symbol
+params: a list of symbols
+body: a form
+
+*** Description
+
+Binds the method in the class' vtable and (re-)defines a generic
+function with the given name, that calls the method.
+
+** new
+
+(new class)
+
+class: a form, evaluated
+
+*** Description
+
+Creates a new instance of a class

@@ -12,6 +12,10 @@ function lispEnvMangleFunName(name) {
     return "__lispF_" + lispEnvMangle(name);
 }
 
+function lispEnvMangleMethodName(name) {
+    return "__lispM_" + lispEnvMangle(name);
+}
+
 function lispEnvMangle(name) {
     return name;
 }

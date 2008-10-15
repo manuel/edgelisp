@@ -22,6 +22,24 @@
 
 { jrt: "var", name: <<string>> }
 
-** multi -- multiple expressions in a row
+** multi -- multiple top-level expressions in a row
 
-{ jrt: "seq", exprs: <<jrs>> }
+{ jrt: "multi", exprs: <<jrs>> }
+
+** obj -- object literal
+
+{ jrt: "obj" [,props: <<object>>] [,proto: <<proto_jr>>] }
+
+props: a dictionary with JRs as values
+proto: JR for __proto__
+
+** setprop -- set an object's property
+
+{ jrt: "setprop", obj: <<object_jr>>, name: <<string>>, value: <<value_jr>> }
+
+** invoke -- invoke a method on an object
+
+{ jrt: "invoke", name: <<string>>, params: <<param_jrs>> }
+
+params: JRs for parameters (object is first element)
+

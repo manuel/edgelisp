@@ -14,8 +14,13 @@ var lispCompileFunctionsMap = {
     "apply": lispCompileApply,
     "function": lispCompileFunction,
     "lambda": lispCompileLambda,
+    "make-class": lispCompileMakeClass,
+    "make-instance": lispCompileMakeInstance,
+    "set-method": lispCompileSetMethod,
+    "invoke-method": lispCompileInvokeMethod,
     "string": lispCompileString,
     "var": lispCompileVar,
+    "progn": lispCompileProgn,
 }
 
 function lispCompileDefun(ir) {
@@ -52,4 +57,29 @@ function lispCompileFunction(ir) {
 
 function lispCompileVar(ir) {
     return { jrt: "var", name: lispEnvMangleVarName(ir.name) };
+}
+
+function lispCompileMakeClass(ir) {
+    return { jrt: "obj", props: { "name": { jrt: "string", s: ir.name } } };
+}
+
+function lispCompileMakeInstance(ir) {
+    return { jrt: "obj", proto: lispCompile(ir["class"]) };
+}
+
+function lispCompileSetMethod(ir) {
+    return { jrt: "setprop", 
+            obj: lispCompile(ir["class"]),
+            name: lispEnvMangleMethodName(ir.name),
+            value: lispCompile(ir.lambda) };
+}
+
+function lispCompileInvokeMethod(ir) {
+    return { jrt: "invoke",
+            name: lispEnvMangleMethodName(ir.name),
+            params: ir.params.map(lispCompile) };
+}
+
+function lispCompileProgn(ir) {
+    return { jrt: "multi", exprs: ir.exprs.map(lispCompile) };
 }

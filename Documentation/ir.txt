@@ -23,6 +23,12 @@ First-class function abstraction.
 
 ** progn
 
+{ irt: "progn", exprs: <<expr_irs>> }
+
+*** Description
+
+Evaluates multiple expressions in sequence.
+
 ** defvar
 
 { irt: "defvar", name: <<name>>, value: <<value_ir>> }
@@ -49,7 +55,7 @@ Registers a function in the global environment.
 
 ** flet
 
-** function
+** function, #'
 
 { irt: "function", name: <<name>> }
 
@@ -59,6 +65,8 @@ name: the function name, a string
 
 Accesses the function binding with the given name, i.e. performs a
 lookup in the function namespace.
+
+#'foo is equivalent to (function foo).
 
 ** apply
 
@@ -71,11 +79,35 @@ arg_irs: IRs for function arguments, each evaluated
 
 Calls a function supplied as a parameter.
 
-** defmethod
+** set-method
+
+{ irt: "set-method", name: <<string>>, class: <<class_ir>>, lambda: <<lambda_ir>> }
+
+*** Description
+
+Binds a method in the class' vtable.
 
 ** defgeneric
 
-** defclass
+** make-class
+
+{ irt: "make-class", name: <<string>>, members: <<member_names>> }
+
+*** Description
+
+Creates a class object.
+
+** make-instance
+
+{ irt: "make-instance", class: <<class_ir>> }
+
+*** Description
+
+Creates an instance of a class.
+
+** invoke-method
+
+{ irt: "invoke-method", name: <<string>>, params: <<param_irs>> }
 
 ** unwind-protect
 

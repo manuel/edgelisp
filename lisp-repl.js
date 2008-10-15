@@ -10,6 +10,7 @@ var lispDebug = false;
 while(1) {
     try {
         var lispText = readline();
+
         if ((lispText == "/debug") || (lispText == "/d")) {
             lispDebug = !lispDebug;
             if (lispDebug) {
@@ -18,7 +19,11 @@ while(1) {
                 print("Debugging OFF");
             }
             continue;
+        } else if (lispText[0] == "{") {
+            print(uneval(eval(lispText)));
+            continue;
         }
+
         var lispForms = lispParse(lispText);
         if (lispDebug) print(uneval(lispForms));
         var lispIR = lispDecode(lispForms[0]);
@@ -27,7 +32,7 @@ while(1) {
         if (lispDebug) print(uneval(lispJR));
         var lispJS = lispEmit(lispJR);
         if (lispDebug) print(uneval(lispJS));
-        print(eval(lispJS));
+        print(uneval(eval(lispJS)));
     } catch(e) {
         print(uneval(e));
     }
