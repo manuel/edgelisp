@@ -31,7 +31,7 @@ The Lisp code
 
   (lambda () x)
 
-is first parsed into the forms (S-expressions), an "objectified"
+is first parsed into forms (S-expressions), an "objectified"
 representation of the nested list structure of Lisp.
 
   [{formt:"compound", elts:[{formt:"symbol", name:"lambda"}, 
