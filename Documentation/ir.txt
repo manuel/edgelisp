@@ -127,8 +127,6 @@ Creates an instance of a class.
 
 ** if
 
-** the
-
 ** eval
 
 ** var

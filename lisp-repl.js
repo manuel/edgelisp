@@ -5,35 +5,38 @@ load("lisp-emitter.js");
 
 print("CyberLisp 0.0.1");
 
-var lispDebug = false;
+var lispDebugToggle = false;
 
 while(1) {
     try {
         var lispText = readline();
-
-        if ((lispText == "/debug") || (lispText == "/d")) {
-            lispDebug = !lispDebug;
-            if (lispDebug) {
-                print("Debugging ON");
-            } else {
-                print("Debugging OFF");
-            }
+        
+        if (lispText == "/d") {
+            lispDebugToggle = !lispDebugToggle;
+            print("Debugging " + (lispDebug ? "ON" : "OFF"));
             continue;
         } else if (lispText[0] == "{") {
             print(uneval(eval(lispText)));
             continue;
+        } else if (lispText == "") {
+            continue;
         }
 
         var lispForms = lispParse(lispText);
-        if (lispDebug) print(uneval(lispForms));
+        lispDebug(lispForms);
         var lispIR = lispDecode(lispForms[0]);
-        if (lispDebug) print(uneval(lispIR));
+        lispDebug(lispIR);
         var lispJR = lispCompile(lispIR);
-        if (lispDebug) print(uneval(lispJR));
+        lispDebug(lispJR);
         var lispJS = lispEmit(lispJR);
-        if (lispDebug) print(uneval(lispJS));
+        lispDebug(lispJS);
         print(uneval(eval(lispJS)));
+
     } catch(e) {
         print(uneval(e));
     }
+}
+
+function lispDebug(obj) {
+    if (lispDebugToggle) print(uneval(obj));
 }

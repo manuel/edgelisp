@@ -4,9 +4,13 @@ Requires SpiderMonkey.
 
 Currently, the coolest program it can run is
 
-(defun identity (x) x)
-(defvar bar (lambda () (identity "foo")))
-(apply bar)
-==> "foo"
+(defclass <dog>)
+(def say-something ((<dog> d)) "wooof")
+
+(defclass <cat>)
+(def say-something ((<cat> c)) "meoow")
+
+(say-something (new <dog>))
+(say-something (new <cat>))
 
 -- Manuel Simoni, 2008-10-15

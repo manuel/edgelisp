@@ -43,7 +43,7 @@ Creates a class and binds it in the global environment.
 
 ** def
 
-(def name ((the class instance) &rest params) body)
+(def name ((class instance) &rest params) body)
 
 name: a symbol
 class: a form, evaluated

@@ -99,11 +99,11 @@ function lispDecodeDef(form) {
     var args = form.elts[2];
     var body = form.elts[3];
 
-    var the_arg = args.elts[0];
+    var first_arg = args.elts[0];
     var other_args = args.elts.slice(1);
     
-    var cls = the_arg.elts[1];
-    var inst = the_arg.elts[2].name;
+    var cls = first_arg.elts[0];
+    var inst = first_arg.elts[1].name;
     var cls_ir = lispDecode(cls);
 
     var param_names = [ inst ].concat(other_args.map(function(arg) { return arg.name; }));

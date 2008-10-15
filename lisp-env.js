@@ -16,6 +16,21 @@ function lispEnvMangleMethodName(name) {
     return "__lispM_" + lispEnvMangle(name);
 }
 
+// Lisp symbols have to be lowercase, so we can use uppercase
+// characters to escape special characters.
+var lispMangleTable = [["-", "H"],
+                       ["*", "A"],
+                       ["?", "Q"],
+                       ["!", "X"],
+                       ["<", "L"],
+                       [">", "G"],
+                       ["$", "D"]];
+
 function lispEnvMangle(name) {
+    for (var i in lispMangleTable) {
+        var pair = lispMangleTable[i];
+        var re = new RegExp("\\" + pair[0], "g");
+        name = name.replace(re, pair[1]);
+    }
     return name;
 }

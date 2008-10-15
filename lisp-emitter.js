@@ -52,9 +52,8 @@ function lispEmitObj(jr) {
     }
     res += "}";
     if (jr.proto) {
-        // this contortion is necessary because __proto__ cannot be put into props directly,
-        // or otherwise __proto__'s properties show up in props.
-        return "((function(__lispX_obj) { __lispX_obj.__proto__ = " + lispEmit(jr.proto) + "; return __lispX_obj; })(" + res + "))";
+        return lispOnce("__lispX_obj", res, 
+                        "__lispX_obj.__proto__ = " + lispEmit(jr.proto) + "; return __lispX_obj;");
     } else {
         return res;
     }
@@ -65,8 +64,13 @@ function lispEmitSetprop(jr) {
 }
 
 function lispEmitInvoke(jr) {
-    // slightly contorted, to prevent multiple evaluation of receiver
     var receiver = lispEmit(jr.params[0]); 
-    var other_args = [ "__lispX_this" ].concat(jr.params.slice(1).map(lispEmit));
-    return "((function(__lispX_this) { return __lispX_this." + jr.name + "(" + other_args.join(", ") + ") }(" + receiver + ")))";
+    var args = [ "__lispX_this" ].concat(jr.params.slice(1).map(lispEmit));
+    return lispOnce("__lispX_this", receiver, 
+                    "return __lispX_this." + jr.name + "(" + args.join(", ") + ")");
+}
+
+// Prevents multiple evaluation.
+function lispOnce(varName, value, code) {
+    return "((function(" + varName + ") {" + code + "}(" + value + ")))";
 }

@@ -1,3 +1,10 @@
 -*- outline -*-
 
-* Are the __lispX... temporary variables dangerous, do they need unique identifiers?
+* Are the __lispX... temporary variables dangerous?
+
+Don't think so.
+
+* It sucks that NEW is not defined as a function automatically
+
+Need sth. like lispDefinePrimitive that defines both a decoder and a Lisp function?
+
