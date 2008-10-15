@@ -10,7 +10,7 @@ var lispDebug = false;
 while(1) {
     try {
         var lispText = readline();
-        if (lispText == "/debug") {
+        if ((lispText == "/debug") || (lispText == "/d")) {
             lispDebug = !lispDebug;
             if (lispDebug) {
                 print("Debugging ON");
@@ -29,6 +29,6 @@ while(1) {
         if (lispDebug) print(uneval(lispJS));
         print(eval(lispJS));
     } catch(e) {
-        print(e);
+        print(uneval(e));
     }
 }

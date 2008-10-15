@@ -10,10 +10,12 @@ function lispCompile(ir) {
 
 var lispCompileFunctionsMap = {
     "defun": lispCompileDefun,
+    "defvar": lispCompileDefvar,
     "funcall": lispCompileFuncall,
     "function": lispCompileFunction,
     "lambda": lispCompileLambda,
     "string": lispCompileString,
+    "var": lispCompileVar,
 }
 
 function lispCompileDefun(ir) {
@@ -21,6 +23,13 @@ function lispCompileDefun(ir) {
     var funJR = lispCompile(ir.lambda);
     return { jrt: "multi", exprs: [ { jrt: "vardef", name: funName, value: funJR },
                                     { jrt: "var", name: funName } ] };
+}
+
+function lispCompileDefvar(ir) {
+    var varName = lispEnvMangleVarName(ir.name);
+    var valueJR = lispCompile(ir.value);
+    return { jrt: "multi", exprs: [ { jrt: "vardef", name: varName, value: valueJR },
+                                    { jrt: "var", name: varName } ] };
 }
 
 function lispCompileFuncall(ir) {
@@ -37,4 +46,8 @@ function lispCompileString(ir) {
 
 function lispCompileFunction(ir) {
     return { jrt: "var", name: lispEnvMangleFunName(ir.name) };
+}
+
+function lispCompileVar(ir) {
+    return { jrt: "var", name: lispEnvMangleVarName(ir.name) };
 }

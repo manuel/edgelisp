@@ -22,3 +22,9 @@ fun: a function, evaluated
 name: a symbol
 lambda-list: a list of symbols
 body: a form
+
+** function
+
+(function name)
+
+name: a symbol

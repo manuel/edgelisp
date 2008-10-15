@@ -23,7 +23,16 @@ First-class function abstraction.
 
 ** progn
 
-** defparameter
+** defvar
+
+{ irt: "defvar", name: <<name>>, value: <<value_ir>> }
+
+name: a symbol
+value_ir: IR of the variable's value, evaluated
+
+*** Description
+
+Establishes a binding in the top level environment.
 
 ** defun
 

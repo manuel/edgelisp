@@ -38,6 +38,7 @@ function lispDecodeFunctionApplication(form) {
 
 var lispDecodeCompoundFunctionsTable = {
     "defun": lispDecodeDefun,
+    "defvar": lispDecodeDefvar,
     "funcall": lispDecodeFuncall,
     "function": lispDecodeFunction,
     "lambda": lispDecodeLambda,
@@ -71,4 +72,10 @@ function lispDecodeDefun(form) {
     var lambdaBody = lispDecode(form.elts[3]);
     var lambda_ir = { irt: "lambda", req_params: lambdaParams, body: lambdaBody };
     return { irt: "defun", name: name, lambda: lambda_ir };
+}
+
+function lispDecodeDefvar(form) {
+    var name = form.elts[1].name;
+    var value_ir = lispDecode(form.elts[2]);
+    return { irt: "defvar", name: name, value: value_ir };
 }
