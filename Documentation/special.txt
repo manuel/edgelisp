@@ -1,0 +1,14 @@
+-*- outline -*-
+
+* Special forms
+
+** lambda
+
+(lambda lambda-list body)
+
+lambda-list: a list of symbols
+body: a form
+
+** funcall
+
+(funcall fun)

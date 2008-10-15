@@ -1,0 +1,17 @@
+-*- outline -*-
+
+* Forms
+
+Forms consist of compound forms (lists), symbol forms, and literals.
+
+** Compound (list) form
+
+{ formt: "compound", elts: <<elt_forms>> }
+
+** Symbol form
+
+{ formt: "symbol", name: <<string>> }
+
+** String literal
+
+{ formt: "string", s: <<string>> }

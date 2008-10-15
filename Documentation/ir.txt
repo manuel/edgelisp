@@ -1,0 +1,80 @@
+-*- outline -*-
+
+* Intermediate Representation (IR)
+
+** string
+
+{ irt: "string", s: <<string>> }
+
+*** Description
+
+A literal string.
+
+** lambda
+
+{ irt: "lambda", req_params: <<req_param_names>>, body: <<body_ir>> }
+
+req_param_names: an array of strings
+body_ir: IR of the lambda's body
+
+*** Description
+
+First-class function abstraction.
+
+** progn
+
+** defparameter
+
+** defun
+
+** let
+
+** flet
+
+** function
+
+** funcall
+
+{ irt: "funcall", fun: <<fun_ir>> }
+
+fun_ir: IR for function to call, evaluated
+
+*** Description
+
+Calls a function with an array of arguments.
+
+** defmethod
+
+** defgeneric
+
+** defclass
+
+** unwind-protect
+
+** catch
+
+** handle
+
+** throw
+
+** setq
+
+** call-with-escape-continuation, call/ec
+
+** defmacro
+
+** quasiquote, unquote, unquote-splicing
+
+** if
+
+** the
+
+** eval
+
+** var
+
+{ irt: "var", name: <<string>> }
+
+*** Description
+
+Accesses the value of the variable.

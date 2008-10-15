@@ -1,0 +1,15 @@
+-*- outline -*-
+
+* JavaScript Representation (JR)
+
+** funapp
+
+{ jrt: "funapp", fun: <<fun_jr>>, args: <<arg_jrs>> }
+
+** function
+
+{ jrt: "function", params: <<param_names>>, body: <<body_jr>> }
+
+** string
+
+{ jrt: "string", s: <<string>> }

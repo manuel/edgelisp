@@ -1,0 +1,17 @@
+Lisp text
+    |
+    | parser
+    V
+  forms
+    |
+    | decoder
+    V
+intermediate representation (IR)
+    |
+    | compiler 
+    V
+JavaScript representation (JR)
+    |
+    | emitter
+    V
+JavaScript text
