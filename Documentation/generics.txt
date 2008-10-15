@@ -11,7 +11,7 @@ to methods.  Methods are lambda functions that take the receiver
 object ("this") as first argument.
 
 A generic function is a function that looks up a method in the class
-of the reciver.
+of the receiver.
 
 Method lookup is done via JavaScript's built-in __proto__ dispatch.
 
