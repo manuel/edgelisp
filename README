@@ -1,0 +1,9 @@
+A Lisp to JavaScript 1.5 compiler.
+
+Requires SpiderMonkey.
+
+Currently, the coolest program it can run is
+
+(funcall (lambda () "foo"))
+
+-- Manuel Simoni, 2008-10-15
