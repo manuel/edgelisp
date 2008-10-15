@@ -9,11 +9,12 @@
 lambda-list: a list of symbols
 body: a form
 
-** funcall
+** apply
 
-(funcall fun)
+(apply fun &rest args)
 
 fun: a function, evaluated
+args: arguments, each evaluated
 
 ** defun
 

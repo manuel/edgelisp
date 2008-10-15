@@ -60,15 +60,16 @@ name: the function name, a string
 Accesses the function binding with the given name, i.e. performs a
 lookup in the function namespace.
 
-** funcall
+** apply
 
-{ irt: "funcall", fun: <<fun_ir>> }
+{ irt: "apply", fun: <<fun_ir>>, args: <<arg_irs>> }
 
 fun_ir: IR for function to call, evaluated
+arg_irs: IRs for function arguments, each evaluated
 
 *** Description
 
-Calls a function supplied as parameter.
+Calls a function supplied as a parameter.
 
 ** defmethod
 

@@ -4,6 +4,9 @@ Requires SpiderMonkey.
 
 Currently, the coolest program it can run is
 
-(funcall (lambda () "foo"))
+(defun identity (x) x)
+(defvar bar (lambda () (identity "foo")))
+(apply bar)
+==> "foo"
 
 -- Manuel Simoni, 2008-10-15

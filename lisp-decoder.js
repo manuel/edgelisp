@@ -33,13 +33,14 @@ function lispDecodeCompound(form) {
 
 function lispDecodeFunctionApplication(form) {
     var funRefIR = { irt: "function", name: form.elts[0].name };
-    return { irt: "funcall", fun: funRefIR };
+    var funArgs = form.elts.splice(1).map(lispDecode);
+    return { irt: "apply", fun: funRefIR, args: funArgs };
 }
 
 var lispDecodeCompoundFunctionsTable = {
     "defun": lispDecodeDefun,
     "defvar": lispDecodeDefvar,
-    "funcall": lispDecodeFuncall,
+    "apply": lispDecodeApply,
     "function": lispDecodeFunction,
     "lambda": lispDecodeLambda,
 };
@@ -56,9 +57,10 @@ function lispDecodeLambda(form) {
     return { irt: "lambda", req_params: req_param_names, body: body_ir };
 }
 
-function lispDecodeFuncall(form) {
+function lispDecodeApply(form) {
     var fun_ir = lispDecode(form.elts[1]);
-    return { irt: "funcall", fun: fun_ir };
+    var arg_irs = form.elts.slice(2).map(lispDecode);
+    return { irt: "apply", fun: fun_ir, args: arg_irs };
 }
 
 function lispDecodeFunction(form) {
