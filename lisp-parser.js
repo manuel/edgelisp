@@ -9,7 +9,7 @@ var LispStringChars = repeat1(LispStringChar);
 var LispStringLiteral = action(sequence("\"", optional(LispStringChars), "\""),
                                lispStringLiteralAction);
 
-var LispSymbolChar = choice(range("a", "z"), "-", "*", "?", "!", "$", "_", "<", ">", range("0", "9"));
+var LispSymbolChar = choice(range("a", "z"), "-", "*", "?", "!", "$", "_", "/", "<", ">", range("0", "9"));
 var LispSymbolChars = repeat1(LispSymbolChar);
 var LispSymbolForm = action(LispSymbolChars,
                             lispSymbolFormAction);

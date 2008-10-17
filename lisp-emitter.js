@@ -22,6 +22,7 @@ var lispEmitFunctionsMap = {
     "finally": lispEmitFinally,
     "throw": lispEmitThrow,
     "catch": lispEmitCatch,
+    "callec": lispEmitCallEC,
 }
 
 function lispEmitFunapp(jr) {
@@ -95,6 +96,10 @@ function lispEmitCatch(jr) {
     }
     hCode += "]";
     return "lispCallWithHandlers(function() { return " + lispEmit(jr.body) + "; }, " + hCode + ")";
+}
+
+function lispEmitCallEC(jr) {
+    return "lispCallEC(" + lispEmit(jr.fun) + ")";
 }
 
 // Prevents multiple evaluation.

@@ -40,9 +40,9 @@ The Lisp code
 is first parsed into forms (S-expressions), an "objectified"
 representation of the nested list structure of Lisp.
 
-  [{formt:"compound", elts:[{formt:"symbol", name:"lambda"}, 
-                            {formt:"compound", elts:[]}, 
-                            {formt:"symbol", name:"x"}]}]
+  {formt:"compound", elts:[{formt:"symbol", name:"lambda"}, 
+                           {formt:"compound", elts:[]}, 
+                           {formt:"symbol", name:"x"}]}
 
 Forms are decoded into intermediate representation (IR), CyberLisp's
 "kernel language".

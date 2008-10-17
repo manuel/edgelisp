@@ -88,3 +88,7 @@ exception: a form, evaluated
 (with-handlers handlers body)
 
 handlers is a list of (class function) pairs
+
+** call/ec, call-with-escape-continuation
+
+(call/ec fun)

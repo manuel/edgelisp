@@ -135,12 +135,17 @@ next-handler function.
 *** Description
 
 Evaluates the exception and searches for an applicable handler.  If
-one is found, the handler function is called with the exception as
-single argument.
+one is found, the handler function is called as described at
+BIND-HANDLERS.
 
 ** call-with-escape-continuation
 
 { irt: "call-with-escape-continuation", fun: <<fun_ir>> }
+
+*** Description
+
+Calls the function with one argument, an escape continuation.  The
+continuation is a function that takes a single argument.
 
 ** set
 

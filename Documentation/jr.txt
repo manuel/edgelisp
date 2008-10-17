@@ -60,3 +60,7 @@ params: JRs for parameters (object is first element)
 { jrt: "catch", handlers: <<handlers>>, body: <<body_jr>> }
 
 handlers: a list of { class: <<class_jr>>, function: <<function_jr>> }
+
+** callec -- call with escape continuation
+
+{ jrt: "callec", fun: <<fun_jr>> }

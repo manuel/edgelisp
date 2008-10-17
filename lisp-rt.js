@@ -28,7 +28,6 @@ function lispCallWithHandlers(fun, handlers) {
 }
 
 function lispFindHandler(exception, handlerFrame) {
-    print(uneval(handlerFrame));
     if (!handlerFrame) return null;
     var handlers = handlerFrame.handlers;
     var exceptionClass = lispGetClass(exception);
@@ -37,12 +36,32 @@ function lispFindHandler(exception, handlerFrame) {
         if (lispIsSubclass(handler["class"], exceptionClass))
             return handler;
     }
-    print(uneval(handlerFrame.parentFrame));
     return lispFindHandler(exception, handlerFrame.parentFrame);
 }
 
 function lispThrow(exception) {
     var handler = lispFindHandler(exception, lispHandlerFrame);
-    if (handler) return handler["function"](exception, function() { throw "NIY"; });
-    else throw "No applicable handler for exception " + uneval(lispGetClass(exception).name);
+    if (handler) 
+        return handler["function"](exception, function() { throw "NIY"; });
+    else 
+        throw "No applicable handler for exception " + uneval(lispGetClass(exception).name);
+}
+
+// Escape continuations (jump buffers, first class exit procedures)
+
+function lispCallEC(fun) {
+    var token = {};
+    var ec = function(result) {
+        token.result = result;
+        throw token;
+    };
+    try {
+        return fun(ec);
+    } catch(obj) {
+        if (obj == token) {
+            return token.result;
+        } else {
+            throw obj;
+        }
+    }
 }

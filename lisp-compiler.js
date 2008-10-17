@@ -25,6 +25,7 @@ var lispCompileFunctionsMap = {
     "unwind-protect": lispCompileUnwindProtect,
     "throw": lispCompileThrow,
     "bind-handlers": lispCompileBindHandlers,
+    "call-with-escape-continuation": lispCompileCallWithEscapeContinuation,
 }
 
 function lispCompileDefun(ir) {
@@ -93,7 +94,7 @@ function lispCompileSet(ir) {
 }
 
 function lispCompileUnwindProtect(ir) {
-    return { jrt: "finally", "protected": lispCompile(ir["protected"]), cleanup: lispCompile(ir.cleanup) }
+    return { jrt: "finally", "protected": lispCompile(ir["protected"]), cleanup: lispCompile(ir.cleanup) };
 }
 
 function lispCompileThrow(ir) {
@@ -106,4 +107,8 @@ function lispCompileBindHandlers(ir) {
              handlers: ir.handlers.map(function(h) { 
                      return { "class": lispCompile(h["class"]),
                               "function": lispCompile(h["function"]) } }) }; // lots of silly punctuation
+}
+
+function lispCompileCallWithEscapeContinuation(ir) {
+    return { jrt: "callec", fun: lispCompile(ir.fun) };
 }
