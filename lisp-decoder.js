@@ -47,6 +47,9 @@ var lispDecodeCompoundFunctionsTable = {
     "lambda": lispDecodeLambda,
     "new": lispDecodeNew,
     "set": lispDecodeSet,
+    "finally": lispDecodeFinally,
+    "throw": lispDecodeThrow,
+    "with-handlers": lispDecodeWithHandlers,
 };
 
 function lispDecodeLambda(form) {
@@ -134,4 +137,22 @@ function lispDecodeSet(form) {
     var name = form.elts[1].name;
     var value_ir = lispDecode(form.elts[2]);
     return { irt: "set", name: name, value: value_ir };
+}
+
+function lispDecodeFinally(form) {
+    var protected_ir = lispDecode(form.elts[1]);
+    var cleanup_ir = lispDecode(form.elts[2]);
+    return { irt: "unwind-protect", "protected": protected_ir, cleanup: cleanup_ir };
+}
+
+function lispDecodeThrow(form) {
+    var exception_ir = lispDecode(form.elts[1]);
+    return { irt: "throw", exception: exception_ir };
+}
+
+function lispDecodeWithHandlers(form) {
+    var handlers = form.elts[1].elts.map(function(handler) {
+            return { "class": lispDecode(handler.elts[0]), "function": lispDecode(handler.elts[1]) };
+        });
+    return { irt: "bind-handlers", body: lispDecode(form.elts[2]), handlers: handlers };
 }

@@ -19,6 +19,9 @@ var lispEmitFunctionsMap = {
     "setprop": lispEmitSetprop,
     "invoke": lispEmitInvoke,
     "set": lispEmitSet,
+    "finally": lispEmitFinally,
+    "throw": lispEmitThrow,
+    "catch": lispEmitCatch,
 }
 
 function lispEmitFunapp(jr) {
@@ -30,7 +33,7 @@ function lispEmitFunction(jr) {
 }
 
 function lispEmitString(jr) {
-    return "(" + jr.s.toSource() + ")";
+    return uneval(jr.s);
 }
 
 function lispEmitVar(jr) {
@@ -73,6 +76,25 @@ function lispEmitInvoke(jr) {
 
 function lispEmitSet(jr) {
     return "(" + jr.name + " = " + lispEmit(jr.value) + ")";
+}
+
+function lispEmitFinally(jr) {
+    return "((function() { try { return " + lispEmit(jr["protected"]) + "; } finally { " + lispEmit(jr.cleanup) + "; } })())";
+}
+
+function lispEmitThrow(jr) {
+    return "lispThrow(" + lispEmit(jr.exception) + ")";
+}
+
+function lispEmitCatch(jr) {
+    var handlers = jr.handlers;
+    var hCode = "[";    
+    for (var i in handlers) {
+        var h = handlers[i];
+        hCode += "{\"class\":" + lispEmit(h["class"]) + ",\"function\":" + lispEmit(h["function"]) + "},";
+    }
+    hCode += "]";
+    return "lispCallWithHandlers(function() { return " + lispEmit(jr.body) + "; }, " + hCode + ")";
 }
 
 // Prevents multiple evaluation.

@@ -46,3 +46,17 @@ params: JRs for parameters (object is first element)
 ** set -- update variable
 
 { jrt: "set", name: <<string>>, value: <<value_jr>> }
+
+** finally -- stack unwind protection
+
+{ jrt: "finally", protected: <<protected_jr>>, cleanup: <<cleanup_jr>> }
+
+** throw -- raise exception
+
+{ jrt: "throw", exception: <<exception_jr>> }
+
+** catch -- handle exception
+
+{ jrt: "catch", handlers: <<handlers>>, body: <<body_jr>> }
+
+handlers: a list of { class: <<class_jr>>, function: <<function_jr>> }

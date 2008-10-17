@@ -66,15 +66,25 @@ class: a form, evaluated
 
 Creates a new instance of a class
 
-** let
-
-(let (&rest bindings) &rest body)
-
-binding ::= (name value)
-
 ** set
 
 (set name value)
 
 name: a symbol
 value: a form, evaluated
+
+** finally
+
+(finally protected-form cleanup-form)
+
+** throw
+
+(throw exception)
+
+exception: a form, evaluated
+
+** with-handlers
+
+(with-handlers handlers body)
+
+handlers is a list of (class function) pairs

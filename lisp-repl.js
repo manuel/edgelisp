@@ -1,9 +1,10 @@
+print("CyberLisp 0.0.1");
+
 load("lisp-parser.js");
 load("lisp-decoder.js");
 load("lisp-compiler.js");
 load("lisp-emitter.js");
-
-print("CyberLisp 0.0.1");
+load("lisp-rt.js");
 
 var lispDebugToggle = false;
 

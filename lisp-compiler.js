@@ -22,6 +22,9 @@ var lispCompileFunctionsMap = {
     "var": lispCompileVar,
     "progn": lispCompileProgn,
     "set": lispCompileSet,
+    "unwind-protect": lispCompileUnwindProtect,
+    "throw": lispCompileThrow,
+    "bind-handlers": lispCompileBindHandlers,
 }
 
 function lispCompileDefun(ir) {
@@ -87,4 +90,20 @@ function lispCompileProgn(ir) {
 
 function lispCompileSet(ir) {
     return { jrt: "set", name: lispEnvMangleVarName(ir.name), value: lispCompile(ir.value) };
+}
+
+function lispCompileUnwindProtect(ir) {
+    return { jrt: "finally", "protected": lispCompile(ir["protected"]), cleanup: lispCompile(ir.cleanup) }
+}
+
+function lispCompileThrow(ir) {
+    return { jrt: "throw", exception: lispCompile(ir.exception) };
+}
+
+function lispCompileBindHandlers(ir) {
+    return { jrt: "catch", 
+             body: lispCompile(ir.body),
+             handlers: ir.handlers.map(function(h) { 
+                     return { "class": lispCompile(h["class"]),
+                              "function": lispCompile(h["function"]) } }) }; // lots of silly punctuation
 }

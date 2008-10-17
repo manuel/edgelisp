@@ -107,17 +107,44 @@ Creates an instance of a class.
 
 ** unwind-protect
 
-** catch
+{ irt: "unwind-protect", protected: <<protected_ir>>, cleanup: <<cleanup_ir>> }
 
-** handle
+** bind-handlers
+
+{ irt: "bind-handlers", handlers: <<handlers>>, body: <<body_ir>> }
+
+handlers is a non-empty list of { class: <<class_ir>>, function: <<fun_ir>> }
+
+*** Description
+
+Executes the body with exception handlers installed.  Each handler
+consists of a class and a handler function.  The handler matches
+exceptions that are instances of the handler class (or a subclass).
+
+Each handler_function must evaluate to a function that takes two
+arguments: an exception, and a next-handler function.  The handler has
+three possibilities: (1) return a value; this will be the result of
+the THROW that invoked the handler, (2) take a non-local exit, to
+abort execution of the thrower, (3) decline handling by calling the
+next-handler function.
 
 ** throw
+
+{ irt: "throw", exception: <<exception_ir>> }
+
+*** Description
+
+Evaluates the exception and searches for an applicable handler.  If
+one is found, the handler function is called with the exception as
+single argument.
+
+** call-with-escape-continuation
+
+{ irt: "call-with-escape-continuation", fun: <<fun_ir>> }
 
 ** set
 
 { irt: "set", name: <<string>>, value: <<value_ir>> }
-
-** call-with-escape-continuation, call/ec
 
 ** defmacro
 
@@ -134,3 +161,5 @@ Creates an instance of a class.
 *** Description
 
 Accesses the value of the variable.
+
+** dlet

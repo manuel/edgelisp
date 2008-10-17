@@ -2,10 +2,6 @@
 
 * Generic Programming in CyberLisp
 
-CyberLisp is a generic programming language.
-
-Generic is a technical term meaning "object orientation done right".
-
 Classes contain virtual lookup tables (vtables) that map method names
 to methods.  Methods are lambda functions that take the receiver
 object ("this") as first argument.

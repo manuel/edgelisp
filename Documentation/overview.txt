@@ -4,6 +4,9 @@
 
 CyberLisp uses a cascade of code representations:
 
+--------------------------------------------
+
+
 Lisp text
     |
     | parser
@@ -21,6 +24,9 @@ JavaScript representation (JR)
     | emitter
     V
 JavaScript text
+
+
+--------------------------------------------
 
 NOTE: The REPL will print these intermediate representations, when
 debugging is enabled with the "/d" command.
