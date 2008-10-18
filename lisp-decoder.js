@@ -37,23 +37,50 @@ function lispDecodeSymbol(form) {
 }
 
 function lispDecodeCompound(form) {
+    if (form.elts.length == 0) throw "Empty form";
     var op = form.elts[0];
-    if (op.formt == "symbol") {
+    switch (op.formt) {
+    case "symbol": // special form or function application
         var decodeCompoundFunction = lispDecodeCompoundFunctionsTable[op.name];
         if (decodeCompoundFunction) {
             return decodeCompoundFunction(form);
         } else {
             return lispDecodeFunctionApplication(form);
         }
-    } else {
-        throw "First element of compound form must be a symbol " + uneval(form);
+    case "compound": // type-expr as first element
+        if (lispIsTypeName(op.elts[0].name)) {
+            return lispDecodeCompoundFormWithTypeExpr(op);
+        }
     }
+    throw "Malformed compound form " + uneval(form);
 }
 
 function lispDecodeFunctionApplication(form) {
     var funRefIR = { irt: "function", name: form.elts[0].name };
     var funArgs = form.elts.splice(1).map(lispDecode);
     return { irt: "apply", fun: funRefIR, args: funArgs };
+}
+
+function lispDecodeCompoundFormWithTypeExpr(form) {
+    return { irt: "apply",
+             fun: { irt: "lambda", 
+                    req_params: [ { name: "--lisp-x-temp" } ],
+                    body: { irt: "progn", 
+                    exprs: form.elts[2].elts.map(function(destructForm) {
+                            return { irt: "apply", 
+                                     fun: { irt: "function", name: lispSlotSetterName(destructForm.elts[0].name) },
+                                     args: [ { irt: "var", name: "--lisp-x-temp"},
+                                             lispDecode(destructForm.elts[1]) ] };
+                        }).concat({ irt: "var", name: "--lisp-x-temp"}) } },
+             args: [ { irt: "make-instance", "class": { irt: "var", name: form.elts[0].name } } ] };
+}
+
+function lispSlotSetterName(slotGetterName) {
+    return slotGetterName + "-setter";
+}
+
+function lispCleanSlotGetterName(slotGetterName) {
+    return slotGetterName.slice(1);
 }
 
 // Lambda list parsing
@@ -75,17 +102,37 @@ function lispDecodeLambdaList(llForm) {
                 else
                     return { "type": null, "name": paramForm.name };
             case "compound":
-                return { "type": paramForm.elts[0].name, "name": paramForm.elts[1].name };
+                var name = paramForm.elts[1].name;
+                return { "type": paramForm.elts[0].name,
+                         "name": paramForm.elts[1].name };
             case "string":
                 throw "String in lambda list " + llForm;
             }
         });
 }
 
+function lispDecodeLambdaListDestructs(llForm) {
+    var destructs = [];
+    llForm.elts.map(function(paramForm) {
+            if (paramForm.formt == "compound") {
+                var paramName = paramForm.elts[1].name;
+                paramForm.elts[2].elts.map(function(destructForm) {
+                        var slotName = destructForm.elts[0].name;
+                        destructs.push({ name: lispCleanSlotGetterName(slotName),
+                                         value: { irt: "apply", 
+                                                  fun: { irt: "function", name: slotName },
+                                                  args: [ { irt: "var", name: paramName } ] } });
+                    });
+            }
+        });
+    return destructs;
+}
+
 function lispDecodeLambda(form) {
     var ll = lispDecodeLambdaList(form.elts[1]);
     var body_ir = lispDecode(form.elts[2]);
-    return { irt: "lambda", req_params: ll, body: body_ir };
+    var destructs = lispDecodeLambdaListDestructs(form.elts[1]);
+    return { irt: "lambda", req_params: ll, body: body_ir, destructs: destructs };
 }
 
 function lispDecodeApply(form) {
@@ -103,7 +150,8 @@ function lispDecodeDefun(form) {
     var name = form.elts[1].name;
     var ll = lispDecodeLambdaList(form.elts[2]);
     var lambdaBody = lispDecode(form.elts[3]);
-    var lambda_ir = { irt: "lambda", req_params: ll, body: lambdaBody };
+    var destructs = lispDecodeLambdaListDestructs(form.elts[2]);
+    var lambda_ir = { irt: "lambda", req_params: ll, body: lambdaBody, destructs: destructs };
     return { irt: "defun", name: name, lambda: lambda_ir };
 }
 

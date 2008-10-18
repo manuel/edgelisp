@@ -28,7 +28,7 @@ var lispMangleTable = [["-", "H"],
                        ["!", "X"],
                        ["<", "L"],
                        [">", "G"],
-                       ["$", "D"],
+                       [".", "D"],
                        ["/", "S"]];
 
 function lispEnvMangle(name) {

@@ -50,8 +50,14 @@ function lispCompileApply(ir) {
 }
 
 function lispCompileLambda(ir) {
+    var destructs;
+    if (ir.destructs)
+        destructs = ir.destructs.map(function(destruct) {
+                return { name: lispEnvMangleVarName(destruct.name), value: lispCompile(destruct.value) };
+            });
     return { jrt: "function", 
-             params: ir.req_params.map(function(param) { return lispEnvMangleVarName(param.name); }), 
+             destructs: destructs ? destructs : [],
+             params: ir.req_params.map(function(param) { return lispEnvMangleVarName(param.name); }),
              body: lispCompile(ir.body) };
 }
 

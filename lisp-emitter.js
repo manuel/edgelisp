@@ -32,7 +32,13 @@ function lispEmitFunapp(jr) {
 }
 
 function lispEmitFunction(jr) {
-    return "(function(" + jr.params + ") { return " + lispEmit(jr.body) + "; })";
+    var destructs = jr.destructs;
+    var destructsCode = "";
+    for (var i in destructs) {
+        var destruct = destructs[i];
+        destructsCode += ("var " + destruct.name + " = " + lispEmit(destruct.value) + "; ");
+    }
+    return "(function(" + jr.params + ") { " + destructsCode + "return " + lispEmit(jr.body) + "; })";
 }
 
 function lispEmitString(jr) {

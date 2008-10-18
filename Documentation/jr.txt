@@ -12,7 +12,9 @@
 
 ** function -- create anonymous function
 
-{ jrt: "function", params: <<param_names>>, body: <<body_jr>> }
+{ jrt: "function", params: <<param_names>>, body: <<body_jr>> [, destructs: <<destructs>>] }
+
+destructs: a list of { name: <<var_name_string>>, value: <<value_jr>> }
 
 ** string -- string literal
 

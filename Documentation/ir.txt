@@ -12,10 +12,11 @@ A literal string.
 
 ** lambda
 
-{ irt: "lambda", req_params: <<req_params>>, body: <<body_ir>> }
+{ irt: "lambda", req_params: <<req_params>>, body: <<body_ir>> [, destructs: <<destructs>>] }
 
 req_params: lambda list
 body_ir: IR of the lambda's body
+destructs: a list of { name: <<var_name_string>>, value: <<value_ir>> }
 
 *** Description
 
@@ -23,7 +24,7 @@ First-class function abstraction.
 
 ** (lambda-list)
 
-An array of { name: <<string>> [, type: <<string>>] } objects.
+A list of { name: <<string>> [, type: <<string>>] } objects.
 
 ** progn
 
@@ -95,7 +96,7 @@ Binds a method in the class' vtable.
 
 *** Description
 
-Creates a class object.
+Creates a class object and defines slot getter and setter generic functions.
 
 ** make-instance
 

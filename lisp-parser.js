@@ -7,16 +7,17 @@ function lispParse(text) {
 }
 
 var LispForm = function(input) { return LispForm(input); }; // forward decl.
+var LispFormReduced = function(input) { return LispFormReduced(input); }; // forward decl.
 
 var LispStringChar = negate("\"");
 var LispStringChars = repeat1(LispStringChar);
 var LispStringLiteral = action(sequence("\"", optional(LispStringChars), "\""), lispStringLiteralAction);
 function lispStringLiteralAction(ast) { return { formt: "string", s: ast[1].join("") }; }
 
-var LispSymbolCharNoClass = choice(range("a", "z"), "-", "*", "?", "!", "$", "_", "/", range("0", "9"));
-var LispSymbolCharsNoClass = repeat1(LispSymbolCharNoClass);
-var LispSymbolFormNoClass = action(LispSymbolCharsNoClass, lispSymbolFormAction);
-var LispSymbolChar = choice("<", ">", LispSymbolCharNoClass);
+var LispSymbolCharReduced = choice(range("a", "z"), "-", "*", "?", "!", "_", "/", range("0", "9"));
+var LispSymbolCharsReduced = repeat1(LispSymbolCharReduced);
+var LispSymbolFormReduced = action(LispSymbolCharsReduced, lispSymbolFormAction);
+var LispSymbolChar = choice("<", ">", ".", LispSymbolCharReduced);
 var LispSymbolChars = repeat1(LispSymbolChar);
 var LispSymbolForm = action(LispSymbolChars, lispSymbolFormAction);
 function lispSymbolFormAction(ast) { return { formt: "symbol", name: ast.join("") }; }
@@ -28,13 +29,13 @@ var LispFunctionForm = action(sequence("#'", LispSymbolForm), lispFunctionFormAc
 function lispFunctionFormAction(ast) {
     return { formt: "compound", elts: [ { formt: "symbol", name: "function" }, ast[1] ] }; }
 
-var LispSlotName = action(sequence(".", LispSymbolFormNoClass), lispSlotNameAction);
+var LispSlotName = action(sequence(".", LispSymbolFormReduced), lispSlotNameAction);
 function lispSlotNameAction(ast) { return "." + ast[1].name; }
 
 var LispTypeExpr = action(wsequence("<",
-                                    LispSymbolFormNoClass, 
-                                    optional(LispSymbolFormNoClass), 
-                                    repeat0(wsequence(LispSlotName, optional(LispForm))),
+                                    LispSymbolFormReduced, 
+                                    whitespace(optional(LispSymbolFormReduced)),
+                                    repeat0(wsequence(LispSlotName, optional(LispFormReduced))),
                                     ">"),
                           lispTypeExprAction);
 function lispTypeExprAction(ast) {
@@ -43,9 +44,12 @@ function lispTypeExprAction(ast) {
     var slotFuns = [];
     for (var i in ast[3]) {
         var slotFunAst = ast[3][i];
+        print(uneval(slotFunAst));
         var slotName = slotFunAst[0];
         var slotValue = slotFunAst[1];
-        slotFuns.push({ formt: "compound", elts: [ { formt: "symbol", name: slotName }, slotValue ] });
+        var elts = [ { formt: "symbol", name: slotName } ];
+        if (slotValue) elts.push(slotValue);
+        slotFuns.push({ formt: "compound", elts: elts });
     }
     if (ast[2].name || (slotFuns.length > 0))
         return { formt: "compound", elts: [ { formt: "symbol", name: typeName },
@@ -55,10 +59,16 @@ function lispTypeExprAction(ast) {
         return { formt: "symbol", name: typeName };
 }
 
+// This is needed because otherwise <person .name> will be parsed as "<person" ".name" ">"
+var LispFormReduced = whitespace(choice(LispTypeExpr,
+                                        LispFunctionForm,
+                                        LispStringLiteral,
+                                        LispSymbolFormReduced,
+                                        LispCompoundForm));
 var LispForm = whitespace(choice(LispTypeExpr,
                                  LispFunctionForm,
-                                 LispStringLiteral, 
-                                 LispSymbolForm, 
+                                 LispStringLiteral,
+                                 LispSymbolForm,
                                  LispCompoundForm));
 var LispForms = repeat0(LispForm);
 
@@ -68,5 +78,5 @@ function lispShowForm(form) {
     case "string": return uneval(form.s);
     case "compound": return "(" + form.elts.map(lispShowForm).join(" ") + ")";
     }
-    throw "show: Unrecognized form " + uneval(form);
+    return "[Unrecognized form: " + uneval(form) + "]";
 }
