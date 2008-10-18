@@ -12,25 +12,29 @@ while(1) {
     try {
         var lispText = readline();
         
-        if (lispText == "/d") {
+        if (lispText == "/d") { // debug
             lispDebugToggle = !lispDebugToggle;
             print("Debugging " + (lispDebugToggle ? "ON" : "OFF"));
             continue;
-        } else if (lispText[0] == "{") {
+        } else if (lispText == "/r") { // reload
+            load("lisp-repl.js");
+        } else if (lispText[0] == "{") { // inline JS
             print(uneval(eval(lispText)));
             continue;
-        } else if (lispText == "") {
+        } else if (lispText == "") { // empty line
             continue;
         }
 
+        // Lisp evaluation
         var lispForms = lispParse(lispText);
-        lispDebug(lispForms);
+        lispDebug("S-EXP: " + lispShowForm(lispForms[0]));
+        lispDebug("FORMS: " + uneval(lispForms));
         var lispIR = lispDecode(lispForms[0]);
-        lispDebug(lispIR);
+        lispDebug("   IR: " + uneval(lispIR));
         var lispJR = lispCompile(lispIR);
-        lispDebug(lispJR);
+        lispDebug("   JR: " + uneval(lispJR));
         var lispJS = lispEmit(lispJR);
-        lispDebug(lispJS);
+        lispDebug("   JS: " + lispJS);
         print(uneval(eval(lispJS)));
 
     } catch(e) {
@@ -39,5 +43,5 @@ while(1) {
 }
 
 function lispDebug(obj) {
-    if (lispDebugToggle) print(uneval(obj));
+    if (lispDebugToggle) print("; " + obj);
 }

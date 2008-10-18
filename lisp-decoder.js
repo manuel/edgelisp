@@ -56,16 +56,36 @@ function lispDecodeFunctionApplication(form) {
     return { irt: "apply", fun: funRefIR, args: funArgs };
 }
 
+// Lambda list parsing
+
+function lispIsTypeName(name) {
+    return (name[0] == "<") && (name[name.length - 1] == ">");
+}
+
+function lispCleanTypeName(name) {
+    return name.slice(1, name.length - 1);
+}
+
+function lispDecodeLambdaList(llForm) {
+    return llForm.elts.map(function(paramForm) {
+            switch (paramForm.formt) {
+            case "symbol":
+                if (lispIsTypeName(paramForm.name))
+                    return { "type": paramForm.name, "name": lispCleanTypeName(paramForm.name) };
+                else
+                    return { "type": null, "name": paramForm.name };
+            case "compound":
+                return { "type": paramForm.elts[0].name, "name": paramForm.elts[1].name };
+            case "string":
+                throw "String in lambda list " + llForm;
+            }
+        });
+}
+
 function lispDecodeLambda(form) {
-    function lambdaReqParamNames(form) {
-        return form.elts[1].elts.map(function(paramForm) { return paramForm.name; });
-    }
-    function lambdaBodyIR(form) {
-        return lispDecode(form.elts[2]);
-    }
-    var req_param_names = lambdaReqParamNames(form);
-    var body_ir = lambdaBodyIR(form);
-    return { irt: "lambda", req_params: req_param_names, body: body_ir };
+    var ll = lispDecodeLambdaList(form.elts[1]);
+    var body_ir = lispDecode(form.elts[2]);
+    return { irt: "lambda", req_params: ll, body: body_ir };
 }
 
 function lispDecodeApply(form) {
@@ -81,9 +101,9 @@ function lispDecodeFunction(form) {
 
 function lispDecodeDefun(form) {
     var name = form.elts[1].name;
-    var lambdaParams = form.elts[2].elts.map(function(paramForm) { return paramForm.name; });
+    var ll = lispDecodeLambdaList(form.elts[2]);
     var lambdaBody = lispDecode(form.elts[3]);
-    var lambda_ir = { irt: "lambda", req_params: lambdaParams, body: lambdaBody };
+    var lambda_ir = { irt: "lambda", req_params: ll, body: lambdaBody };
     return { irt: "defun", name: name, lambda: lambda_ir };
 }
 
@@ -102,34 +122,21 @@ function lispDecodeDefclass(form) {
 }
 
 function lispDecodeDef(form) {
-    // extract form data
     var name = form.elts[1].name;
-    var args = form.elts[2];
-    var body = form.elts[3];
-
-    var first_arg = args.elts[0];
-    var other_args = args.elts.slice(1);
-    
-    var cls = first_arg.elts[0];
-    var inst = first_arg.elts[1].name;
-    var cls_ir = lispDecode(cls);
-
-    var param_names = [ inst ].concat(other_args.map(function(arg) { return arg.name; }));
-
-    // create method and generic function lambdas
-    var lambda_ir = { irt: "lambda", 
-                      req_params: param_names,
-                      body: lispDecode(body) };
-
-    var param_refs = param_names.map(function(param) { return { irt: "var", name: param }; });
-    var gf_ir = { irt: "lambda",
-                  req_params: param_names,
-                  body: { irt: "invoke-method", name: name, params: param_refs } };
-
-    // create set-method and defun (for the generic)
+    var ll = lispDecodeLambdaList(form.elts[2]);
     return { irt: "progn",
-            exprs: [ { irt: "set-method", name: name, "class": cls_ir, lambda: lambda_ir },
-                     { irt: "defun", name: name, lambda: gf_ir } ] };
+             exprs: [ { irt: "set-method",
+                        name: name,
+                        "class": { irt: "var", name: ll[0].type },
+                        lambda: { irt: "lambda", req_params: ll, body: lispDecode(form.elts[3]) } },
+                      { irt: "defun",
+                        name: name,
+                        lambda: { irt: "lambda",
+                                  req_params: ll,
+                                  body: { irt: "invoke-method",
+                                          name: name,
+                                          params: ll.map(function(param) {
+                                                           return { irt: "var", name: param.name; } }) } } } ] };
 }
 
 function lispDecodeNew(form) {

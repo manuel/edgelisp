@@ -12,14 +12,18 @@ A literal string.
 
 ** lambda
 
-{ irt: "lambda", req_params: <<req_param_names>>, body: <<body_ir>> }
+{ irt: "lambda", req_params: <<req_params>>, body: <<body_ir>> }
 
-req_param_names: an array of strings
+req_params: lambda list
 body_ir: IR of the lambda's body
 
 *** Description
 
 First-class function abstraction.
+
+** (lambda-list)
+
+An array of { name: <<string>> [, type: <<string>>] } objects.
 
 ** progn
 

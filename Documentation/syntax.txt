@@ -1,0 +1,61 @@
+-*- outline -*-
+
+DRAFT, NOT IMPLEMENTED YET
+
+* Syntax
+
+** #' -- function namespace lookup
+
+#'foo is equal to (function foo) and performs a lookup in the function namespace:
+
+(defvar foo "a string")
+foo ==> "a string"
+#'foo ==> null
+(defun foo () "another string")
+(foo) ==> "another string"
+#'foo ==> <function>
+
+** (<class> obj) -- typed function parameter
+
+In a function signature, parameters can be either names or typed names.
+
+(lambda (x) x) ;; x is untyped
+(lambda ((<person> p)) p) ;; p must be a person
+
+At function invocation, the types of parameters are checked, and an
+exception is thrown when a parameter doesn't match.
+
+In a method definition, the first parameter must be typed.
+
+** <class obj> -- typed function parameter convenience
+
+<class obj> is a shortcut for (<class> obj), so the above lambda can
+be written as:
+
+(lambda (<person p>) p)
+
+** <class> -- typed function parameter ultra-convenience
+
+When used as a function parameter, <class> is equivalent to (<class> class).
+
+This enables the even shorter:
+
+(lambda (<person>) person)
+
+** <class [obj] [.slot]*> -- type expression (object literals, destructuring)
+
+(defclass <person> name age)
+(def my-get-person-name (<person .name>) name)
+
+** obj.slot -- slot access
+
+obj.slot is equivalent to (.slot obj)
+
+(defclass <person> name age)
+(new <person> "manuel" "27").name ==> "manuel"
+
+Note that .slot must be a function.
+
+** obj[slot-name] -- dynamic slot access
+
+obj[slot-name] is equivalent to ([] obj slot-name).
