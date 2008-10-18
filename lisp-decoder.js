@@ -9,6 +9,25 @@ function lispDecode(form) {
     throw "Unrecognized form " + uneval(form);
 }
 
+var lispDecodeCompoundFunctionsTable = {
+    "defclass": lispDecodeDefclass,
+    "def": lispDecodeDef,
+    "defun": lispDecodeDefun,
+    "defvar": lispDecodeDefvar,
+    "apply": lispDecodeApply,
+    "function": lispDecodeFunction,
+    "lambda": lispDecodeLambda,
+    "new": lispDecodeNew,
+    "set": lispDecodeSet,
+    "finally": lispDecodeFinally,
+    "throw": lispDecodeThrow,
+    "with-handlers": lispDecodeWithHandlers,
+    "call/ec": lispDecodeCallEC,
+    "bind": lispDecodeBind,
+    "slot-value": lispDecodeSlotValue,
+    "set-slot-value": lispDecodeSetSlotValue,
+};
+
 function lispDecodeString(form) {
     return { irt: "string", s: form.s };
 }
@@ -36,23 +55,6 @@ function lispDecodeFunctionApplication(form) {
     var funArgs = form.elts.splice(1).map(lispDecode);
     return { irt: "apply", fun: funRefIR, args: funArgs };
 }
-
-var lispDecodeCompoundFunctionsTable = {
-    "defclass": lispDecodeDefclass,
-    "def": lispDecodeDef,
-    "defun": lispDecodeDefun,
-    "defvar": lispDecodeDefvar,
-    "apply": lispDecodeApply,
-    "function": lispDecodeFunction,
-    "lambda": lispDecodeLambda,
-    "new": lispDecodeNew,
-    "set": lispDecodeSet,
-    "finally": lispDecodeFinally,
-    "throw": lispDecodeThrow,
-    "with-handlers": lispDecodeWithHandlers,
-    "call/ec": lispDecodeCallEC,
-    "bind": lispDecodeBind,
-};
 
 function lispDecodeLambda(form) {
     function lambdaReqParamNames(form) {
@@ -167,4 +169,13 @@ function lispDecodeBind(form) {
     return { irt: "bind", 
              body: lispDecode(form.elts[2]),
              bindings: form.elts[1].elts.map(function(b) { return [ b.elts[0].name, lispDecode(b.elts[1]) ]; }) };
+}
+
+function lispDecodeSlotValue(form) {
+    return { irt: "get-slot", obj: lispDecode(form.elts[1]), name: form.elts[2].name };
+}
+
+function lispDecodeSetSlotValue(form) {
+    return { irt: "set-slot", obj: lispDecode(form.elts[1]), name: form.elts[2].name,
+             value: lispDecode(form.elts[3]) };
 }

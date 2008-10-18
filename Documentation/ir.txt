@@ -181,3 +181,11 @@ Dynamically scoped rebinding of global variables.
 ** inline-js
 
 ** invoke-debugger
+
+** get-slot
+
+{ irt: "get-slot", obj: <<obj_ir>>, slotName: <<string>> }
+
+** set-slot
+
+{ irt: "set-slot", obj: <<obj_ir>>, slotName: <<string>>, value: <<value_ir>> }

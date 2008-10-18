@@ -16,6 +16,10 @@ function lispEnvMangleMethodName(name) {
     return "__lispM_" + lispEnvMangle(name);
 }
 
+function lispEnvMangleSlotName(name) {
+    return "__lispS_" + lispEnvMangle(name);
+}
+
 // Lisp symbols have to be lowercase, so we can use uppercase
 // characters to escape special characters.
 var lispMangleTable = [["-", "H"],

@@ -96,3 +96,18 @@ handlers is a list of (class function) pairs
 ** bind
 
 (bind bindings body)
+
+** slot-value
+
+(slot-value obj name)
+
+obj: a form, evaluated
+name: a symbol
+
+** set-slot-value
+
+(set-slot-value obj name value)
+
+obj: a form, evaluated
+name: a symbol
+value: a form, evaluated

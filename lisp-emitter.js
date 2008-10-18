@@ -16,6 +16,7 @@ var lispEmitFunctionsMap = {
     "multi": lispEmitMulti,
     "var": lispEmitVar,
     "vardef": lispEmitVardef,
+    "getprop": lispEmitGetprop,
     "setprop": lispEmitSetprop,
     "invoke": lispEmitInvoke,
     "set": lispEmitSet,
@@ -63,6 +64,10 @@ function lispEmitObj(jr) {
     } else {
         return res;
     }
+}
+
+function lispEmitGetprop(jr) {
+    return "((" + lispEmit(jr.obj) + ")." + jr.name + ")";
 }
 
 function lispEmitSetprop(jr) {

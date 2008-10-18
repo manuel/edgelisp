@@ -37,6 +37,10 @@ proto: JR for __proto__
 
 { jrt: "setprop", obj: <<object_jr>>, name: <<string>>, value: <<value_jr>> }
 
+** getprop -- get an object's property
+
+{ jrt: "setprop", obj: <<object_jr>>, name: <<string>> }
+
 ** invoke -- invoke a method on an object
 
 { jrt: "invoke", name: <<string>>, params: <<param_jrs>> }

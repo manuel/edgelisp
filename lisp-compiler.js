@@ -27,6 +27,8 @@ var lispCompileFunctionsMap = {
     "bind-handlers": lispCompileBindHandlers,
     "call-with-escape-continuation": lispCompileCallWithEscapeContinuation,
     "bind": lispCompileBind,
+    "get-slot": lispCompileGetSlot,
+    "set-slot": lispCompileSetSlot,
 }
 
 function lispCompileDefun(ir) {
@@ -118,4 +120,12 @@ function lispCompileBind(ir) {
     return { jrt: "bind", 
              body: lispCompile(ir.body),
              bindings: ir.bindings.map(function(b) { return [ b[0], lispCompile(b[1]) ]; }) };
+}
+
+function lispCompileGetSlot(ir) {
+    return { jrt: "getprop", obj: lispCompile(ir.obj), name: ir.name };
+}
+
+function lispCompileSetSlot(ir) {
+    return { jrt: "setprop", obj: lispCompile(ir.obj), name: ir.name, value: lispCompile(ir.value) };
 }
