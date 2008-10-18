@@ -136,7 +136,7 @@ function lispDecodeDef(form) {
                                   body: { irt: "invoke-method",
                                           name: name,
                                           params: ll.map(function(param) {
-                                                           return { irt: "var", name: param.name; } }) } } } ] };
+                                                           return { irt: "var", name: param.name } }) } } } ] };
 }
 
 function lispDecodeNew(form) {

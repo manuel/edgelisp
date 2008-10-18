@@ -51,7 +51,7 @@ function lispCompileApply(ir) {
 
 function lispCompileLambda(ir) {
     return { jrt: "function", 
-             params: ir.req_params.map(lispEnvMangleVarName), 
+             params: ir.req_params.map(function(param) { return lispEnvMangleVarName(param.name); }), 
              body: lispCompile(ir.body) };
 }
 
