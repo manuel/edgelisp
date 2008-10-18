@@ -23,6 +23,7 @@ var lispEmitFunctionsMap = {
     "throw": lispEmitThrow,
     "catch": lispEmitCatch,
     "callec": lispEmitCallEC,
+    "bind": lispEmitBind,
 }
 
 function lispEmitFunapp(jr) {
@@ -42,11 +43,11 @@ function lispEmitVar(jr) {
 }
 
 function lispEmitVardef(jr) {
-    return "var " + jr.name + " = " + lispEmit(jr.value);
+    return "(" + jr.name + " = " + lispEmit(jr.value) + ")";
 }
 
 function lispEmitMulti(jr) {
-    return jr.exprs.map(lispEmit).join(";");
+    return "(" + jr.exprs.map(lispEmit).join(", ") + ")";
 }
 
 function lispEmitObj(jr) {
@@ -100,6 +101,20 @@ function lispEmitCatch(jr) {
 
 function lispEmitCallEC(jr) {
     return "lispCallEC(" + lispEmit(jr.fun) + ")";
+}
+
+function lispEmitBind(jr) {
+    var setters = "", resetters = "";
+    var bindings = jr.bindings;
+    for (var i in bindings) {
+        var b = bindings[i];
+        var mangledName = lispEnvMangleVarName(b[0]);
+        setters += ("var __lispTemp" + i + " = " + mangledName + "; ");
+        setters += (mangledName + " = " + lispEmit(b[1]) + "; ");
+        resetters += (mangledName + " = __lispTemp" + i + "; ");
+    }
+    var body = lispEmit(jr.body);
+    return "((function() { try { " + setters + "return " + body + "} finally { " + resetters + "} })())";
 }
 
 // Prevents multiple evaluation.

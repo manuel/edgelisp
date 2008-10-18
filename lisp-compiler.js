@@ -26,6 +26,7 @@ var lispCompileFunctionsMap = {
     "throw": lispCompileThrow,
     "bind-handlers": lispCompileBindHandlers,
     "call-with-escape-continuation": lispCompileCallWithEscapeContinuation,
+    "bind": lispCompileBind,
 }
 
 function lispCompileDefun(ir) {
@@ -111,4 +112,10 @@ function lispCompileBindHandlers(ir) {
 
 function lispCompileCallWithEscapeContinuation(ir) {
     return { jrt: "callec", fun: lispCompile(ir.fun) };
+}
+
+function lispCompileBind(ir) {
+    return { jrt: "bind", 
+             body: lispCompile(ir.body),
+             bindings: ir.bindings.map(function(b) { return [ b[0], lispCompile(b[1]) ]; }) };
 }

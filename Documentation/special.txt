@@ -92,3 +92,7 @@ handlers is a list of (class function) pairs
 ** call/ec, call-with-escape-continuation
 
 (call/ec fun)
+
+** bind
+
+(bind bindings body)

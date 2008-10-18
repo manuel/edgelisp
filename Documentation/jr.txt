@@ -2,7 +2,7 @@
 
 * JavaScript Representation (JR)
 
-** vardef -- define a variable
+** vardef -- define a global variable
 
 { jrt: "vardef", name: <<string>>, value: <<jr>> }
 
@@ -22,7 +22,7 @@
 
 { jrt: "var", name: <<string>> }
 
-** multi -- multiple top-level expressions in a row
+** multi -- multiple expressions in a row
 
 { jrt: "multi", exprs: <<jrs>> }
 
@@ -64,3 +64,10 @@ handlers: a list of { class: <<class_jr>>, function: <<function_jr>> }
 ** callec -- call with escape continuation
 
 { jrt: "callec", fun: <<fun_jr>> }
+
+** bind -- dynamic binding (should really be a macro)
+
+{ jrt: "bind", bindings: <<bindings>> }
+
+bindings: a list of [ <<name>>, <<value_ir>> ] pairs
+name: a string

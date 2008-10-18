@@ -167,4 +167,17 @@ continuation is a function that takes a single argument.
 
 Accesses the value of the variable.
 
-** dlet
+** bind
+
+{ irt: "bind", bindings: <<bindings>>, body: <<body_ir>> }
+
+bindings: a list of [name, value_ir] pairs
+name: string
+
+*** Description
+
+Dynamically scoped rebinding of global variables.
+
+** inline-js
+
+** invoke-debugger

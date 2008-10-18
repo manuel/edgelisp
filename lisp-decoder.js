@@ -51,6 +51,7 @@ var lispDecodeCompoundFunctionsTable = {
     "throw": lispDecodeThrow,
     "with-handlers": lispDecodeWithHandlers,
     "call/ec": lispDecodeCallEC,
+    "bind": lispDecodeBind,
 };
 
 function lispDecodeLambda(form) {
@@ -160,4 +161,10 @@ function lispDecodeWithHandlers(form) {
 
 function lispDecodeCallEC(form) {
     return { irt: "call-with-escape-continuation", fun: lispDecode(form.elts[1]) };
+}
+
+function lispDecodeBind(form) {
+    return { irt: "bind", 
+             body: lispDecode(form.elts[2]),
+             bindings: form.elts[1].elts.map(function(b) { return [ b.elts[0].name, lispDecode(b.elts[1]) ]; }) };
 }
