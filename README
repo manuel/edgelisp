@@ -2,15 +2,13 @@ A Lisp to JavaScript 1.5 compiler.
 
 Requires SpiderMonkey.
 
-Currently, the coolest program it can run is
+Currently, the coolest program, which shows off destructuring and
+object literals, is:
 
-(defclass <dog>)
-(def say-something ((<dog> d)) "wooof")
-
-(defclass <cat>)
-(def say-something ((<cat> c)) "meoow")
-
-(say-something (new <dog>))
-(say-something (new <cat>))
+(defclass <dog> name)
+(def say-name (<dog .name>) name)
+(defvar *d* (<dog .name "Gonz">))
+(say-name *d*)
+==> "Gonz"
 
 -- Manuel Simoni, 2008-10-15
