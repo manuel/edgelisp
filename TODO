@@ -1,8 +1,8 @@
 -*- outline -*-
 
-* Are the __lispX... temporary variables dangerous?
+* Better lambda list abstraction
 
-Don't think so.
+Make it an object, define some nice utilities, and put the destructs into it.
 
 * It sucks that NEW is not defined as a function automatically
 

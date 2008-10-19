@@ -40,15 +40,21 @@ function lispDecodeCompound(form) {
     if (form.elts.length == 0) throw "Empty form";
     var op = form.elts[0];
     switch (op.formt) {
-    case "symbol": // special form or function application
+    case "symbol":
         var decodeCompoundFunction = lispDecodeCompoundFunctionsTable[op.name];
         if (decodeCompoundFunction) {
+            // special form
             return decodeCompoundFunction(form);
+        } else if (lispIsTypeName(op.name)) {
+            // type name as first element
+            return lispDecodeCompoundFormWithTypeName(form);
         } else {
+            // user-defined function
             return lispDecodeFunctionApplication(form);
         }
-    case "compound": // type-expr as first element
+    case "compound":
         if (lispIsTypeName(op.elts[0].name)) {
+            // type-expr as first element
             return lispDecodeCompoundFormWithTypeExpr(op);
         }
     }
@@ -59,6 +65,13 @@ function lispDecodeFunctionApplication(form) {
     var funRefIR = { irt: "function", name: form.elts[0].name };
     var funArgs = form.elts.splice(1).map(lispDecode);
     return { irt: "apply", fun: funRefIR, args: funArgs };
+}
+
+// Needed because <T> parses as a symbol, and not as a type
+// expression, but we still want (<T>) to create a new <T> instance.
+function lispDecodeCompoundFormWithTypeName(form) {
+    var cls_ir = lispDecode(form.elts[0]);
+    return { irt: "make-instance", "class": cls_ir };
 }
 
 function lispDecodeCompoundFormWithTypeExpr(form) {

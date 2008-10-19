@@ -9,6 +9,11 @@ function lispGetClass(obj) {
     return obj.__proto__;
 }
 
+function lispCheckType(obj, type) {
+    if (!lispIsSubclass(lispGetClass(obj), type))
+        throw (uneval(obj) + " is not of type " + uneval(type));
+}
+
 // Exception handler frame:
 // 
 // { handlers: <<handlers>>, parentFrame: <<handler_frame>> }
@@ -65,3 +70,4 @@ function lispCallEC(fun) {
         }
     }
 }
+

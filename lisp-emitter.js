@@ -24,8 +24,10 @@ var lispEmitFunctionsMap = {
     "throw": lispEmitThrow,
     "catch": lispEmitCatch,
     "callec": lispEmitCallEC,
+    "checktype": lispEmitChecktype,
+    // should be macros:
     "bind": lispEmitBind,
-}
+};
 
 function lispEmitFunapp(jr) {
     return "(" + lispEmit(jr.fun) + "(" + jr.args.map(lispEmit).join(", ") + "))";
@@ -112,6 +114,10 @@ function lispEmitCatch(jr) {
 
 function lispEmitCallEC(jr) {
     return "lispCallEC(" + lispEmit(jr.fun) + ")";
+}
+
+function lispEmitChecktype(jr) {
+    return "lispCheckType(" + lispEmit(jr.obj) + ", " + lispEmit(jr.type) + ")";
 }
 
 function lispEmitBind(jr) {

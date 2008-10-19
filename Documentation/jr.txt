@@ -77,3 +77,7 @@ handlers: a list of { class: <<class_jr>>, function: <<function_jr>> }
 
 bindings: a list of [ <<name>>, <<value_ir>> ] pairs
 name: a string
+
+** checktype -- ensure that an object has a given type
+
+{ jrt: "checktype", obj: <<obj_ir>>, type: <<type_ir>> }
