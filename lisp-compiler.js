@@ -129,9 +129,9 @@ function lispCompileBind(ir) {
 }
 
 function lispCompileGetSlot(ir) {
-    return { jrt: "getprop", obj: lispCompile(ir.obj), name: ir.name };
+    return { jrt: "getprop", obj: lispCompile(ir.obj), name: lispEnvMangleSlotName(ir.slotName) };
 }
 
 function lispCompileSetSlot(ir) {
-    return { jrt: "setprop", obj: lispCompile(ir.obj), name: ir.name, value: lispCompile(ir.value) };
+    return { jrt: "setprop", obj: lispCompile(ir.obj), name: lispEnvMangleSlotName(ir.slotName), value: lispCompile(ir.value) };
 }

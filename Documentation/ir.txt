@@ -96,7 +96,7 @@ Binds a method in the class' vtable.
 
 *** Description
 
-Creates a class object and defines slot getter and setter generic functions.
+Creates a class object.
 
 ** make-instance
 

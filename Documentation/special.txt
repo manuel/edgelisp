@@ -41,7 +41,9 @@ member_names: a list of symbols
 
 *** Description
 
-Creates a class and binds it in the global environment.
+Creates a class, binds it in the global environment, and for each
+member creates a getter generic function called ("." + member) and a
+setter generic function called ("." + member + "-setter").
 
 ** def
 
@@ -61,11 +63,7 @@ The first parameter in the lambda list must be typed.
 
 (new class)
 
-class: a form, evaluated OR a anonymous type expression (see type-expr.txt)
-
-If class is a type expression, NEW creates a new instance of the
-class, calls the generic functions indicated by the type expression
-and returns the instance.
+class: a form, evaluated
 
 *** Description
 
