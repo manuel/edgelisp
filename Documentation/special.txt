@@ -73,7 +73,7 @@ Creates a new instance of a class
 
 (set name value)
 
-name: a symbol
+name: a place (see places.txt)
 value: a form, evaluated
 
 ** finally

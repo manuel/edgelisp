@@ -92,8 +92,12 @@ function lispSlotGetterName(memberName) {
     return "." + memberName;
 }
 
-function lispSlotSetterName(slotGetterName) {
+function lispSlotSetterName(slotGetterName) { // todo: refactor all uses to lispSetterName
     return slotGetterName + "-setter";
+}
+
+function lispSetterName(getterName) {
+    return getterName + "-setter";
 }
 
 function lispCleanSlotGetterName(slotGetterName) {
@@ -247,9 +251,17 @@ function lispDecodeNew(form) {
 }
 
 function lispDecodeSet(form) {
-    var name = form.elts[1].name;
-    var value_ir = lispDecode(form.elts[2]);
-    return { irt: "set", name: name, value: value_ir };
+    var place = form.elts[1];
+    switch (place.formt) {
+    case "symbol":
+        return { irt: "set", name: place.name, value: lispDecode(form.elts[2]) };
+    case "compound":
+        // (set (getter args...) value) --> (getter-setter args... value)
+        var getter = place.elts[0].name;
+        var args = place.elts.slice(1).concat(form.elts[2]);
+        return { irt: "apply", fun: { irt: "function", name: lispSetterName(getter) }, args: args.map(lispDecode) };
+    }
+    throw "Illegal set form " + uneval(form);
 }
 
 function lispDecodeFinally(form) {
