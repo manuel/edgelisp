@@ -71,9 +71,9 @@ Creates a new instance of a class
 
 ** set
 
-(set name value)
+(set place value)
 
-name: a place (see places.txt)
+place: a place (see places.txt)
 value: a form, evaluated
 
 ** finally

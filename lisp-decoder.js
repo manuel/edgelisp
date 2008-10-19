@@ -62,46 +62,40 @@ function lispDecodeCompound(form) {
 }
 
 function lispDecodeFunctionApplication(form) {
-    var funRefIR = { irt: "function", name: form.elts[0].name };
-    var funArgs = form.elts.splice(1).map(lispDecode);
-    return { irt: "apply", fun: funRefIR, args: funArgs };
+    return { irt: "apply", fun: { irt: "function", name: form.elts[0].name }, args: form.elts.splice(1).map(lispDecode) };
 }
 
 // Needed because <T> parses as a symbol, and not as a type
 // expression, but we still want (<T>) to create a new <T> instance.
 function lispDecodeCompoundFormWithTypeName(form) {
-    var cls_ir = lispDecode(form.elts[0]);
-    return { irt: "make-instance", "class": cls_ir };
+    return { irt: "make-instance", "class": lispDecode(form.elts[0]) };
 }
 
 function lispDecodeCompoundFormWithTypeExpr(form) {
-    return { irt: "apply",
-             fun: { irt: "lambda", 
-                    req_params: [ { name: "--lisp-x-temp" } ],
-                    body: { irt: "progn", 
-                    exprs: form.elts[2].elts.map(function(destructForm) {
-                            return { irt: "apply", 
-                                     fun: { irt: "function", name: lispSlotSetterName(destructForm.elts[0].name) },
-                                     args: [ { irt: "var", name: "--lisp-x-temp"},
-                                             lispDecode(destructForm.elts[1]) ] };
-                        }).concat({ irt: "var", name: "--lisp-x-temp"}) } },
-             args: [ { irt: "make-instance", "class": { irt: "var", name: form.elts[0].name } } ] };
+    // Turns a destruct form of a type expression into a setter call.
+    function decodeDestructFormForNewInstance(destructForm) {
+        return { irt: "apply",
+                 fun: { irt: "function", name: lispSetterName(destructForm.elts[0].name) },
+                 args: [ { irt: "var", name: "--lisp-class"}, lispDecode(destructForm.elts[1]) ] }
+    }
+
+    // Create new instance, run slot setters on it, and return it.
+    return lispDecodeOnce("--lisp-class", { irt: "make-instance", "class": { irt: "var", name: form.elts[0].name } },
+                          { irt: "progn",
+                                  exprs: form.elts[2].elts.map(decodeDestructFormForNewInstance)
+                                         .concat({ irt: "var", name: "--lisp-class"}) });
 }
 
 function lispSlotGetterName(memberName) {
     return "." + memberName;
 }
 
-function lispSlotSetterName(slotGetterName) { // todo: refactor all uses to lispSetterName
-    return slotGetterName + "-setter";
+function lispCleanSlotGetterName(slotGetterName) {
+    return slotGetterName.slice(1);
 }
 
 function lispSetterName(getterName) {
     return getterName + "-setter";
-}
-
-function lispCleanSlotGetterName(slotGetterName) {
-    return slotGetterName.slice(1);
 }
 
 // Lambda list parsing
@@ -140,7 +134,7 @@ function lispDecodeLambdaListDestructs(llForm) {
                 paramForm.elts[2].elts.map(function(destructForm) {
                         var slotName = destructForm.elts[0].name;
                         destructs.push({ name: lispCleanSlotGetterName(slotName),
-                                         value: { irt: "apply", 
+                                         value: { irt: "apply",
                                                   fun: { irt: "function", name: slotName },
                                                   args: [ { irt: "var", name: paramName } ] } });
                     });
@@ -186,13 +180,13 @@ function lispDecodeDefclass(form) {
     var cls_name = form.elts[1].name;
     var member_names = form.elts.slice(2).map(function (member_form) { return member_form.name; });
     var cls_ir = { irt: "var", name: cls_name };
-    
+
     var member_getters = member_names.map(function(member_name) {
             return lispDefineMethodAndGenericIR(cls_ir,
                                                 lispSlotGetterName(member_name),
                                                 [ { name: "--lisp-this", type: cls_name } ],
                                                 [ { name: "--lisp-this" } ],
-                                                { irt: "get-slot", 
+                                                { irt: "get-slot",
                                                   obj: { irt: "var", name: "--lisp-this" },
                                                   slotName: member_name },
                                                 []);
@@ -200,19 +194,19 @@ function lispDecodeDefclass(form) {
 
     var member_setters = member_names.map(function(member_name) {
             return lispDefineMethodAndGenericIR(cls_ir,
-                                                lispSlotSetterName(lispSlotGetterName(member_name)),
-                                                [ { name: "--lisp-this", type: cls_name }, 
+                                                lispSetterName(lispSlotGetterName(member_name)),
+                                                [ { name: "--lisp-this", type: cls_name },
                                                   { name: "--lisp-new-value" } ],
-                                                [ { name: "--lisp-this" }, 
+                                                [ { name: "--lisp-this" },
                                                   { name: "--lisp-new-value" } ],
-                                                { irt: "set-slot", 
+                                                { irt: "set-slot",
                                                   obj: { irt: "var", name: "--lisp-this" },
                                                   slotName: member_name,
                                                   value: { irt: "var", name: "--lisp-new-value" } },
                                                 []);
         });
 
-    var class_defvar = { irt: "defvar", 
+    var class_defvar = { irt: "defvar",
                          name: cls_name,
                          value: { irt: "make-class", name: cls_name, member_names: member_names } };
 
@@ -287,7 +281,7 @@ function lispDecodeCallEC(form) {
 }
 
 function lispDecodeBind(form) {
-    return { irt: "bind", 
+    return { irt: "bind",
              body: lispDecode(form.elts[2]),
              bindings: form.elts[1].elts.map(function(b) { return [ b.elts[0].name, lispDecode(b.elts[1]) ]; }) };
 }
@@ -300,3 +294,9 @@ function lispDecodeSetSlotValue(form) {
     return { irt: "set-slot", obj: lispDecode(form.elts[1]), slotName: form.elts[2].name,
              value: lispDecode(form.elts[3]) };
 }
+
+// Prevents multiple evaluation.
+function lispDecodeOnce(varName, value, body) {
+    return { irt: "apply", fun: { irt: "lambda", req_params: [ { name: varName } ], body: body }, args: [ value ] };
+}
+

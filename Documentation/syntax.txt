@@ -1,7 +1,5 @@
 -*- outline -*-
 
-DRAFT, NOT IMPLEMENTED YET
-
 * Syntax
 
 ** #' -- function namespace lookup
@@ -46,6 +44,12 @@ This enables the even shorter:
 
 (defclass <person> name age)
 (def my-get-person-name (<person .name>) name)
+
+
+
+THE FOLLOWING = DRAFT, NOT IMPLEMENTED YET
+
+
 
 ** obj.slot -- slot access
 

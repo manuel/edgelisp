@@ -44,18 +44,20 @@ function lispTypeExprAction(ast) {
     var slotFuns = [];
     for (var i in ast[3]) {
         var slotFunAst = ast[3][i];
-        print(uneval(slotFunAst));
         var slotName = slotFunAst[0];
         var slotValue = slotFunAst[1];
         var elts = [ { formt: "symbol", name: slotName } ];
         if (slotValue) elts.push(slotValue);
-        slotFuns.push({ formt: "compound", elts: elts });
+        slotFuns.push({ formt: "compound", elts: elts }); // called destructs in other parts; both names suck
     }
     if (ast[2].name || (slotFuns.length > 0))
         return { formt: "compound", elts: [ { formt: "symbol", name: typeName },
                                             { formt: "symbol", name: objName },
                                             { formt: "compound", elts: slotFuns } ] }
     else
+        // We want simple type expressions like <T> to turn into
+        // symbols, but we have to put type expressions before symbols
+        // into the grammar, or "<T ..." will parse as "<T" "...".
         return { formt: "symbol", name: typeName };
 }
 

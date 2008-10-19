@@ -67,8 +67,8 @@ function lispEmitObj(jr) {
     }
     res += "}";
     if (jr.proto) {
-        return lispOnce("__lispX_obj", res, 
-                        "__lispX_obj.__proto__ = " + lispEmit(jr.proto) + "; return __lispX_obj;");
+        return lispEmitOnce("__lispX_obj", res,
+                            "__lispX_obj.__proto__ = " + lispEmit(jr.proto) + "; return __lispX_obj;");
     } else {
         return res;
     }
@@ -83,10 +83,10 @@ function lispEmitSetprop(jr) {
 }
 
 function lispEmitInvoke(jr) {
-    var receiver = lispEmit(jr.params[0]); 
+    var receiver = lispEmit(jr.params[0]);
     var args = [ "__lispX_this" ].concat(jr.params.slice(1).map(lispEmit));
-    return lispOnce("__lispX_this", receiver, 
-                    "return __lispX_this." + jr.name + "(" + args.join(", ") + ")");
+    return lispEmitOnce("__lispX_this", receiver,
+                        "return __lispX_this." + jr.name + "(" + args.join(", ") + ")");
 }
 
 function lispEmitSet(jr) {
@@ -103,7 +103,7 @@ function lispEmitThrow(jr) {
 
 function lispEmitCatch(jr) {
     var handlers = jr.handlers;
-    var hCode = "[";    
+    var hCode = "[";
     for (var i in handlers) {
         var h = handlers[i];
         hCode += "{\"class\":" + lispEmit(h["class"]) + ",\"function\":" + lispEmit(h["function"]) + "},";
@@ -135,6 +135,6 @@ function lispEmitBind(jr) {
 }
 
 // Prevents multiple evaluation.
-function lispOnce(varName, value, code) {
+function lispEmitOnce(varName, value, code) {
     return "((function(" + varName + ") {" + code + "}(" + value + ")))";
 }
