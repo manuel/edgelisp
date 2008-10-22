@@ -1,5 +1,7 @@
 // Lisp runtime: variables and functions needed by the compiled JavaScript code.
 
+load("lisp-js.js");
+
 // Returns true iff class B is a subclass of (or equal to) class A.
 function lispIsSubclass(classA, classB) {
     return classA == classB;
@@ -71,3 +73,25 @@ function lispCallEC(fun) {
     }
 }
 
+// WHILE
+
+function lispWhile(testFn, fn) {
+    while(testFn()) {
+        fn();
+    }
+    return null;
+}
+
+// Macros
+
+// Produce a new natural compound from a list of natural compound forms
+function lispCompoundFormsAppend(forms) {
+    var res = [];
+    for (var i in forms) {
+        var form = forms[i];
+        var elts = lispSlot(form, "elts");
+        var peer = lispSlot(elts, "peer");
+        res = res.concat(peer);
+    }
+    return lispCall("new-compound-form", res);
+}

@@ -4,8 +4,8 @@ function lispVar(varName) {
     return eval(lispEnvMangleVarName(varName));
 }
 
-function lispCall(funName, args) {
-    return eval(lispEnvMangleFunName(funName))(args);
+function lispCall(funName, arg) {
+    return eval(lispEnvMangleFunName(funName))(arg);
 }
 
 function lispSlot(obj, slotName) {

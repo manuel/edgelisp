@@ -16,7 +16,7 @@ function lispStringLiteralAction(ast) { return { formt: "string", s: ast[1].join
 
 var LispSymbolCharReduced = choice(range("a", "z"), 
                                    range("0", "9"),
-                                   "-", "*", "?", "!", "_", "/", "[", "]", "@");
+                                   "-", "*", "?", "!", "_", "/", "[", "]", "@", "=");
 var LispSymbolCharsReduced = repeat1(LispSymbolCharReduced);
 var LispSymbolFormReduced = action(LispSymbolCharsReduced, lispSymbolFormAction);
 var LispSymbolChar = choice("<", ">", ".", LispSymbolCharReduced);

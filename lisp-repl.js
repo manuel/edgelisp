@@ -33,7 +33,6 @@ while(1) {
         var lispJS = lispEmit(lispJR);
         lispDebug("   JS: " + lispJS);
         print(lispUneval(eval(lispJS)));
-
     } catch(e) {
         print(lispUneval(e));
     }

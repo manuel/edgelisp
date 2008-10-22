@@ -7,22 +7,17 @@
 (def not (<true>) false)
 (def not (<false>) true)
 
-(defun naturalize-jsbool (jsbool)
-  {% ~(jsbool) ? ~(true) : ~(false) %})
+(defun jsbool-naturalize (jsbool) {% ~(jsbool) ? ~(true) : ~(false) %})
 
 
-(defun == (a b)
-  (naturalize-jsbool {% a == b %}))
+(defun == (a b) (naturalize-jsbool {% ~(a) == ~(b) %}))
 
-(defun != (a b)
-  (not (== a b)))
+(defun != (a b) (not (== a b)))
 
 
-(defun if-fn (test-fn then-fn else-fn)
-  {% ~(!= (apply test-fn) false) ? ~((apply then-fn)) : ~((apply else-fn)) %})
+(defun if-fn (test-fn then-fn else-fn) {% ~((!= (apply test-fn) false)) ? ~((apply then-fn)) : ~((apply else-fn)) %})
 
-(defun while-fn (test-fn fn)
-  {% while(~((!= false (apply test-fn)))) { ~((apply fn)) } %})
+(defun while-fn (test-fn fn) {% lispWhile(~(test-fn), ~(fn)) %})
   
 
 (defun map (fn coll)
@@ -41,11 +36,8 @@
         (apply fn (current iterator))
         (set iterator (next iterator))))))
 
-(defun first (coll)
-  ([] coll 0))
+(defun first (coll) ([] coll {% 0 %}))
 
-(defun second (coll)
-  ([] coll 1))
+(defun second (coll) ([] coll {% 1 %}))
 
-(defun rest (coll)
-  (slice coll 1))
+(defun rest (coll) (slice coll {% 1 %}))

@@ -61,7 +61,7 @@ function lispDecodeCompound(form) {
             var macro = lispMacrosTable[op.name];
             if (macro) {
                 // macro
-                return lispDecode(lispDenaturalizeForm(macro(form)));
+                return lispDecodeMacroApplication(macro, form);
             } else {
                 // user-defined function
                 return lispDecodeFunctionApplication(form);
@@ -80,6 +80,16 @@ function lispDecodeFunctionApplication(form) {
     return { irt: "apply", 
              fun: { irt: "function", name: form.elts[0].name }, 
              args: form.elts.splice(1).map(lispDecode) };
+}
+
+function lispDecodeMacroApplication(macro, form) {
+    var naturalForm = lispNaturalizeForm(form);
+    print(">" + uneval(naturalForm));
+    var naturalTransformedForm = macro(naturalForm);
+    print(">>" + uneval(naturalTransformedForm));
+    var transformedForm = lispDenaturalizeForm(naturalTransformedForm);
+    print(">>>" + uneval(transformedForm));
+    return lispDecode(transformedForm);
 }
 
 // Needed because <T> parses as a symbol, and not as a type
@@ -399,14 +409,17 @@ function lispIsSplatName(name) {
     return name[0] == "@";
 }
 
+function lispCleanSplatName(name) {
+    return name.slice(1);
+}
+
 function lispDecodeDefmacro(form) {
     var name = form.elts[1].name;
     var args = form.elts[2].elts;
-    // sweet: exploit existing destructuring infrastructure:
-    var i = 0;
-    var destructs = args.map(function(arg) {
+    var i = 1; // skip over macro name
+    var destructs = args.map(function(arg) { // exploit existing destructuring infrastructure
             if (lispIsSplatName(arg.name)) {
-                return { name: arg.name, 
+                return { name: lispCleanSplatName(arg.name), 
                          value: { irt: "apply", 
                                   fun: { irt: "function", name: "slice" },
                                   args: [ { irt: "var", name: "--lisp-form" },
@@ -431,7 +444,29 @@ function lispDenaturalizeForm(naturalForm) {
     // compiler.  So, once a macro has produced forms, they need to be
     // turned back into compiler forms.  This is called
     // denaturalization.
-    return lispCall("denaturalize", naturalForm);
+    // return lispCall("denaturalize", naturalForm);
+    var x;
+    if (x = naturalForm[lispEnvMangleSlotName("s")]) {
+        return { formt: "string", s: x };
+    } else if (x = naturalForm[lispEnvMangleSlotName("name")]) {
+        return { formt: "symbol", name: x };
+    } else if (x = naturalForm[lispEnvMangleSlotName("elts")]) {
+        return { formt: "compound", elts: x[lispEnvMangleSlotName("peer")].map(lispDenaturalizeForm) }
+    } else {
+        throw "Illegal form for denaturalization " + uneval(naturalForm);
+    }
+}
+
+function lispNaturalizeForm(form) {
+    switch(form.formt) {
+    case "string":
+        return lispCall("new-string-form", form.s);
+    case "symbol":
+        return lispCall("new-symbol-form", form.name);
+    case "compound":
+        return lispCall("new-compound-form", form.elts.map(lispNaturalizeForm));
+    }
+    throw "Unknown form for naturalization " + uneval(form);
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))

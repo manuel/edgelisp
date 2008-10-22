@@ -155,7 +155,7 @@ function lispEmit__Compound(jr) {
 }
 
 function lispEmit__Append(jr) {
-    return "lispCall(\"compound-forms-append\", [" + jr.exprs.map(lispEmit).join(", ") + "])";
+    return "lispCompoundFormsAppend([" + jr.exprs.map(lispEmit).join(", ") + "])";
 }
 
 function lispEmitDefmacro(jr) {

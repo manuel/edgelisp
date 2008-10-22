@@ -2,43 +2,27 @@
 
 (defclass <symbol-form> name)
 
-(defun new-symbol-form (jsstr)
-  (<symbol-form .name jsstr>))
+(defun new-symbol-form (name) (<symbol-form .name name>))
 
-(def denaturalize (<symbol-form .name>)
-  {% { formt: "symbol", name: ~(name) } %})
+; (def denaturalize (<symbol-form .name>) {% { formt: "symbol", name: ~(name) } %})
 
 (defclass <string-form> s)
 
-(defun new-string-form (jsstr)
-  (<string-form .s jsstr>))
+(defun new-string-form (s) (<string-form .s s>))
 
-(def denaturalize (<string-form .s>)
-  {% { formt: "string", s: ~(s) } %})
+; (def denaturalize (<string-form .s>) {% { formt: "string", s: ~(s) } %})
 
 (defclass <compound-form> elts)
 
-(defun new-compound-form (jselts)
-  (<compound-form .elts (<array .elts jselts>>)))
+(defun new-compound-form (elts) (<compound-form .elts (<array .peer elts>)>))
 
-(def denaturalize (<compound-form .elts>)
-  {% { formt: "compound", elts: ~((.peer (map #'denaturalize elts))) %})
+; (def denaturalize (<compound-form .elts>)
+;  {% { formt: "compound", elts: ~((.peer (map #'denaturalize elts))) } %})
 
-(def iterator (<compound-form .elts>)
-  (iterator elts))
+(def iterator (<compound-form .elts>) (iterator elts))
 
-(def slice (<compound-form .elts>)
-  (<compound-form .elts (slice elts)))
+(def slice (<compound-form .elts>) (<compound-form .elts (slice elts)>))
 
-(def [] (<compound-form .elts> i)
-  ([] elts i))
+(def [] (<compound-form .elts> i) ([] elts i))
 
-(def type-for-copy (<compound-form>)
-  <compound-form>)
-
-(defun compound-forms-append (forms)
-  (let ((res {% [] %}))
-    (for-each (lambda (<form .elts>)
-                {% ~(res).concat(~((.peer elts))) %})
-              forms)
-    (new-compound-form res)))
+(def type-for-copy (<compound-form>) <compound-form>)
