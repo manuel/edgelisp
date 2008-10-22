@@ -30,6 +30,7 @@ var lispCompileFunctionsMap = {
     "get-slot": lispCompileGetSlot,
     "set-slot": lispCompileSetSlot,
     "native": lispCompileNative,
+    "noop": lispCompileNoop,
 }
 
 function lispCompileDefun(ir) {
@@ -162,4 +163,8 @@ function lispCompileNative(ir) {
             return snippet;
     }
     return { jrt: "native", snippets: ir.snippets.map(compileSnippet) };
+}
+
+function lispCompileNoop(ir) {
+    return { jrt: "noop" };
 }

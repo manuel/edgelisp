@@ -1,15 +1,15 @@
 (defclass <array> peer)
 
-(defun new-array () 
+(defun new-array ()
   (<array .peer {% [] %}>))
 
-(def type-for-copy (<array>) 
+(def type-for-copy (<array>)
   <array>)
 
-(def []-setter (<array> i v) 
+(def []-setter (<array> i v)
   {% ~((.peer array))[~(i)] = ~(v) %})
 
-(defclass <array-iterator> array i)
+(defclass <array-iterator> array i) ;; protocol from Dylan
 
 (def iterator (<array>) 
   (<array-iterator> .array array .i {% 0 %}))

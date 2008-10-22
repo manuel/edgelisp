@@ -189,9 +189,9 @@ Dynamically scoped rebinding of global variables.
 
 snippets: a list of a) JavaScript code strings b) IRs
 
-** comment
+** noop
 
-{ irt: "comment", text: <<string>> }
+{ irt: "noop" }
 
 
 NOT YET IMPLEMENTED:

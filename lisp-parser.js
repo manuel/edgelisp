@@ -72,7 +72,7 @@ var LispLineComment = action(sequence(";", repeat0(negate("\n"))),
                              lispLineCommentAction);
 function lispLineCommentAction(ast) {
     return { formt: "compound", elts: [ { formt: "symbol", name: "comment" },
-                                        { formt: "string", text: ast[1].join("") } ] };
+                                        { formt: "string", text: ";" + ast[1].join("") } ] };
 }
 
 // This is needed because otherwise <person .name> will be parsed as "<person" ".name" ">"

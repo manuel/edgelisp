@@ -26,7 +26,6 @@ while(1) {
         var lispForms = lispParse(lispText);
         lispDebug("FORMS: " + lispUneval(lispForms));
         var lispIR = lispDecode(lispForms[0]);
-        if (!lispIR) continue; // e.g. comments
         lispDebug("   IR: " + lispUneval(lispIR));
         var lispJR = lispCompile(lispIR);
         lispDebug("   JR: " + lispUneval(lispJR));

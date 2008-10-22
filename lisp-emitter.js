@@ -26,6 +26,7 @@ var lispEmitFunctionsMap = {
     "callec": lispEmitCallEC,
     "checktype": lispEmitChecktype,
     "native": lispEmitNative,
+    "noop": lispEmitNoop,
     // should be macros:
     "bind": lispEmitBind,
 };
@@ -129,6 +130,10 @@ function lispEmitNative(jr) {
             return snippet;
     }
     return "(" + jr.snippets.map(emitSnippet).join("") + ")";
+}
+
+function lispEmitNoop(jr) {
+    return "";
 }
 
 function lispEmitBind(jr) {

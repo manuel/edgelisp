@@ -66,7 +66,9 @@ function lispDecodeCompound(form) {
 }
 
 function lispDecodeFunctionApplication(form) {
-    return { irt: "apply", fun: { irt: "function", name: form.elts[0].name }, args: form.elts.splice(1).map(lispDecode) };
+    return { irt: "apply", 
+             fun: { irt: "function", name: form.elts[0].name }, 
+             args: form.elts.splice(1).map(lispDecode) };
 }
 
 // Needed because <T> parses as a symbol, and not as a type
@@ -225,7 +227,8 @@ function lispDecodeDef(form) {
     var destructs = lispDecodeLambdaListDestructs(form.elts[2]);
     var cls_ir = { irt: "var", name: ll[0].type };
     var generic_ll = ll.map(function(param) { return { name: param.name }; });
-    return lispDefineMethodAndGenericIR(cls_ir, name, ll, generic_ll, lispDecode(form.elts[3]), destructs);
+    var body = lispDecodeImplicitProgn(form.elts.slice(2));
+    return lispDefineMethodAndGenericIR(cls_ir, name, ll, generic_ll, body, destructs);
 }
 
 function lispDefineMethodAndGenericIR(class_ir, name, method_ll, generic_ll, method_ir, destructs) {
@@ -242,6 +245,10 @@ function lispDefineMethodAndGenericIR(class_ir, name, method_ll, generic_ll, met
                                           name: name,
                                           params: generic_ll.map(function(param) {
                                                   return { irt: "var", name: param.name } }) } } } ] };
+}
+
+function lispDecodeImplicitProgn(forms) {
+    return { irt: "progn", exprs: forms.map(lispDecode) };
 }
 
 function lispDecodeNew(form) {
@@ -318,7 +325,7 @@ function lispDecodeNative(form) {
 }
 
 function lispDecodeNoop(form) {
-    return false;
+    return { irt: "noop" };
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))
