@@ -5,6 +5,7 @@ load("lisp-decoder.js");
 load("lisp-compiler.js");
 load("lisp-emitter.js");
 load("lisp-rt.js");
+load("lisp-js.js");
 
 var lispDebugToggle = false;
 

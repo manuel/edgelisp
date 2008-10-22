@@ -137,11 +137,24 @@ function lispEmitNative(jr) {
 }
 
 function lispEmitNoop(jr) {
-    return "";
+    return "undefined";
 }
 
 function lispEmit__String(jr) {
-    
+    return "lispCall(\"new-string-form\", " + uneval(jr.name) + ")";    
+}
+
+function lispEmit__Symbol(jr) {
+    return "lispCall(\"new-symbol-form\", " + uneval(jr.name) + ")";
+}
+
+// this is getting ridiculously meta...
+function lispEmit__Compound(jr) {
+    return "lispCall(\"new-compound-form\", [" + jr.elts.map(lispEmit).join(", ") + "])";
+}
+
+function lispEmit__Append(jr) {
+    return "lispCall(\"compound-forms-append\", [" + jr.exprs.map(lispEmit).join(", ") + "])";
 }
 
 function lispEmitBind(jr) {

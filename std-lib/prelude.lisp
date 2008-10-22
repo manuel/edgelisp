@@ -34,6 +34,13 @@
         (set iterator (next iterator))))
     clone))
 
+(defun for-each (fn coll)
+  (let ((iterator (iterator coll)))
+    (while-fn (lambda () (not (done iterator)))
+      (lambda ()
+        (apply fn (current iterator))
+        (set iterator (next iterator))))))
+
 (defun first (coll)
   ([] coll 0))
 
