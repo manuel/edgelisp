@@ -35,6 +35,7 @@ var lispCompileFunctionsMap = {
     "--string": lispCompile__String,
     "--compound": lispCompile__Compound,
     "--append": lispCompile__Append,
+    "defmacro": lispCompileDefmacro,
 }
 
 function lispCompileDefun(ir) {
@@ -187,4 +188,8 @@ function lispCompile__Compound(ir) {
 
 function lispCompile__Append(ir) {
     return { jrt: "--append", exprs: ir.exprs.map(lispCompile) };
+}
+
+function lispCompileDefmacro(ir) {
+    return { jrt: "defmacro", name: ir.name, lambda: lispCompile(ir.lambda) };
 }

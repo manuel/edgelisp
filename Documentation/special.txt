@@ -124,9 +124,13 @@ value: a form, evaluated
 Contains inline JavaScript code.  JavaScript code can escape back into
 Lisp with ~(), e.g. ~((foo-bar x y)) and ~("hello world").
 
+** defmacro 
 
+(defmacro name args body)
 
-NOT IMPLEMENTED YET:
+args: a list of symbols; if the last symbol starts with the "@"
+character, the argument is a splat argument, that will be bound to the
+remaining subforms.
 
 ** quasiquote, `
 

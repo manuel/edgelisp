@@ -217,11 +217,13 @@ Compound-form creator.
 
 Appends N compound forms into a single compound.
 
+** defmacro
+
+{ irt: "defmacro", name: <<name>>, lambda: <<lambda_ir>> }
 
 
 NOT YET IMPLEMENTED:
 
-** defmacro
 
 ** if
 

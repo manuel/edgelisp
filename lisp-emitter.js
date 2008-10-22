@@ -31,6 +31,7 @@ var lispEmitFunctionsMap = {
     "--string": lispEmit__String,
     "--compound": lispEmit__Compound,
     "--append": lispEmit__Append,
+    "defmacro": lispEmitDefmacro,
     // should be macros:
     "bind": lispEmitBind,
 };
@@ -155,6 +156,10 @@ function lispEmit__Compound(jr) {
 
 function lispEmit__Append(jr) {
     return "lispCall(\"compound-forms-append\", [" + jr.exprs.map(lispEmit).join(", ") + "])";
+}
+
+function lispEmitDefmacro(jr) {
+    return "(lispMacrosTable[" + jr.name + "] = " + lispEmit(jr.lambda) + ")";
 }
 
 function lispEmitBind(jr) {

@@ -101,3 +101,8 @@ name: a string
 ** --append
 
 { jrt: "--append", exprs: <<--compounds>> }
+
+** defmacro
+
+{ jrt: "defmacro", name: <<name>>, lambda: <<lambda_jr>> }
+

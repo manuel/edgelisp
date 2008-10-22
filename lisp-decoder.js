@@ -29,9 +29,12 @@ var lispDecodeCompoundFunctionsTable = {
     "native": lispDecodeNative,
     "comment": lispDecodeNoop,
     "quasiquote": lispDecodeQuasiquote,
+    "defmacro": lispDecodeDefmacro,
     // should be macros:
     "let": lispDecodeLet,
 };
+
+var lispMacrosTable = {};
 
 function lispDecodeString(form) {
     return { irt: "string", s: form.s };
@@ -54,8 +57,14 @@ function lispDecodeCompound(form) {
             // type name as first element
             return lispDecodeCompoundFormWithTypeName(form);
         } else {
-            // user-defined function
-            return lispDecodeFunctionApplication(form);
+            var macro = lispMacrosTable[op.name];
+            if (macro) {
+                // macro
+                lispDecode(lispDenaturalizeForm(macro(form)));
+            } else {
+                // user-defined function
+                return lispDecodeFunctionApplication(form);
+            }
         }
     case "compound":
         if (lispIsTypeName(op.elts[0].name)) {
@@ -380,6 +389,46 @@ function lispDecodeQuasiquotedCompoundForm(form, level) {
         exprs.push(currentCompound);
         return { irt: "--append", exprs: exprs };
     }
+}
+
+// Defmacro
+
+function lispIsSplatName(name) {
+    return name[0] == "@";
+}
+
+function lispDecodeDefmacro(form) {
+    var name = form.elts[1].name;
+    var args = form.elts[2].elts;
+    // sweet: exploit existing destructuring infrastructure:
+    var i = 0;
+    var destructs = args.map(function(arg) {
+            if (lispIsSplatName(arg.name)) {
+                return { name: arg.name, 
+                         value: { irt: "apply", 
+                                  fun: { irt: "function", name: "slice" },
+                                  args: [ { irt: "var", name: "--lisp-form" },
+                                          { irt: "native", snippets: [ (i++).toString() ] } ] } };
+            } else {
+                return { name: arg.name, 
+                         value: { irt: "apply",
+                                  fun: { irt: "function", name: "[]" },
+                                  args: [ { irt: "var", name: "--lisp-form" },
+                                          { irt: "native", snippets: [ (i++).toString() ] } ] } }; // WJW
+            }
+        });
+    var body = { irt: "progn", exprs: form.elts.slice(2).map(lispDecode) };
+    var lambda = { irt: "lambda", req_params: [ { name: "--lisp-form" } ], body: body, destructs: destructs };
+    return { irt: "defmacro", name: name, lambda: lambda };
+}
+
+function lispDenaturalizeForm(naturalForm) {
+    // The form objects exposed to macro writers (called "natural"
+    // because they exist in the Lisp world) are not equal to the
+    // actual forms used internally by the compiler.  So, once a macro
+    // has produced forms, they need to be turned back into compiler
+    // forms.  This is called denaturalization.
+    lispCall("denaturalize", form);
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))
