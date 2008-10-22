@@ -81,3 +81,7 @@ name: a string
 ** checktype -- ensure that an object has a given type
 
 { jrt: "checktype", obj: <<obj_ir>>, type: <<type_ir>> }
+
+** native -- inline JavaScript
+
+{ jrt: "native", code: <<string>> }

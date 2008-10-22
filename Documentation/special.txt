@@ -115,6 +115,19 @@ obj: a form, evaluated
 name: a symbol
 value: a form, evaluated
 
+** native
+
+(native str)
+
+*** Description
+
+Contains inline JavaScript code.  JavaScript code can escape back into
+Lisp with ~(), e.g. ~((foo-bar x y)) and ~("hello world").
+
+
+
+NOT IMPLEMENTED YET:
+
 ** quasiquote, `
 
 Quasiquote is a convenient mechanism for writing code-generating

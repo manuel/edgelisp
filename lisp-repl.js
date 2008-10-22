@@ -18,16 +18,13 @@ while(1) {
             continue;
         } else if (lispText == "/r") { // reload
             load("lisp-repl.js");
-        } else if (lispText[0] == "{") { // inline JS
-            print(uneval(eval(lispText)));
-            continue;
         } else if (lispText == "") { // empty line
             continue;
         }
 
         // Lisp evaluation
         var lispForms = lispParse(lispText);
-        lispDebug("S-EXP: " + lispShowForm(lispForms[0]));
+        //        lispDebug("S-EXP: " + lispShowForm(lispForms[0]));
         lispDebug("FORMS: " + uneval(lispForms));
         var lispIR = lispDecode(lispForms[0]);
         lispDebug("   IR: " + uneval(lispIR));

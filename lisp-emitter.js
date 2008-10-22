@@ -25,6 +25,7 @@ var lispEmitFunctionsMap = {
     "catch": lispEmitCatch,
     "callec": lispEmitCallEC,
     "checktype": lispEmitChecktype,
+    "native": lispEmitNative,
     // should be macros:
     "bind": lispEmitBind,
 };
@@ -118,6 +119,10 @@ function lispEmitCallEC(jr) {
 
 function lispEmitChecktype(jr) {
     return "lispCheckType(" + lispEmit(jr.obj) + ", " + lispEmit(jr.type) + ")";
+}
+
+function lispEmitNative(jr) {
+    return "(" + jr.code + ")";
 }
 
 function lispEmitBind(jr) {

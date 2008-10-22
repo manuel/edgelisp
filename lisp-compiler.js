@@ -29,6 +29,7 @@ var lispCompileFunctionsMap = {
     "bind": lispCompileBind,
     "get-slot": lispCompileGetSlot,
     "set-slot": lispCompileSetSlot,
+    "native": lispCompileNative,
 }
 
 function lispCompileDefun(ir) {
@@ -151,4 +152,8 @@ function lispCompileGetSlot(ir) {
 
 function lispCompileSetSlot(ir) {
     return { jrt: "setprop", obj: lispCompile(ir.obj), name: lispEnvMangleSlotName(ir.slotName), value: lispCompile(ir.value) };
+}
+
+function lispCompileNative(ir) {
+    return { jrt: "native", code: ir.code };
 }

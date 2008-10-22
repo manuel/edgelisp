@@ -61,13 +61,22 @@ function lispTypeExprAction(ast) {
         return { formt: "symbol", name: typeName };
 }
 
+var LispNativeForm = action(sequence("{%", repeat0(negate("%")), "%}"),
+                            lispNativeFormAction);
+function lispNativeFormAction(ast) {
+    return { formt: "compound", elts: [ { formt: "symbol", name: "native" },
+                                        { formt: "string", s: ast[1].join("") } ] };
+}
+
 // This is needed because otherwise <person .name> will be parsed as "<person" ".name" ">"
-var LispFormReduced = whitespace(choice(LispTypeExpr,
+var LispFormReduced = whitespace(choice(LispNativeForm,
+                                        LispTypeExpr,
                                         LispFunctionForm,
                                         LispStringLiteral,
                                         LispSymbolFormReduced,
                                         LispCompoundForm));
-var LispForm = whitespace(choice(LispTypeExpr,
+var LispForm = whitespace(choice(LispNativeForm,
+                                 LispTypeExpr,
                                  LispFunctionForm,
                                  LispStringLiteral,
                                  LispSymbolForm,
