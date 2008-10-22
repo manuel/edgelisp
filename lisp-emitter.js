@@ -159,7 +159,7 @@ function lispEmit__Append(jr) {
 }
 
 function lispEmitDefmacro(jr) {
-    return "(lispMacrosTable[" + jr.name + "] = " + lispEmit(jr.lambda) + ")";
+    return "(lispMacrosTable[\"" + jr.name + "\"] = " + lispEmit(jr.lambda) + ")";
 }
 
 function lispEmitBind(jr) {

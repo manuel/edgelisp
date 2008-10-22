@@ -372,7 +372,7 @@ function lispDecodeQuasiquotedCompoundForm(form, level) {
         var exprs = [];
         var currentCompound = { irt: "--compound", elts: [] };
         for (var i in form.elts) {
-            var subForm = form.elts[0];
+            var subForm = form.elts[i];
             if ((subForm.formt == "compound") && subForm.elts[0] &&
                 (subForm.elts[0].name == "unquote-splicing")) { // (quasiquote (... (unquote-splicing ...) ...)
                 exprs.push(currentCompound);
@@ -424,11 +424,12 @@ function lispDecodeDefmacro(form) {
 
 function lispDenaturalizeForm(naturalForm) {
     // The form objects exposed to macro writers (called "natural"
-    // because they exist in the Lisp world) are not equal to the
-    // actual forms used internally by the compiler.  So, once a macro
-    // has produced forms, they need to be turned back into compiler
-    // forms.  This is called denaturalization.
-    lispCall("denaturalize", form);
+    // because they exist in the Lisp world; see std-lib/forms.lisp)
+    // are not equal to the actual forms used internally by the
+    // compiler.  So, once a macro has produced forms, they need to be
+    // turned back into compiler forms.  This is called
+    // denaturalization.
+    return lispCall("denaturalize", naturalForm);
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))

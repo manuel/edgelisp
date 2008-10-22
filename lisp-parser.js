@@ -77,15 +77,36 @@ function lispLineCommentAction(ast) {
                                         { formt: "string", text: ";" + ast[1].join("") } ] };
 }
 
+var LispQuasiquote = action(sequence("`", LispForm), lispQuasiquoteAction);
+function lispQuasiquoteAction(ast) { 
+    return { formt: "compound", elts: [ { formt: "symbol", name: "quasiquote" },
+                                        ast[1] ] }; }
+
+var LispUnquoteSplicing = action(sequence(",@", LispForm), lispUnquoteSplicingAction);
+function lispUnquoteSplicingAction(ast) { 
+    return { formt: "compound", elts: [ { formt: "symbol", name: "unquote-splicing" },
+                                        ast[1] ] }; }
+
+var LispUnquote = action(sequence(",", LispForm), lispUnquoteAction);
+function lispUnquoteAction(ast) { 
+    return { formt: "compound", elts: [ { formt: "symbol", name: "unquote" },
+                                        ast[1] ] }; }
+
 // This is needed because otherwise <person .name> will be parsed as "<person" ".name" ">"
-var LispFormReduced = whitespace(choice(LispNativeForm,
+var LispFormReduced = whitespace(choice(LispQuasiquote,
+                                        LispUnquoteSplicing,
+                                        LispUnquote,
+                                        LispNativeForm,
                                         LispTypeExpr,
                                         LispFunctionForm,
                                         LispStringLiteral,
                                         LispSymbolFormReduced,
                                         LispCompoundForm,
                                         LispLineComment));
-var LispForm = whitespace(choice(LispNativeForm,
+var LispForm = whitespace(choice(LispQuasiquote,
+                                 LispUnquoteSplicing,
+                                 LispUnquote,
+                                 LispNativeForm,
                                  LispTypeExpr,
                                  LispFunctionForm,
                                  LispStringLiteral,

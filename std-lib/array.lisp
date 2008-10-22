@@ -20,7 +20,7 @@
 (defclass <array-iterator> array i)
 
 (def iterator (<array>) 
-  (<array-iterator> .array array .i {% 0 %}))
+  (<array-iterator .array array .i {% 0 %}>))
 
 (def done (<array-iterator .array .i>)
   (jsbool-naturalize {% ~(i) >= (~((.peer array)).length - 1) %}))
