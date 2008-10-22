@@ -386,7 +386,8 @@ function lispDecodeQuasiquotedCompoundForm(form, level) {
                 currentCompound.elts.push(lispDecodeQuasiquotedForm(subForm, level));
             }
         }
-        exprs.push(currentCompound);
+        if (currentCompound.elts.length > 0)
+            exprs.push(currentCompound);
         return { irt: "--append", exprs: exprs };
     }
 }
