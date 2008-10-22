@@ -238,7 +238,7 @@ function lispDecodeDef(form) {
     var destructs = lispDecodeLambdaListDestructs(form.elts[2]);
     var cls_ir = { irt: "var", name: ll[0].type };
     var generic_ll = ll.map(function(param) { return { name: param.name }; });
-    var body = lispDecodeImplicitProgn(form.elts.slice(2)); // why does this also work with 2???
+    var body = lispDecodeImplicitProgn(form.elts.slice(3));
     return lispDefineMethodAndGenericIR(cls_ir, name, ll, generic_ll, body, destructs);
 }
 
