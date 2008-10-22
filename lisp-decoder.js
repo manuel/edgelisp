@@ -28,6 +28,7 @@ var lispDecodeCompoundFunctionsTable = {
     "set-slot-value": lispDecodeSetSlotValue,
     "native": lispDecodeNative,
     "comment": lispDecodeNoop,
+    "quasiquote": lispDecodeQuasiquote,
     // should be macros:
     "let": lispDecodeLet,
 };

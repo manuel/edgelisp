@@ -25,7 +25,7 @@
   {% while(~((!= false (apply test-fn)))) { ~((apply fn)) } %})
   
 
-(defun map (coll fn)
+(defun map (fn coll)
   (let ((clone (new (type-for-copy coll)))
         (iterator (iterator coll)))
     (while-fn (lambda () (not (done iterator)))
