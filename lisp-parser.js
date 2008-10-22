@@ -68,19 +68,28 @@ function lispNativeFormAction(ast) {
                                         { formt: "string", s: ast[1].join("") } ] };
 }
 
+var LispLineComment = action(sequence(";", repeat0(negate("\n"))),
+                             lispLineCommentAction);
+function lispLineCommentAction(ast) {
+    return { formt: "compound", elts: [ { formt: "symbol", name: "comment" },
+                                        { formt: "string", text: ast[1].join("") } ] };
+}
+
 // This is needed because otherwise <person .name> will be parsed as "<person" ".name" ">"
 var LispFormReduced = whitespace(choice(LispNativeForm,
                                         LispTypeExpr,
                                         LispFunctionForm,
                                         LispStringLiteral,
                                         LispSymbolFormReduced,
-                                        LispCompoundForm));
+                                        LispCompoundForm,
+                                        LispLineComment));
 var LispForm = whitespace(choice(LispNativeForm,
                                  LispTypeExpr,
                                  LispFunctionForm,
                                  LispStringLiteral,
                                  LispSymbolForm,
-                                 LispCompoundForm));
+                                 LispCompoundForm,
+                                 LispLineComment));
 var LispForms = repeat0(LispForm);
 
 function lispShowForm(form) {

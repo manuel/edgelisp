@@ -24,21 +24,25 @@ while(1) {
 
         // Lisp evaluation
         var lispForms = lispParse(lispText);
-        //        lispDebug("S-EXP: " + lispShowForm(lispForms[0]));
-        lispDebug("FORMS: " + uneval(lispForms));
+        lispDebug("FORMS: " + lispUneval(lispForms));
         var lispIR = lispDecode(lispForms[0]);
-        lispDebug("   IR: " + uneval(lispIR));
+        if (!lispIR) continue; // e.g. comments
+        lispDebug("   IR: " + lispUneval(lispIR));
         var lispJR = lispCompile(lispIR);
-        lispDebug("   JR: " + uneval(lispJR));
+        lispDebug("   JR: " + lispUneval(lispJR));
         var lispJS = lispEmit(lispJR);
         lispDebug("   JS: " + lispJS);
-        print(uneval(eval(lispJS)));
+        print(lispUneval(eval(lispJS)));
 
     } catch(e) {
-        print(uneval(e));
+        print(lispUneval(e));
     }
 }
 
 function lispDebug(obj) {
     if (lispDebugToggle) print("; " + obj);
+}
+
+function lispUneval(obj) {
+    return uneval(obj);
 }

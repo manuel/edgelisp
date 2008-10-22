@@ -27,6 +27,7 @@ var lispDecodeCompoundFunctionsTable = {
     "slot-value": lispDecodeSlotValue,
     "set-slot-value": lispDecodeSetSlotValue,
     "native": lispDecodeNative,
+    "comment": lispDecodeNoop,
     // should be macros:
     "let": lispDecodeLet,
 };
@@ -314,6 +315,10 @@ function lispDecodeNative(form) {
                 snippets.push(lispDecode(ast[1][1]));
         });
     return { irt: "native", snippets: snippets };
+}
+
+function lispDecodeNoop(form) {
+    return false;
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))

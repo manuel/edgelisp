@@ -156,14 +156,6 @@ continuation is a function that takes a single argument.
 
 { irt: "set", name: <<string>>, value: <<value_ir>> }
 
-** defmacro
-
-** quasiquote, unquote, unquote-splicing
-
-** if
-
-** eval
-
 ** var
 
 { irt: "var", name: <<string>> }
@@ -183,10 +175,6 @@ name: string
 
 Dynamically scoped rebinding of global variables.
 
-** inline-js
-
-** invoke-debugger
-
 ** get-slot
 
 { irt: "get-slot", obj: <<obj_ir>>, slotName: <<string>> }
@@ -197,6 +185,24 @@ Dynamically scoped rebinding of global variables.
 
 ** native
 
-{ irt: native: snippets: <<snippets>> }
+{ irt: "native", snippets: <<snippets>> }
 
 snippets: a list of a) JavaScript code strings b) IRs
+
+** comment
+
+{ irt: "comment", text: <<string>> }
+
+
+NOT YET IMPLEMENTED:
+
+** defmacro
+
+** quasiquote, unquote, unquote-splicing
+
+** if
+
+** eval
+
+** invoke-debugger
+
