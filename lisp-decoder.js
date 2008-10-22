@@ -23,15 +23,16 @@ var lispDecodeCompoundFunctionsTable = {
     "throw": lispDecodeThrow,
     "with-handlers": lispDecodeWithHandlers,
     "call/ec": lispDecodeCallEC,
-    "bind": lispDecodeBind,
     "slot-value": lispDecodeSlotValue,
     "set-slot-value": lispDecodeSetSlotValue,
     "native": lispDecodeNative,
     "comment": lispDecodeNoop,
     "quasiquote": lispDecodeQuasiquote,
     "defmacro": lispDecodeDefmacro,
-    // should be macros:
+    // should be macros, but cannot, because they're used pre-macros
     "let": lispDecodeLet,
+    // should be macros:
+    "bind": lispDecodeBind,
 };
 
 var lispMacrosTable = {};
@@ -60,7 +61,7 @@ function lispDecodeCompound(form) {
             var macro = lispMacrosTable[op.name];
             if (macro) {
                 // macro
-                lispDecode(lispDenaturalizeForm(macro(form)));
+                return lispDecode(lispDenaturalizeForm(macro(form)));
             } else {
                 // user-defined function
                 return lispDecodeFunctionApplication(form);
@@ -237,7 +238,7 @@ function lispDecodeDef(form) {
     var destructs = lispDecodeLambdaListDestructs(form.elts[2]);
     var cls_ir = { irt: "var", name: ll[0].type };
     var generic_ll = ll.map(function(param) { return { name: param.name }; });
-    var body = lispDecodeImplicitProgn(form.elts.slice(2));
+    var body = lispDecodeImplicitProgn(form.elts.slice(2)); // why does this also work with 2???
     return lispDefineMethodAndGenericIR(cls_ir, name, ll, generic_ll, body, destructs);
 }
 
@@ -418,7 +419,7 @@ function lispDecodeDefmacro(form) {
                                           { irt: "native", snippets: [ (i++).toString() ] } ] } }; // WJW
             }
         });
-    var body = { irt: "progn", exprs: form.elts.slice(2).map(lispDecode) };
+    var body = { irt: "progn", exprs: form.elts.slice(3).map(lispDecode) };
     var lambda = { irt: "lambda", req_params: [ { name: "--lisp-form" } ], body: body, destructs: destructs };
     return { irt: "defmacro", name: name, lambda: lambda };
 }
