@@ -2,9 +2,9 @@
 
 ;;; Scala-like case classes:
 ;;;
-;;;  (defcaseclass <maybe>
-;;;    (<just> x)
-;;;    (<nothing>))
+;;;  (defcaseclass <maybe> (<just> x) (<nothing>))
+;;;    
+;;;    
 
 (defmacro defcaseclass (name @cases)
   `(progn

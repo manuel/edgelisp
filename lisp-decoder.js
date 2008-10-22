@@ -84,11 +84,11 @@ function lispDecodeFunctionApplication(form) {
 
 function lispDecodeMacroApplication(macro, form) {
     var naturalForm = lispNaturalizeForm(form);
-    print(">" + uneval(naturalForm));
+    print(";*  PRE: " + uneval(naturalForm));
     var naturalTransformedForm = macro(naturalForm);
-    print(">>" + uneval(naturalTransformedForm));
+    print(";*TRANS: " + uneval(naturalTransformedForm));
     var transformedForm = lispDenaturalizeForm(naturalTransformedForm);
-    print(">>>" + uneval(transformedForm));
+    print(";* POST: " + uneval(transformedForm));
     return lispDecode(transformedForm);
 }
 
