@@ -26,6 +26,7 @@ var lispDecodeCompoundFunctionsTable = {
     "bind": lispDecodeBind,
     "slot-value": lispDecodeSlotValue,
     "set-slot-value": lispDecodeSetSlotValue,
+    "let": lispDecodeLet,
 };
 
 function lispDecodeString(form) {
@@ -131,6 +132,7 @@ function lispDecodeLambdaListDestructs(llForm) {
     llForm.elts.map(function(paramForm) {
             if (paramForm.formt == "compound") {
                 var paramName = paramForm.elts[1].name;
+                if (!paramForm.elts[2]) return;
                 paramForm.elts[2].elts.map(function(destructForm) {
                         var slotName = destructForm.elts[0].name;
                         destructs.push({ name: lispCleanSlotGetterName(slotName),
@@ -293,6 +295,23 @@ function lispDecodeSlotValue(form) {
 function lispDecodeSetSlotValue(form) {
     return { irt: "set-slot", obj: lispDecode(form.elts[1]), slotName: form.elts[2].name,
              value: lispDecode(form.elts[3]) };
+}
+
+// (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))
+function lispDecodeLet(form) {
+    var bindings = form.elts[1].elts;
+    var bodyForms = form.elts.slice(2).map(lispDecode);
+    var params = bindings.map(function(b) { return { name: b.elts[0].name }; });
+    var setters = bindings.map(function(b) { 
+            return { irt: "set", name: b.elts[0].name, value: lispDecode(b.elts[1]) };
+        });
+    
+    return { irt: "apply", 
+             fun: { irt: "lambda", 
+                    req_params: params,
+                    body: { irt: "progn",
+                            exprs: setters.concat(bodyForms) } },
+             args: [] };
 }
 
 // Prevents multiple evaluation.

@@ -8,3 +8,6 @@ Make it an object, define some nice utilities, and put the destructs into it.
 
 Need sth. like lispDefinePrimitive that defines both a decoder and a Lisp function?
 
+* Preventing multiple evaluation of method receiver inside genfun is superfluous
+
+Add invoke-method-no-once IR?

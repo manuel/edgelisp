@@ -114,3 +114,62 @@ name: a symbol
 obj: a form, evaluated
 name: a symbol
 value: a form, evaluated
+
+** quasiquote, `
+
+Quasiquote is a convenient mechanism for writing code-generating
+macros.  A quasiquote form holds a template with holes.
+
+A classical example is the WHEN macro:
+
+  (defmacro when (cond then)
+    `(if ,cond ,then false))
+
+which is equivalent to:
+
+  (defmacro when (cond then)
+    (quasiquote (if (unquote cond) (unquote then) false)))
+
+QUASIQUOTE forms are turned by a preprocessing step into an expression
+that, when evaluated, will produce the desired code.
+
+So, the macro above is conceptually equivalent to:
+
+  (defmacro when (cond then)
+    (make-compound-form
+      (make-form-list (make-symbol-form "if")
+                      cond
+                      then
+                      (make-symbol-form "false"))))
+
+When the WHEN macro is encountered in Lisp code, the macro's body is
+evaluated with COND and THEN bound to the Lisp forms from the macro's
+call site.  The macro's result form (the (IF ...)) is then compiled in
+place of the original user code.
+
+`x = the symbol X
+`() = error
+`,x = the value of X
+`,@... = error
+
+** unquote, ,
+
+An UNQUOTE form represents a hole inside a QUASIQUOTE template.
+
+** unquote-splicing, ,@
+
+An UNQUOTE-SPLICING form represents a second kind of template hole,
+whose contents evaluate to a list, and are spliced into the
+surrounding compound form.
+
+Let LIST be a list of forms (bar quux).
+
+Then `(foo ,@q) produces (foo bar quux).
+
+This is conceptually equivalent to:
+
+(make-compound-form
+  (append-form-lists
+    (make-form-list (make-symbol-form "foo"))
+    (make-form-list (make-symbol-form "foo")
+                    (make-symbol-form "quux"))))
