@@ -329,6 +329,59 @@ function lispDecodeNoop(form) {
     return { irt: "noop" };
 }
 
+// Quasiquotation
+
+function lispDecodeQuasiquote(form) {
+    var quoted = form.elts[1];
+    return lispDecodeQuasiquotedForm(quoted, 0);
+}
+
+function lispDecodeQuasiquotedForm(form, level) {
+    if (level < 0) throw "Ouch, negative quasiquote nesting level " + level + " " + uneval(form);
+    switch(form.formt) {
+    case "symbol":   // (quasiquote x)
+        return { irt: "--symbol", name: form.name };
+    case "string":   // (quasiquote "foo")
+        return { irt: "--string", s: form.s };
+    case "compound": // (quasiquote (...))
+        return lispDecodeQuasiquotedCompoundForm(form, level);
+    }
+    throw "Illegal quasiquoted form " + uneval(form);
+}
+
+function lispDecodeQuasiquotedCompoundForm(form, level) {
+    var op = form.elts[0];
+    if ((op.formt == "symbol") && (op.name == "unquote")) { // (quasiquote (unquote ...))
+        if (level == 0) {
+            return lispDecode(form.elts[1]);
+        } else {
+            return lispDecodeQuasiquotedForm(form.elts[1], level - 1);
+        }
+    } else if ((op.formt == "symbol") && (op.name == "quasiquote")) { // (quasiquote (quasiquote ...))
+        return lispDecodeQuasiquotedForm(form.elts[1], level + 1);
+    } else { // (quasiquote (sub-form1 sub-form2 ... sub-formN))
+        var exprs = [];
+        var currentCompound = { irt: "--compound", elts: [] };
+        for (var i in form.elts) {
+            var subForm = form.elts[0];
+            if ((subForm.formt == "compound") && subForm.elts[0] &&
+                (subForm.elts[0].name == "unquote-splicing")) { // (quasiquote (... (unquote-splicing ...) ...)
+                exprs.push(currentCompound);
+                currentCompound = { irt: "--compound", elts: [] };
+                if (level == 0) {
+                    exprs.push(lispDecode(subForm.elts[1]));
+                } else {
+                    exprs.push(lispDecodeQuasiquotedForm(subForm.elts[1], level - 1));
+                }
+            } else {
+                currentCompound.elts.push(lispDecodeQuasiquotedForm(subForm, level));
+            }
+        }
+        exprs.push(currentCompound);
+        return { irt: "--append", exprs: exprs };
+    }
+}
+
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))
 function lispDecodeLet(form) {
     var bindings = form.elts[1].elts;

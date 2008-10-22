@@ -193,12 +193,35 @@ snippets: a list of a) JavaScript code strings b) IRs
 
 { irt: "noop" }
 
+** --symbol
+
+{ irt: "--symbol", name: <<string>> }
+
+String-form creator.
+
+** --string
+
+{ irt: "--string", s: <<string>> }
+
+Symbol-form creator.
+
+** --compound
+
+{ irt: "--compound", elts: <<--forms>> }
+
+Compound-form creator.
+
+** --append
+
+{ irt: "--append", exprs: <<--compounds>> }
+
+Appends N compound forms into a single compound.
+
+
 
 NOT YET IMPLEMENTED:
 
 ** defmacro
-
-** quasiquote, unquote, unquote-splicing
 
 ** if
 
