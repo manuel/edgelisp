@@ -194,3 +194,9 @@ Dynamically scoped rebinding of global variables.
 ** set-slot
 
 { irt: "set-slot", obj: <<obj_ir>>, slotName: <<string>>, value: <<value_ir>> }
+
+** native
+
+{ irt: native: snippets: <<snippets>> }
+
+snippets: a list of a) JavaScript code strings b) IRs

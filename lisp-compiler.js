@@ -155,5 +155,11 @@ function lispCompileSetSlot(ir) {
 }
 
 function lispCompileNative(ir) {
-    return { jrt: "native", code: ir.code };
+    function compileSnippet(snippet) {
+        if (snippet.irt)
+            return lispCompile(snippet);
+        else
+            return snippet;
+    }
+    return { jrt: "native", snippets: ir.snippets.map(compileSnippet) };
 }

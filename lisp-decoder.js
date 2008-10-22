@@ -299,8 +299,21 @@ function lispDecodeSetSlotValue(form) {
              value: lispDecode(form.elts[3]) };
 }
 
+// Inline JavaScript
+
+var LispNativeEscape = repeat0(sequence(optional(join_action(repeat0(negate("~")), "")),
+                                        optional(sequence("~(", LispForm, ")"))));
+
 function lispDecodeNative(form) {
-    return { irt: "native", code: form.elts[1].s };
+    var code = form.elts[1].s;
+    var parser = LispNativeEscape(ps(code));
+    var snippets = [];
+    parser.ast.map(function(ast) {
+            snippets.push(ast[0]);
+            if (ast[1])
+                snippets.push(lispDecode(ast[1][1]));
+        });
+    return { irt: "native", snippets: snippets };
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))

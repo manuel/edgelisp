@@ -122,7 +122,13 @@ function lispEmitChecktype(jr) {
 }
 
 function lispEmitNative(jr) {
-    return "(" + jr.code + ")";
+    function emitSnippet(snippet) {
+        if (snippet.jrt)
+            return lispEmit(snippet);
+        else
+            return snippet;
+    }
+    return "(" + jr.snippets.map(emitSnippet).join("") + ")";
 }
 
 function lispEmitBind(jr) {

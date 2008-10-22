@@ -14,7 +14,7 @@ var LispStringChars = repeat1(LispStringChar);
 var LispStringLiteral = action(sequence("\"", optional(LispStringChars), "\""), lispStringLiteralAction);
 function lispStringLiteralAction(ast) { return { formt: "string", s: ast[1].join("") }; }
 
-var LispSymbolCharReduced = choice(range("a", "z"), "-", "*", "?", "!", "_", "/", range("0", "9"));
+var LispSymbolCharReduced = choice(range("a", "z"), "-", "*", "?", "!", "_", "/", "[", "]", range("0", "9"));
 var LispSymbolCharsReduced = repeat1(LispSymbolCharReduced);
 var LispSymbolFormReduced = action(LispSymbolCharsReduced, lispSymbolFormAction);
 var LispSymbolChar = choice("<", ">", ".", LispSymbolCharReduced);
