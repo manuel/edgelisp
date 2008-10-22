@@ -31,6 +31,10 @@ var lispCompileFunctionsMap = {
     "set-slot": lispCompileSetSlot,
     "native": lispCompileNative,
     "noop": lispCompileNoop,
+    "--symbol": lispCompile__Symbol,
+    "--string": lispCompile__String,
+    "--compound": lispCompile__Compound,
+    "--append": lispCompile__Append,
 }
 
 function lispCompileDefun(ir) {
@@ -167,4 +171,20 @@ function lispCompileNative(ir) {
 
 function lispCompileNoop(ir) {
     return { jrt: "noop" };
+}
+
+function lispCompile__Symbol(ir) {
+    return { jrt: "--symbol", name: ir.name };
+}
+
+function lispCompile__String(ir) {
+    return { jrt: "--string", s: ir.s };
+}
+
+function lispCompile__Compound(ir) {
+    return { jrt: "--compound", elts: ir.elts.map(lispCompile) };
+}
+
+function lispCompile__Append(ir) {
+    return { jrt: "--append", exprs: ir.exprs.map(lispCompile) };
 }

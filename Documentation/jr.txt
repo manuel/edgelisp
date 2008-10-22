@@ -85,3 +85,19 @@ name: a string
 ** native -- inline JavaScript
 
 { jrt: "native", code: <<string>> }
+
+** --symbol
+
+{ jrt: "--symbol", name: <<string>> }
+
+** --string
+
+{ jrt: "--string", s: <<string>> }
+
+** --compound
+
+{ jrt: "--compound", elts: <<--forms>> }
+
+** --append
+
+{ jrt: "--append", exprs: <<--compounds>> }

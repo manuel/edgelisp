@@ -39,3 +39,6 @@
 
 (defun second (coll)
   ([] coll 1))
+
+(defun rest (coll)
+  (slice coll 1))

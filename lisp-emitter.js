@@ -27,6 +27,10 @@ var lispEmitFunctionsMap = {
     "checktype": lispEmitChecktype,
     "native": lispEmitNative,
     "noop": lispEmitNoop,
+    "--symbol": lispEmit__Symbol,
+    "--string": lispEmit__String,
+    "--compound": lispEmit__Compound,
+    "--append": lispEmit__Append,
     // should be macros:
     "bind": lispEmitBind,
 };
@@ -134,6 +138,10 @@ function lispEmitNative(jr) {
 
 function lispEmitNoop(jr) {
     return "";
+}
+
+function lispEmit__String(jr) {
+    
 }
 
 function lispEmitBind(jr) {
