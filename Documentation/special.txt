@@ -190,3 +190,7 @@ This is conceptually equivalent to:
     (make-form-list (make-symbol-form "foo"))
     (make-form-list (make-symbol-form "foo")
                     (make-symbol-form "quux"))))
+
+** progn
+
+(progn &rest exprs)

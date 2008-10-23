@@ -90,7 +90,7 @@ function lispEmitSetprop(jr) {
 }
 
 function lispEmitInvoke(jr) {
-    var receiver = lispEmit(jr.params[0]);
+    var receiver = lispEmit(jr.params[0]);    
     var args = [ "__lispX_this" ].concat(jr.params.slice(1).map(lispEmit));
     return lispEmitOnce("__lispX_this", receiver,
                         "return __lispX_this." + jr.name + "(" + args.join(", ") + ")");

@@ -29,6 +29,7 @@ var lispDecodeCompoundFunctionsTable = {
     "comment": lispDecodeNoop,
     "quasiquote": lispDecodeQuasiquote,
     "defmacro": lispDecodeDefmacro,
+    "progn": lispDecodeProgn,
     // should be macros, but cannot, because they're used pre-macros
     "let": lispDecodeLet,
     // should be macros:
@@ -98,6 +99,12 @@ function lispDecodeCompoundFormWithTypeName(form) {
     return { irt: "make-instance", "class": lispDecode(form.elts[0]) };
 }
 
+// Type expression:
+//
+// (<t> t ((.slot1 val1) ... (.slotN valN))) === <t t .slot1 val1 ... .slotN valN>
+// 0    1 2 \               /
+//           \             /
+//            destructForms
 function lispDecodeCompoundFormWithTypeExpr(form) {
     // Turns a destruct form of a type expression into a setter call.
     function decodeDestructFormForNewInstance(destructForm) {
@@ -105,12 +112,12 @@ function lispDecodeCompoundFormWithTypeExpr(form) {
                  fun: { irt: "function", name: lispSetterName(destructForm.elts[0].name) },
                  args: [ { irt: "var", name: "--lisp-class"}, lispDecode(destructForm.elts[1]) ] }
     }
-
     // Create new instance, run slot setters on it, and return it.
-    return lispDecodeOnce("--lisp-class", { irt: "make-instance", "class": { irt: "var", name: form.elts[0].name } },
+    return lispDecodeOnce("--lisp-class", { irt: "make-instance", 
+                                                 "class": { irt: "var", name: form.elts[0].name } },
                           { irt: "progn",
-                                  exprs: form.elts[2].elts.map(decodeDestructFormForNewInstance)
-                                         .concat({ irt: "var", name: "--lisp-class"}) });
+                            exprs: form.elts[2].elts.map(decodeDestructFormForNewInstance)
+                                   .concat({ irt: "var", name: "--lisp-class"}) }); // return class
 }
 
 function lispSlotGetterName(memberName) {
@@ -135,6 +142,10 @@ function lispCleanTypeName(name) {
     return name.slice(1, name.length - 1);
 }
 
+// (lambda (a <b>) ...) === (lambda (a (<b> b ())) ...)
+//         ^^^^^^^
+//            \
+//             \---> [ { name: "a" }, { name: "b", type: "b" } ]
 function lispDecodeLambdaList(llForm) {
     return llForm.elts.map(function(paramForm) {
             switch (paramForm.formt) {
@@ -153,6 +164,22 @@ function lispDecodeLambdaList(llForm) {
         });
 }
 
+// (lambda (<person .name .age> ...) ...)
+// ===
+// (lambda ((<person> person ((.name) (.age))) ...) ...)
+// |         0        1      2
+// |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ = paramForm;   paramName = paramForm[1]
+// |                                  
+// |                          ^^^^^^^ ^^^^^^   = destructForm(s)
+// |
+// \--> destructs = [ { name: "name", value: ``IR for (.name person)'' },
+//                    { name: "age",  value: ``IR for (.age person)'' } ]
+//
+// Further down the line, the destructs get embedded in a lambda body,
+// and add the names "name" and "age" to the function's lexical
+// environment.  They are a generic, IR-driven mechanism for
+// extracting additional information from a function's arguments.
+// They could also be used to add list destructuring, for example.
 function lispDecodeLambdaListDestructs(llForm) {
     var destructs = [];
     llForm.elts.map(function(paramForm) {
@@ -192,7 +219,7 @@ function lispDecodeFunction(form) {
 function lispDecodeDefun(form) {
     var name = form.elts[1].name;
     var ll = lispDecodeLambdaList(form.elts[2]);
-    var lambdaBody = lispDecode(form.elts[3]);
+    var lambdaBody = lispDecodeImplicitProgn(form.elts.slice(3));
     var destructs = lispDecodeLambdaListDestructs(form.elts[2]);
     var lambda_ir = { irt: "lambda", req_params: ll, body: lambdaBody, destructs: destructs };
     return { irt: "defun", name: name, lambda: lambda_ir };
@@ -413,11 +440,19 @@ function lispCleanSplatName(name) {
     return name.slice(1);
 }
 
+// (DEFMACRO foobar (arg ... @rest) body ...) -- macro definition, creates macro function
+//  0        1      2           \   3
+//           name   args         \
+//                                spl@t arg, gets rest of args
+// 
+// (FOOBAR arg1 arg2 ... argN) -- macro application form, passed as std-lib/forms object to m-function;
+//  0      1    2 ...             macro uses destructs to extract args from form object,
+//                                which has methods such as [] and SLICE.
 function lispDecodeDefmacro(form) {
     var name = form.elts[1].name;
     var args = form.elts[2].elts;
-    var i = 1; // skip over macro name
-    var destructs = args.map(function(arg) { // exploit existing destructuring infrastructure
+    var i = 1; // skip over macro name in application
+    var destructs = args.map(function(arg) {
             if (lispIsSplatName(arg.name)) {
                 return { name: lispCleanSplatName(arg.name), 
                          value: { irt: "apply", 
@@ -467,6 +502,10 @@ function lispNaturalizeForm(form) {
         return lispCall("new-compound-form", form.elts.map(lispNaturalizeForm));
     }
     throw "Unknown form for naturalization " + uneval(form);
+}
+
+function lispDecodeProgn(form) {
+    return lispDecodeImplicitProgn(form.elts.slice(1));
 }
 
 // (let ((name value) ...) body ...) -> (apply (lambda (name ...) (progn (set name value) ... body ...)))

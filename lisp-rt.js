@@ -76,7 +76,8 @@ function lispCallEC(fun) {
 // WHILE
 
 function lispWhile(testFn, fn) {
-    while(testFn()) {
+    var lispFalse = lispVar("false");
+    while(testFn() != lispFalse) {
         fn();
     }
     return null;
@@ -86,6 +87,7 @@ function lispWhile(testFn, fn) {
 
 // Produce a new natural compound from a list of natural compound forms
 function lispCompoundFormsAppend(forms) {
+    print(uneval("---------------------" + forms.map(uneval)));
     var res = [];
     for (var i in forms) {
         var form = forms[i];
@@ -93,5 +95,6 @@ function lispCompoundFormsAppend(forms) {
         var peer = lispSlot(elts, "peer");
         res = res.concat(peer);
     }
+    print(uneval(">>>>>>>>>>>>>>>>>>>>>" + res.map(uneval)));
     return lispCall("new-compound-form", res);
 }
