@@ -22,9 +22,6 @@
 (def [] (<compound-form .elts> i) 
   ([] elts i))
 
-(def type-for-copy (<compound-form>) 
-  <compound-form>)
-
 (def []-setter (<compound-form .elts> i v) 
   ([]-setter elts i v))
 

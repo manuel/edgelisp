@@ -5,7 +5,10 @@ load("lisp-decoder.js");
 load("lisp-compiler.js");
 load("lisp-emitter.js");
 load("lisp-rt.js");
-load("lisp-js.js");
+
+Object.prototype.__lispM_show = function() {
+    return uneval(this);
+}
 
 var lispDebugToggle = false;
 
@@ -32,7 +35,7 @@ while(1) {
         lispDebug("   JR: " + lispUneval(lispJR));
         var lispJS = lispEmit(lispJR);
         lispDebug("   JS: " + lispJS);
-        print(lispUneval(eval(lispJS)));
+        print(eval(lispJS).__lispM_show());
     } catch(e) {
         print(lispUneval(e));
     }

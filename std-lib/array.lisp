@@ -3,9 +3,6 @@
 (defun new-array () 
   (<array .peer {% [] %}>))
 
-(def type-for-copy (<array>) 
-  <array>)
-
 (def [] (<array .peer> i) 
   {% ~(peer)[~(i)] %})
 
@@ -14,6 +11,9 @@
 
 (def slice (<array .peer> start) 
   (<array .peer {% ~(peer).slice(~(start)) %}>))
+
+(def empty-clone (<array>)
+  (<array .peer {% [] %}>))
 
 (defclass <array-iterator> array i)
 
@@ -33,5 +33,3 @@
 (def index (<array-iterator .i>)
   {% ~(i) %})
 
-(def empty-clone (<array>)
-  (<array .peer {% [] %}>))

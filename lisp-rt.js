@@ -1,7 +1,5 @@
 // Lisp runtime: variables and functions needed by the compiled JavaScript code.
 
-load("lisp-js.js");
-
 // Returns true iff class B is a subclass of (or equal to) class A.
 function lispIsSubclass(classA, classB) {
     return classA == classB;
@@ -54,7 +52,7 @@ function lispThrow(exception) {
         throw "No applicable handler for exception " + uneval(lispGetClass(exception).name);
 }
 
-// Escape continuations (jump buffers, first class exit procedures)
+// Escape continuations
 
 function lispCallEC(fun) {
     var token = {};
@@ -73,7 +71,7 @@ function lispCallEC(fun) {
     }
 }
 
-// WHILE
+// Loops
 
 function lispWhile(testFn, fn) {
     var lispFalse = lispVar("false");
@@ -87,7 +85,6 @@ function lispWhile(testFn, fn) {
 
 // Produce a new natural compound from a list of natural compound forms
 function lispCompoundFormsAppend(forms) {
-    print(uneval("---------------------" + forms.map(uneval)));
     var res = [];
     for (var i in forms) {
         var form = forms[i];
@@ -95,6 +92,19 @@ function lispCompoundFormsAppend(forms) {
         var peer = lispSlot(elts, "peer");
         res = res.concat(peer);
     }
-    print(uneval(">>>>>>>>>>>>>>>>>>>>>" + res.map(uneval)));
     return lispCall("new-compound-form", res);
+}
+
+// Accessing Lisp from JavaScript
+
+function lispVar(varName) {
+    return eval(lispEnvMangleVarName(varName));
+}
+
+function lispCall(funName, arg) {
+    return eval(lispEnvMangleFunName(funName))(arg);
+}
+
+function lispSlot(obj, slotName) {
+    return obj[lispEnvMangleSlotName(slotName)];
 }

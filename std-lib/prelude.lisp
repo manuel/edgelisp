@@ -24,7 +24,7 @@
 
 (defun map (fn coll)
   (let ((clone (empty-clone coll))
-        (iterator (iterator coll)))  
+        (iterator (iterator coll)))
     (while-fn (lambda () (not (done iterator)))  
               (lambda ()       
                 (set ([] clone (index iterator)) (apply fn (current iterator)))  
