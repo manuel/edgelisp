@@ -32,7 +32,7 @@ while(1) {
         var lispJS = lispEmit(lispJR);
         lispDebug("   JS: " + lispJS);
         var lispResult = eval(lispJS);
-        if(lispResult.__lispM_show) {
+        if(lispResult && lispResult.__lispM_show) {
             print(lispResult.__lispM_show(lispResult));
         } else {
             print(lispUneval(lispResult));

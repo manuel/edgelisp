@@ -13,7 +13,7 @@
   {% ~(jsbool) ? ~(true) : ~(false) %})
 
 (defun == (a b) 
-  (naturalize-jsbool {% ~(a) == ~(b) %}))
+  (jsbool-naturalize {% ~(a) == ~(b) %}))
 
 (defun != (a b) 
   (not (== a b)))

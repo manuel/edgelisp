@@ -275,7 +275,9 @@ function lispDecodeDefclass(form) {
                          value: { irt: "make-class", name: cls_name, member_names: member_names } };
 
     return { irt: "progn",
-            exprs: [ class_defvar ].concat(member_getters, member_setters, [ { irt: "var", name: cls_name } ]) };
+            exprs: [ class_defvar ].concat(member_getters,
+                                           member_setters,
+                                           [ { irt: "var", name: cls_name } ]) };
 }
 
 function lispDecodeDef(form) {
@@ -319,12 +321,7 @@ function lispDecodeSet(form) {
     case "symbol":
         return { irt: "set", name: place.name, value: lispDecode(form.elts[2]) };
     case "compound":
-        //                       ____________________________________.
-        //                  form[2]                                  |
-        //                       |                                   |
-        // (set (getter args...) value) >>>>> (getter-setter args... value)
-        //              |                                    |
-        //        place[1]___________________________________|        
+        // (set (getter args...) value) --> (getter-setter args... value)
         var getter = place.elts[0].name;
         var args = place.elts.slice(1).concat(form.elts[2]);
         return { irt: "apply", 
