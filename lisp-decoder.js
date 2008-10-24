@@ -231,6 +231,15 @@ function lispDecodeDefvar(form) {
     return { irt: "defvar", name: name, value: value_ir };
 }
 
+// (defclass <c> a b)
+// ===
+// (progn
+//   (defvar <c> (make-class))
+//   (def .a (<c>) (slot-value c a))
+//   (def .b (<c>) (slot-value c b))
+//   (def .a-setter (<c> v) (set-slot-value c a v))
+//   (def .b-setter (<c> v) (set-slot-value c b v))
+//   <c>)
 function lispDecodeDefclass(form) {
     var cls_name = form.elts[1].name;
     var member_names = form.elts.slice(2).map(function (member_form) { return member_form.name; });
@@ -279,12 +288,12 @@ function lispDecodeDef(form) {
     return lispDefineMethodAndGenericIR(cls_ir, name, ll, generic_ll, body, destructs);
 }
 
-function lispDefineMethodAndGenericIR(class_ir, name, method_ll, generic_ll, method_ir, destructs) {
+function lispDefineMethodAndGenericIR(class_ir, name, method_ll, generic_ll, body, destructs) {
     return { irt: "progn",
              exprs: [ { irt: "set-method",
                         name: name,
                         "class": class_ir,
-                        lambda: { irt: "lambda", req_params: method_ll, body: method_ir, destructs: destructs } },
+                        lambda: { irt: "lambda", req_params: method_ll, body: body, destructs: destructs } },
                       { irt: "defun",
                         name: name,
                         lambda: { irt: "lambda",
@@ -310,10 +319,17 @@ function lispDecodeSet(form) {
     case "symbol":
         return { irt: "set", name: place.name, value: lispDecode(form.elts[2]) };
     case "compound":
-        // (set (getter args...) value) --> (getter-setter args... value)
+        //                       ____________________________________.
+        //                  form[2]                                  |
+        //                       |                                   |
+        // (set (getter args...) value) >>>>> (getter-setter args... value)
+        //              |                                    |
+        //        place[1]___________________________________|        
         var getter = place.elts[0].name;
         var args = place.elts.slice(1).concat(form.elts[2]);
-        return { irt: "apply", fun: { irt: "function", name: lispSetterName(getter) }, args: args.map(lispDecode) };
+        return { irt: "apply", 
+                 fun: { irt: "function", name: lispSetterName(getter) }, 
+                 args: args.map(lispDecode) };
     }
     throw "Illegal set form " + uneval(form);
 }
@@ -378,11 +394,22 @@ function lispDecodeNoop(form) {
 
 // Quasiquotation
 
+// A QUASIQUOTE form produces code that, when evaluated, produces a form.
+//
+// (A frog jumps into the pond.)
+//
+// The --symbol, --string, and --compound IRs produce "natural"
+// symbols, strings, and compounds, respectively.  They are called
+// natural because they live in the Lisp world -- they mimick the
+// compiler's data structures using Lisp classes and are provided so
+// that macro writers can access and produce code.  Once a macro is
+// done, the natural form it has produced is converted to a compiler
+// form again.
 function lispDecodeQuasiquote(form) {
-    var quoted = form.elts[1];
-    return lispDecodeQuasiquotedForm(quoted, 0);
+    return lispDecodeQuasiquotedForm(form.elts[1], 0);
 }
 
+//                     (quasiquote form)
 function lispDecodeQuasiquotedForm(form, level) {
     if (level < 0) throw "Ouch, negative quasiquote nesting level " + level + " " + uneval(form);
     switch(form.formt) {
@@ -400,7 +427,7 @@ function lispDecodeQuasiquotedCompoundForm(form, level) {
     var op = form.elts[0];
     if ((op.formt == "symbol") && (op.name == "unquote")) { // (quasiquote (unquote ...))
         if (level == 0) {
-            return lispDecode(form.elts[1]);
+            return lispDecode(form.elts[1]); // <---- unquoted code
         } else {
             return lispDecodeQuasiquotedForm(form.elts[1], level - 1);
         }
@@ -416,7 +443,7 @@ function lispDecodeQuasiquotedCompoundForm(form, level) {
                 exprs.push(currentCompound);
                 currentCompound = { irt: "--compound", elts: [] };
                 if (level == 0) {
-                    exprs.push(lispDecode(subForm.elts[1]));
+                    exprs.push(lispDecode(subForm.elts[1])); // <---- unquoted code
                 } else {
                     exprs.push(lispDecodeQuasiquotedForm(subForm.elts[1], level - 1));
                 }
@@ -479,7 +506,6 @@ function lispDenaturalizeForm(naturalForm) {
     // compiler.  So, once a macro has produced forms, they need to be
     // turned back into compiler forms.  This is called
     // denaturalization.
-    // return lispCall("denaturalize", naturalForm);
     var x;
     if (x = naturalForm[lispEnvMangleSlotName("s")]) {
         return { formt: "string", s: x };

@@ -60,29 +60,22 @@ function lispCompileLambda(ir) {
     var destructs;
     if (ir.destructs)
         destructs = ir.destructs.map(function(destruct) {
-                return { name: lispEnvMangleVarName(destruct.name), value: lispCompile(destruct.value) };
-            });
+                return { name: lispEnvMangleVarName(destruct.name), 
+                         value: lispCompile(destruct.value) }; });
 
     var typeChecks = [];
     for (var i in ir.req_params) {
         var param = ir.req_params[i];
-        if (param.type) {
+        if (param.type)
             typeChecks.push({ jrt: "checktype",
                               obj: { jrt: "var", name: lispEnvMangleVarName(param.name) },
                               type: { jrt: "var", name: lispEnvMangleVarName(param.type) } });
-        }
-    }
-
-    if (typeChecks) {
-        var body_ir = { jrt: "multi", exprs: typeChecks.concat(lispCompile(ir.body)) };
-    } else {
-        var body_ir = lispCompile(ir.body);
     }
 
     return { jrt: "function", 
              destructs: destructs ? destructs : [],
              params: ir.req_params.map(function(param) { return lispEnvMangleVarName(param.name); }),
-             body: body_ir };
+             body: { jrt: "multi", exprs: typeChecks.concat(lispCompile(ir.body)) } };
 }
 
 function lispCompileString(ir) {
@@ -157,7 +150,10 @@ function lispCompileGetSlot(ir) {
 }
 
 function lispCompileSetSlot(ir) {
-    return { jrt: "setprop", obj: lispCompile(ir.obj), name: lispEnvMangleSlotName(ir.slotName), value: lispCompile(ir.value) };
+    return { jrt: "setprop", 
+             obj: lispCompile(ir.obj), 
+             name: lispEnvMangleSlotName(ir.slotName), 
+             value: lispCompile(ir.value) };
 }
 
 function lispCompileNative(ir) {
