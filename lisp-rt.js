@@ -108,3 +108,7 @@ function lispCall(funName, arg) {
 function lispSlot(obj, slotName) {
     return obj[lispEnvMangleSlotName(slotName)];
 }
+
+function lispCallMethod(obj, methodName) {
+    return obj[lispEnvMangleMethodName(methodName)];
+}

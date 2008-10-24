@@ -1,7 +1,9 @@
 (defclass <true>)
+(def show (<true>) "true")
 (defvar true (<true>))
 
 (defclass <false>)
+(def show (<false>) "false")
 (defvar false (<false>))
 
 (def not (<true>) false)
