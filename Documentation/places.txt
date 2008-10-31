@@ -1,8 +1,0 @@
--*- outline -*-
-
-* Generalized references (places)
-
-(set (place-spec ...) value) == (place-spec-setter ... value)
-
-e.g.
-(set (.name obj) "foo") == (.name-setter obj "foo")

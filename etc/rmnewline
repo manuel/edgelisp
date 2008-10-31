@@ -1,3 +1,0 @@
-# This currently has to be used to turn a .lisp file into a single line.
-
-sed ':a;N;$!ba;s/\n//g'
