@@ -159,6 +159,10 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) a) 1 2)") == null);
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) b) 1 2)") == null);
 
+        // %%defmacro
+        lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");
+        lisp_test(lisp_eval("(m1)") == 1);
+        
     } catch(e) {
         print(e);
         print(e.stack);

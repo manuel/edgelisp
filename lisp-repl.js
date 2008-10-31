@@ -14,7 +14,7 @@ while(1) {
             print("Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
         } else if (repl_text == "/r") { // reload
-            load("repl.js");
+            load("lisp-repl.js");
         } else if (repl_text == "") { // empty line
             continue;
         }

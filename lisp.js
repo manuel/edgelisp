@@ -219,7 +219,12 @@ function lisp_compile_compound_form(form)
     if (special) {
         return special(form);
     } else {
-        lisp_error("Bad form", form);
+        var macro = lisp_macro_function(op.name);
+        if (macro) {
+            return lisp_compile(macro(null, form));
+        } else {
+            lisp_error("Bad form", form);
+        }
     }
 }
 
@@ -241,12 +246,22 @@ function lisp_special_function(name)
 var lisp_specials_table = {
     "%%defparameter": lisp_compile_special_defparameter,
     "%%defun": lisp_compile_special_defun,
+    "%%defmacro": lisp_compile_special_defmacro,
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
 };
+
+function lisp_macro_function(name)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);
+    return lisp_macros_table[mangled_name];
+}
+
+var lisp_macros_table = {};
 
 /**** List of special forms ****/
 
@@ -270,6 +285,17 @@ function lisp_compile_special_defun(form)
     return { vopt: "fset", 
              name: name_form.name, 
              value: lisp_compile(value_form) };
+}
+
+/* Registers a macro expander function. See heading ``Macros''.
+   (%%defmacro name expander-function) */
+function lisp_compile_special_defmacro(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    var expander_form = lisp_assert_not_null(form.elts[2]);
+    return { vopt: "macroset", 
+             name: name_form.name, 
+             expander: lisp_compile(expander_form) };
 }
 
 /* Calls a function passed as argument.
@@ -617,7 +643,7 @@ function lisp_compile_qq_compound(x, depth)
             return compile_compound(x, depth);
         }
     } else {
-        return compound([]);
+        return make_compound([]);
     }
 
     function compile_compound(x, depth)
@@ -626,9 +652,9 @@ function lisp_compile_qq_compound(x, depth)
         for (var i in x.elts) {
             var sub = x.elts[i];
             if ((sub.formt == "compound") && is_unquote_splicing(sub.elts[0])) {
-                compounds.push(compound(compound_elts));
+                compounds.push(make_compound(compound_elts));
                 compound_elts = [];
-                if (level == 0) {
+                if (depth == 0) {
                     compounds.push(lisp_compile(sub.elts[1]));
                 } else {
                     compounds.push(unquote_splicing(sub.elts[1], depth - 1));
@@ -636,10 +662,10 @@ function lisp_compile_qq_compound(x, depth)
             } else {
                 compound_elts.push(lisp_compile_qq(sub, depth));
             }
-            }
+        }
         if (compound_elts.length > 0) 
-            compounds.push(compound(compound_elts));
-        return compound(compounds);
+            compounds.push(make_compound(compound_elts));
+        return append_compounds(compounds);
     }
 
     function is_quasiquote(op)
@@ -675,10 +701,17 @@ function lisp_compile_qq_compound(x, depth)
                          lisp_compile_qq(x, depth)]);
     }
 
-    function compound(elt_vops)
+    function make_compound(elt_vops)
     {
         return { vopt: "funcall",
                  fun: { vopt: "fref", name: "%%make-compound" },
+                 call_site: { pos_args: elt_vops } };
+    }
+
+    function append_compounds(elt_vops)
+    {
+        return { vopt: "funcall",
+                 fun: { vopt: "fref", name: "%%append-compounds" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -700,6 +733,16 @@ function lisp_make_compound(_key_)
         elts = elts.concat(arguments[i]);
     }
     return { formt: "compound", elts: elts };
+}
+
+function lisp_append_compounds(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+        lisp_assert(arguments[i].formt == "compound");
+        elts = elts.concat(arguments[i].elts);
+    }
+    return { formt: "compound", elts: elts };    
 }
 
 
@@ -730,6 +773,7 @@ var lisp_vop_table = {
     "fset": lisp_emit_vop_fset,
     "funcall": lisp_emit_vop_funcall,
     "lambda": lisp_emit_vop_lambda,
+    "macroset": lisp_emit_vop_macroset,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
     "quote": lisp_emit_vop_quote,
@@ -814,6 +858,18 @@ function lisp_emit_vop_lambda(vop)
     var preamble = arity_check;
     var body = preamble + ", " + lisp_emit(vop.body);
     return "(function(" + sig + "){ return (" + body + "); })";
+}
+
+/* { vopt: "macroset", name: <string>, expander: <vop> }
+   name: macro's name;
+   expander: VOP for expander function. */
+function lisp_emit_vop_macroset(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name);
+    var expander = lisp_assert_not_null(vop.expander);
+    var mangled_name = lisp_mangle_function(name);
+    var expander_code = lisp_emit(expander);
+    return "(lisp_macros_table[\"" + mangled_name + "\"] = " + expander_code + ")";
 }
 
 /* Number literal.
@@ -1022,3 +1078,4 @@ function lisp_assert_compound_form(value, message, arg)
 /**** Define built-in functions ****/
 
 lisp_fset("%%make-compound", "lisp_make_compound");
+lisp_fset("%%append-compounds", "lisp_append_compounds");
