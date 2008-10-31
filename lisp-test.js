@@ -150,14 +150,14 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%funcall (%%lambda (a) a) 1)") == 1);
         lisp_test(lisp_eval("(%%funcall (%%lambda (a b) a) 1 2)") == 1);
         lisp_test(lisp_eval("(%%funcall (%%lambda (a b) b) 1 2)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (&optional a b) a) 1 2)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (&optional a b) b) 1 2)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) r1) 1 2 3 4)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) r2) 1 2 3 4)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) a) 1 2 3 4)") == 3);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) b) 1 2 3 4)") == 4);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) a) 1 2)") == null);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &optional a b) b) 1 2)") == null);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (&opt a b) a) 1 2)") == 1);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (&opt a b) b) 1 2)") == 2);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) r1) 1 2 3 4)") == 1);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) r2) 1 2 3 4)") == 2);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2 3 4)") == 3);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2 3 4)") == 4);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2)") == null);
+        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2)") == null);
 
         // %%defmacro
         lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");

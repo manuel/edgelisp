@@ -430,25 +430,24 @@ function lisp_compile_special_quasiquote(form)
 /**** Signature syntax ****/
 
 /* The different kinds of parameters in a function signature are
-   introduced by signature keywords: &optional, &key, &rest, and
-   &all-keys.
+   introduced by signature keywords: &opt, &key, &rest, and &all-keys.
 
    For example, a signature with 2 required, 1 optional, and 1 keyword
    argument may look like this:
 
-   (req1 req2 &optional opt1 &key key1)
+   (req1 req2 &opt opt1 &key key1)
 
    All parameters to the right of a signature keyword, and to the left
    of another signature keyword or the end of the signature, belong to
    that kind of parameter.  For example, all parameters to the right
-   of an &optional keyword, and to the left of another keyword or the
-   end of the list, are optional.  The initial parameters in a
-   signature, before any signature keyword appears, are required.
+   of an &opt keyword, and to the left of another keyword or the end
+   of the list, are optional.  The initial parameters in a signature,
+   before any signature keyword appears, are required.
    
    While it's not very useful, it is possible to repeat signature
    keywords, e.g.:
 
-   (&optional opt1 &key key1 &optional opt2 &key key2)
+   (&opt opt1 &key key1 &opt opt2 &key key2)
 
    If a signature contains multiple &rest and &all-keys parameters,
    the leftmost one is used, e.g. in the signature (&rest a b
@@ -456,7 +455,7 @@ function lisp_compile_special_quasiquote(form)
    remaining positional arguments, and the parameter `c' is bound to
    the dictionary of supplied keyword arguments. */
 
-var lisp_optional_sig_keyword = "&optional";
+var lisp_optional_sig_keyword = "&opt";
 var lisp_key_sig_keyword = "&key";
 var lisp_rest_sig_keyword = "&rest";
 var lisp_all_keys_sig_keyword = "&all-keys";
