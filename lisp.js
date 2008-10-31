@@ -221,6 +221,8 @@ function lisp_compile_compound_form(form)
     } else {
         var macro = lisp_macro_function(op.name);
         if (macro) {
+            // The macro function is a Lisp function, so the calling
+            // convention must be followed.
             return lisp_compile(macro(null, form));
         } else {
             lisp_error("Bad form", form);
@@ -261,6 +263,14 @@ function lisp_macro_function(name)
     return lisp_macros_table[mangled_name];
 }
 
+function lisp_set_macro_function(name, expander)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);
+    lisp_macros_table[mangled_name] = expander;
+}
+
+/* Maps the mangled names of macros to their expander functions. */
 var lisp_macros_table = {};
 
 /**** List of special forms ****/
@@ -287,7 +297,8 @@ function lisp_compile_special_defun(form)
              value: lisp_compile(value_form) };
 }
 
-/* Registers a macro expander function. See heading ``Macros''.
+/* Registers a macro expander function.  An expander function takes a
+   form as input and must return a form.
    (%%defmacro name expander-function) */
 function lisp_compile_special_defmacro(form)
 {
@@ -866,9 +877,7 @@ function lisp_emit_vop_macroset(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     var expander = lisp_assert_not_null(vop.expander);
-    var mangled_name = lisp_mangle_function(name);
-    var expander_code = lisp_emit(expander);
-    return "(lisp_macros_table[\"" + mangled_name + "\"] = " + expander_code + ")";
+    return "(lisp_set_macro_function(\"" + name + "\", " + lisp_emit(expander) + "))";
 }
 
 /* Number literal.
