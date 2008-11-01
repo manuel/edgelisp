@@ -114,7 +114,7 @@ function lisp_symbol_form_action(ast)
 /**** Compound forms ****/
 
 var lisp_compound_form =
-    action(sequence("(", repeat0(lisp_form), ")"),
+    action(wsequence("(", repeat0(lisp_form), ")"),
            lisp_compound_form_action);
 
 function lisp_compound_form_action(ast)
@@ -156,7 +156,7 @@ var lisp_form =
                       lisp_unquote_splicing_form));
 
 var lisp_forms =
-    repeat1(lisp_form);
+    whitespace(repeat1(lisp_form));
 
 function lisp_parse(string)
 {

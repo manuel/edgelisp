@@ -31,4 +31,4 @@
   `(if ,test (progn ,consequent)))
 
 (defmacro unless (test &rest alternative)
-  `(if ,test null (progn ,alternative)))
+  `(if ,test nil (progn ,alternative)))
