@@ -178,38 +178,27 @@ function lisp_eval(string)
    symbols evaluate to the value of the binding they name.  A compound
    form is evaluated differently depending on whether its first
    element names a special form, a macro, or a function: special form
-   calls are evaluated with special evaluation rules, macro calls are
-   first expanded and then compiled recursively, function calls are
+   calls are evaluated with special evaluation rules; macro calls are
+   first expanded and then compiled recursively; function calls are
    evaluated by applying the named function to the supplied
    arguments. */
 
 function lisp_compile(form)
 {
     switch(form.formt) {
-    case "number": return lisp_compile_number_form(form);
-    case "string": return lisp_compile_string_form(form);
-    case "symbol": return lisp_compile_symbol_form(form);
-    case "compound": return lisp_compile_compound_form(form);
+    case "number":
+        lisp_assert_nonempty_string(form.n, "Bad .n", form);
+        return { vopt: "number", n: form.n };
+    case "string":
+        lisp_assert_string(form.s, "Bad .s", form);
+        return { vopt: "string", s: form.s };
+    case "symbol":
+        lisp_assert_symbol_form(form, "Bad symbol form", form);
+        return { vopt: "ref", name: form.name };
+    case "compound": 
+        return lisp_compile_compound_form(form);
     }
     lisp_error("Bad form", form);
-}
-
-function lisp_compile_number_form(form)
-{
-    lisp_assert_nonempty_string(form.n, "Bad .n", form);
-    return { vopt: "number", n: form.n };
-}
-
-function lisp_compile_string_form(form)
-{
-    lisp_assert_string(form.s, "Bad .s", form);
-    return { vopt: "string", s: form.s };
-}
-
-function lisp_compile_symbol_form(form)
-{
-    lisp_assert_symbol_form(form, "Bad symbol form", form);
-    return { vopt: "ref", name: form.name };
 }
 
 function lisp_compile_compound_form(form)
@@ -222,12 +211,21 @@ function lisp_compile_compound_form(form)
         var macro = lisp_macro_function(op.name);
         if (macro) {
             // The macro function is a Lisp function, so the calling
-            // convention must be followed.
+            // convention argument must be supplied.
             return lisp_compile(macro(null, form));
         } else {
-            lisp_error("Bad form", form);
+            return lisp_compile_function_application(form);
         }
     }
+}
+
+function lisp_compile_function_application(form)
+{
+    var op = lisp_assert_symbol_form(form.elts[0]);
+    var name = lisp_assert_nonempty_string(op.name);
+    var fun = { vopt: "fref", name: name };
+    var call_site = lisp_compile_call_site(form.elts.slice(1));
+    return { vopt: "funcall", fun: fun, call_site: call_site };
 }
 
 
@@ -395,9 +393,11 @@ function lisp_compile_special_quasiquote(form)
    On the other hand, keyword parameters are always optional.
    Furthermore, CyberLisp does not constrain the allowable keywords
    supplied to a function: even if a function's signature does not
-   contain keyword parameters, the call site may still supply keyword
-   arguments to the function.  (The function has no means to access
-   these spurious arguments, unless it has an all-keys parameter) */
+   contain keyword parameters, the caller may still supply keyword
+   arguments to the function, or, in case a function defines keyword
+   parameters, the caller may supply different keyword arguments.
+   (The function has no means to access these unrequested arguments,
+   unless it has an all-keys parameter) */
 
 /**** Parameter default value expressions ****/
 
@@ -413,31 +413,6 @@ function lisp_compile_special_quasiquote(form)
    argument's type is not a general subtype of a parameter's type, an
    exception is thrown. */
    
-/**** Signatures ****/
-
-/* A function's signature ("lambda list") may contain required,
-   optional, keyword, rest and all-keys parameters.
-
-   The signature is represented as an object:
-
-   { req_params: <list>,
-     opt_params: <list>,
-     key_params: <list>,
-     rest_param: <param>,
-     all_keys_param: <param> }
-
-   req_params, opt_params, key_params: lists of required, optional,
-   and keyword parameters, respectively.
-   
-   rest_param, all_keys_param: the rest and all-keys parameters, or
-   null.
-
-   A parameter is also represented as an object:
-
-   { name: <string> }
-
-   name: name of the parameter */
-
 /**** Signature syntax ****/
 
 /* The different kinds of parameters in a function signature are
@@ -465,6 +440,28 @@ function lisp_compile_special_quasiquote(form)
    &all-keys c d), the parameter `a' is bound to the sequence of
    remaining positional arguments, and the parameter `c' is bound to
    the dictionary of supplied keyword arguments. */
+
+/**** Signature objects ****/
+
+/* Function signatures are represented as objects:
+
+   { req_params: <list>,
+     opt_params: <list>,
+     key_params: <list>,
+     rest_param: <param>,
+     all_keys_param: <param> }
+
+   req_params, opt_params, key_params: lists of required, optional,
+   and keyword parameters, respectively.
+   
+   rest_param, all_keys_param: the rest and all-keys parameters, or
+   null.
+
+   Parameter are also represented as objects:
+
+   { name: <string> }
+
+   name: name of the parameter */
 
 var lisp_optional_sig_keyword = "&opt";
 var lisp_key_sig_keyword = "&key";
@@ -535,12 +532,13 @@ function lisp_mangled_param_name(param)
 
 /**** Function call sites ****/
 
-/* At a function call site, keyword arguments are apparent at
-   compile-time.  For example, in the call `(foo file: f 12)', there
-   is one keyword argument named `file' with the value `f' and one
+/* At a function call site, the positional and keyword arguments are
+   apparent at compile-time.  (This enables a fast calling convention,
+   see below.)  For example, in the call `(foo file: f 12)', there is
+   one keyword argument named `file' with the value `f' and one
    positional argument with the value `12'.
 
-   A call site is represented as an object:
+   Call sites are represented as objects:
 
    { pos_args: <list>, 
      key_args: <dict> }
@@ -614,11 +612,11 @@ var lisp_keywords_dict = "_key_";
 /*** Quasiquotation ***/
 
 /* A quasiquote form is compiled into code that, when evaluated,
-   produces a form.  No, really, I couldn't believe it myself.
+   produces a form.  No, really.
 
-   Except for not allowing multi-argument unquotes, this algorithm
-   should be equal to the one in Appendix B of Alan Bawden's paper
-   "Quasiquotation in LISP", 1999. */
+   Except for multi-argument unquotes, which are not supported, this
+   algorithm should produce the same results as the one in Appendix B
+   of Alan Bawden's paper "Quasiquotation in LISP", 1999. */
 
 function lisp_compile_qq(x, depth)
 {
@@ -695,20 +693,20 @@ function lisp_compile_qq_compound(x, depth)
 
     function quasiquote(x, depth)
     {
-        return compound([quote(symbol("%%quasiquote")), 
-                         lisp_compile_qq(x, depth)]);
+        return make_compound([quote(symbol("%%quasiquote")), 
+                              lisp_compile_qq(x, depth)]);
     }
 
     function unquote(x, depth)
     {
-        return compound([quote(symbol("%%unquote")), 
-                         lisp_compile_qq(x, depth)]);
+        return make_compound([quote(symbol("%%unquote")), 
+                              lisp_compile_qq(x, depth)]);
     }
 
     function unquote_splicing(x, depth)
     {
-        return compound([quote(symbol("%%unquote-splicing")), 
-                         lisp_compile_qq(x, depth)]);
+        return make_compound([quote(symbol("%%unquote-splicing")), 
+                              lisp_compile_qq(x, depth)]);
     }
 
     function make_compound(elt_vops)
@@ -734,25 +732,6 @@ function lisp_compile_qq_compound(x, depth)
     {
         return { vopt: "quote", form: form };
     }
-}
-
-function lisp_make_compound(_key_)
-{
-    var elts = [];
-    for (var i = 1; i < arguments.length; i++) {
-        elts = elts.concat(arguments[i]);
-    }
-    return { formt: "compound", elts: elts };
-}
-
-function lisp_append_compounds(_key_)
-{
-    var elts = [];
-    for (var i = 1; i < arguments.length; i++) {
-        lisp_assert(arguments[i].formt == "compound");
-        elts = elts.concat(arguments[i].elts);
-    }
-    return { formt: "compound", elts: elts };    
 }
 
 
@@ -1083,7 +1062,56 @@ function lisp_assert_compound_form(value, message, arg)
     return value;
 }
 
-/**** Define built-in functions ****/
+/**** Built-in form manipulation macros and functions ****/
 
+/* Applies a Lisp function to the elements of a compound form. */
+function lisp_compound_apply(_key_, fun, form)
+{
+    var _key_ = null;
+    var args = [ _key_ ].concat(form.elts.slice(1));
+    var thisArg = null;
+    return fun.apply(thisArg, args);
+}
+
+function lisp_make_compound(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+        elts = elts.concat(arguments[i]);
+    }
+    return { formt: "compound", elts: elts };
+}
+
+function lisp_append_compounds(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+        var elt = arguments[i];
+        if (elt.formt == "compound") {
+            elts = elts.concat(arguments[i].elts);
+        } else {
+            lisp_assert(elt.length);
+            elts = elts.concat(elt);
+        }
+    }
+    return { formt: "compound", elts: elts };    
+}
+
+function lisp_compound_elt(_key_, compound, i)
+{
+    lisp_assert(compound.formt == "compound");
+    lisp_assert(compound.elts[i]);
+    return compound.elts[i];
+}
+
+function lisp_compound_slice(_key_, compound, start)
+{
+    lisp_assert(compound.formt == "compound");
+    return { formt: "compound", elts: compound.elts.slice(start) };
+}
+
+lisp_fset("%%compound-apply", "lisp_compound_apply");
 lisp_fset("%%make-compound", "lisp_make_compound");
 lisp_fset("%%append-compounds", "lisp_append_compounds");
+lisp_fset("%%compound-elt", "lisp_compound_elt");
+lisp_fset("%%compound-slice", "lisp_compound_slice");
