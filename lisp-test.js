@@ -177,7 +177,7 @@ function lisp_test_all()
         // %%if
         lisp_test(lisp_eval("(%%if true true false)") == true);
         lisp_test(lisp_eval("(%%if false true false)") == false);
-        lisp_test(lisp_eval("(%%if nil true false)") == false);
+        lisp_test(lisp_eval("(%%if null true false)") == false);
         
     } catch(e) {
         print(e);

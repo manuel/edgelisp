@@ -1135,7 +1135,9 @@ function lisp_make_compound(_key_)
 }
 
 /* Creates a compound form by appending all positional arguments,
-   which must be compound forms or lists. */
+   which must be compound forms or lists.  This fuzzyness in accepting
+   both compound forms and lists enables the splicing in of forms
+   supplied via the rest parameter. */
 function lisp_append_compounds(_key_)
 {
     var elts = [];
@@ -1183,10 +1185,22 @@ lisp_fset("%%compound-map", "lisp_compound_map");
 
 /*** Other built-ins ***/
 
-function lisp_macroexpand_1(_key_, form)
+function lisp_bif_macroexpand_1(_key_, form)
 {
     var macro = lisp_macro_function(form.elts[0].name);
     return macro(null, form);
 }
 
-lisp_fset("%%macroexpand-1", "lisp_macroexpand_1");
+function lisp_bif_assert(_key_, test)
+{
+    if (!lisp_is_true(test)) throw "Assertion failed";
+}
+
+function lisp_bif_eq(_key_, a, b)
+{
+    return a === b;
+}
+
+lisp_fset("%%macroexpand-1", "lisp_bif_macroexpand_1");
+lisp_fset("%%assert", "lisp_bif_assert");
+lisp_fset("%%eq", "lisp_bif_eq");

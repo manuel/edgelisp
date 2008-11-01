@@ -44,3 +44,9 @@
 
 (defmacro macroexpand-1 (form)
   `(%%macroexpand-1 ,form))
+
+(defmacro assert (test)
+  `(%%assert ,test))
+
+(defmacro eq (a b)
+  `(%%eq ,a ,b))
