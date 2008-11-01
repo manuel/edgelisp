@@ -221,11 +221,13 @@ function lisp_compile_compound_form(form)
 
 function lisp_compile_function_application(form)
 {
-    var op = lisp_assert_symbol_form(form.elts[0]);
-    var name = lisp_assert_nonempty_string(op.name);
+    var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
+    var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
     var fun = { vopt: "fref", name: name };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
-    return { vopt: "funcall", fun: fun, call_site: call_site };
+    return { vopt: "funcall", 
+             fun: fun, 
+             call_site: call_site };
 }
 
 
@@ -834,19 +836,30 @@ function lisp_emit_vop_lambda(vop)
     var sig = param_names.join(", ");
 
     // Positional arguments arity check
-    var min = 1 + req_params.length;
-    if (!rest_param) {
-        var max = 1 + req_params.length + opt_params.length;
+    var min = req_params.length;
+    var max = req_params.length + opt_params.length;
+    var js_min = 1 + min; // Include calling convention argument
+    var js_max = 1 + max; //
+    if (rest_param) {
         var arity_check = 
-            "lisp_arity_min_max(arguments.length, " + min + ", " + max + ")";
+            "lisp_arity_min(arguments.length, " + js_min + "); ";
     } else {
         var arity_check = 
-            "lisp_arity_min(arguments.length, " + min + ")";
+            "lisp_arity_min_max(arguments.length, " + js_min + ", " + js_max + "); ";
     }
 
-    var preamble = arity_check;
-    var body = preamble + ", " + lisp_emit(vop.body);
-    return "(function(" + sig + "){ return (" + body + "); })";
+    // Rest parameter
+    if (rest_param) {
+        var rest_param_setup = 
+            "var " + lisp_mangled_param_name(rest_param) + 
+            " = lisp_rest_param(arguments, " + max + "); ";
+    } else {
+        var rest_param_setup = "";
+    }
+
+    var preamble = arity_check + rest_param_setup;
+    var body = lisp_emit(vop.body);
+    return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
 
 /* { vopt: "macroset", name: <string>, expander: <vop> }
@@ -1062,35 +1075,43 @@ function lisp_assert_compound_form(value, message, arg)
     return value;
 }
 
-/**** Built-in form manipulation macros and functions ****/
+/**** Built-in form manipulation functions ****/
 
-/* Applies a Lisp function to the elements of a compound form. */
+/* Applies a Lisp function to the elements of a compound form, a
+   simple form of destructuring.  The form's elements are simply
+   supplied as the function's positional arguments. */
 function lisp_compound_apply(_key_, fun, form)
 {
     var _key_ = null;
-    var args = [ _key_ ].concat(form.elts.slice(1));
+    var args = [ _key_ ].concat(form.elts);
     var thisArg = null;
     return fun.apply(thisArg, args);
 }
 
+/* Creates a compound from all positional arguments, which must be
+   forms. */
 function lisp_make_compound(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
-        elts = elts.concat(arguments[i]);
+        var elt = arguments[i];
+        lisp_assert(elt.formt, "%%make-compound", elt);
+        elts = elts.concat(elt);
     }
     return { formt: "compound", elts: elts };
 }
 
+/* Creates a compound form by appending all positional arguments,
+   which must be compound forms or lists. */
 function lisp_append_compounds(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
         var elt = arguments[i];
         if (elt.formt == "compound") {
-            elts = elts.concat(arguments[i].elts);
+            elts = elts.concat(elt.elts);
         } else {
-            lisp_assert(elt.length);
+            lisp_assert(elt.length, "%%append-compounds", elt);
             elts = elts.concat(elt);
         }
     }
@@ -1099,14 +1120,14 @@ function lisp_append_compounds(_key_)
 
 function lisp_compound_elt(_key_, compound, i)
 {
-    lisp_assert(compound.formt == "compound");
-    lisp_assert(compound.elts[i]);
-    return compound.elts[i];
+    lisp_assert_compound_form(compound, "%%compound-elt", compound);
+    var elt = compound.elts[i];
+    return elt;
 }
 
 function lisp_compound_slice(_key_, compound, start)
 {
-    lisp_assert(compound.formt == "compound");
+    lisp_assert_compound_form(compound, "%%compound-slice", compound);
     return { formt: "compound", elts: compound.elts.slice(start) };
 }
 

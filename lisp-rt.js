@@ -35,3 +35,16 @@ function lisp_arity_min_max(length, min, max)
     if (length > max)
         throw Error("Too many arguments ");
 }
+
+/* Called with a function's arguments and the count of positional
+   (required and optional) parameters of the function, returns the
+   sequence of arguments to which the rest parameter is bound. */
+function lisp_rest_param(_arguments, pos_ct) {
+    var args = [];
+    var len = _arguments.length;
+    // Don't include calling convention argument.
+    for (var i = 1 + pos_ct; i < len; i++) {
+        args[i - 1 - pos_ct] = _arguments[i];
+    }
+    return args;
+}

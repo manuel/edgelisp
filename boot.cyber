@@ -2,8 +2,18 @@
 
 ;; (defmacro name sig &rest body)
 ;;  0        1    2         3
-(%%defmacro defmacro  (%%lambda (defmacro-form)    `(%%defmacro ,(%%compound-elt defmacro-form 1)       (%%lambda (%%form)         (%%compound-apply            (%%lambda ,(%%compound-elt defmacro-form 2)             (%%progn               ,@(%%compound-slice defmacro-form 3)))           %%form)))))
+(%%defmacro defmacro
+  (%%lambda (defmacro-form)
+    `(%%defmacro ,(%%compound-elt defmacro-form 1)
+       (%%lambda (%%form)         
+         (%%compound-apply            
+           (%%lambda ,(%%compound-elt defmacro-form 2)             
+             (%%progn               
+               ,@(%%compound-slice defmacro-form 3)))           
+           ,(%%compound-slice %%form 1))))))
 
-(defmacro progn (&rest body)  `(%%progn ,@body))
+(defmacro progn (&rest body)
+  `(%%progn ,@body))
 
-(defmacro lambda (sig &rest body)  `(%%lambda ,sig (progn ,@body)))
+(defmacro lambda (sig &rest body)
+  `(%%lambda ,sig (progn ,@body)))

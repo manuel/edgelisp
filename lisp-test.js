@@ -159,6 +159,17 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2)") == null);
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2)") == null);
 
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r))"), []));
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r) 1)"), [1]));
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r) 1 2)"), [1, 2]));
+
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &rest r) a) 1 2 3)"), 1));
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &rest r) r) 1 2 3)"), [2, 3]));
+
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) a) 1 2 3 4)"), 1));
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) b) 1 2 3 4)"), 2));
+        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) r) 1 2 3 4)"), [3, 4]));
+
         // %%defmacro
         lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");
         lisp_test(lisp_eval("(m1)") == 1);
