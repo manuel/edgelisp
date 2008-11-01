@@ -10,7 +10,7 @@
            (%%lambda ,(%%compound-elt defmacro-form 2)             
              (%%progn               
                ,@(%%compound-slice defmacro-form 3)))           
-           ,(%%compound-slice %%form 1))))))
+           (%%compound-slice %%form 1))))))
 
 (defmacro progn (&rest body)
   `(%%progn ,@body))

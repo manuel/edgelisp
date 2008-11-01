@@ -40,11 +40,12 @@ function lisp_arity_min_max(length, min, max)
    (required and optional) parameters of the function, returns the
    sequence of arguments to which the rest parameter is bound. */
 function lisp_rest_param(_arguments, pos_ct) {
+    // Don't include calling convention argument.
+    var offset = 1 + pos_ct;
     var args = [];
     var len = _arguments.length;
-    // Don't include calling convention argument.
-    for (var i = 1 + pos_ct; i < len; i++) {
-        args[i - 1 - pos_ct] = _arguments[i];
+    for (var i = offset; i < len; i++) {
+        args[i - offset] = _arguments[i];
     }
     return args;
 }
