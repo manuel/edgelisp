@@ -24,11 +24,11 @@
 (defmacro defparameter (name value)
   `(%%defparameter ,name ,value))
 
-(defmacro if (test consequent &opt alternative)
+(defmacro if (test consequent alternative)
   `(%%if ,test ,consequent ,alternative))
 
 (defmacro when (test &rest consequent)
-  `(if ,test (progn ,consequent)))
+  `(if ,test (progn ,@consequent) nil))
 
 (defmacro unless (test &rest alternative)
-  `(if ,test nil (progn ,alternative)))
+  `(if ,test nil (progn ,@alternative)))

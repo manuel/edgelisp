@@ -1127,7 +1127,7 @@ function lisp_make_compound(_key_)
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
         var elt = arguments[i];
-        lisp_assert(elt.formt, "%%make-compound", elt);
+        lisp_assert(elt && elt.formt, "%%make-compound", elt);
         elts = elts.concat(elt);
     }
     return { formt: "compound", elts: elts };
