@@ -28,7 +28,19 @@
   `(%%if ,test ,consequent ,alternative))
 
 (defmacro when (test &rest consequent)
-  `(if ,test (progn ,@consequent) nil))
+  `(if ,test (progn ,@consequent) null))
 
 (defmacro unless (test &rest alternative)
-  `(if ,test nil (progn ,@alternative)))
+  `(if ,test null (progn ,@alternative)))
+
+(defmacro let (bindings &rest body)
+  `(%%funcall (lambda ,(%%compound-map (lambda (b) 
+                                         (%%compound-elt b 0))
+                                       bindings)
+                ,@body)
+              ,@(%%compound-map (lambda (b) 
+                                  (%%compound-elt b 1)) 
+                                bindings)))
+
+(defmacro macroexpand-1 (form)
+  `(%%macroexpand-1 ,form))

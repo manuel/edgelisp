@@ -514,6 +514,7 @@ function lisp_compile_sig(params)
 
     for (var i in params) {
         var param = params[i];
+        lisp_assert_not_null(param, "Bad param", params);
         if (param.formt == "symbol") {
             if (lisp_is_sig_keyword(param.name)) {
                 switch (param.name) {
@@ -1150,6 +1151,16 @@ function lisp_append_compounds(_key_)
     return { formt: "compound", elts: elts };    
 }
 
+function lisp_compound_map(_key_, fun, compound)
+{
+    function js_fun(elt) {
+        return fun(null, elt);
+    }
+    lisp_assert_not_null(fun);
+    lisp_assert_compound_form(compound);
+    return { formt: "compound", elts: compound.elts.map(js_fun) };
+}
+
 function lisp_compound_elt(_key_, compound, i)
 {
     lisp_assert_compound_form(compound, "%%compound-elt", compound);
@@ -1168,3 +1179,14 @@ lisp_fset("%%make-compound", "lisp_make_compound");
 lisp_fset("%%append-compounds", "lisp_append_compounds");
 lisp_fset("%%compound-elt", "lisp_compound_elt");
 lisp_fset("%%compound-slice", "lisp_compound_slice");
+lisp_fset("%%compound-map", "lisp_compound_map");
+
+/*** Other built-ins ***/
+
+function lisp_macroexpand_1(_key_, form)
+{
+    var macro = lisp_macro_function(form.elts[0].name);
+    return macro(null, form);
+}
+
+lisp_fset("%%macroexpand-1", "lisp_macroexpand_1");

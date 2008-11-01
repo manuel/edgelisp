@@ -55,6 +55,6 @@ function lisp_is_true(obj)
     return (obj != false) && (obj != null);
 }
 
-lisp_set("true", true);
-lisp_set("false", false);
-lisp_set("nil", null);
+lisp_set("true", "true");
+lisp_set("false", "false");
+lisp_set("null", "null");
