@@ -1,39 +1,61 @@
+print("CyberLisp 0.1");
+
 load("lisp.js");
 load("lisp-rt.js");
 
 var repl_debug = false;
 
-print("CyberLisp 0.1");
+function repl_debug_print(obj)
+{
+    if (repl_debug) print("; " + lisp_show(obj));
+}
 
-while(1) {
+var repl_cont = "";
+
+for(;;) {
     try {
-        var repl_text = readline();
+        var repl_line = readline();
         
-        if (repl_text == "/d") { // debug
+        if (repl_line == "/d") {
             repl_debug = !repl_debug;
             print("Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
-        } else if (repl_text == "/r") { // reload
+        } else if (repl_line == "/r") {
             load("lisp-repl.js");
-        } else if (repl_text == "") { // empty line
+        } else if ((repl_line == "") && (repl_cont == "")) {
             continue;
         }
 
-        // Lisp evaluation
-        var repl_forms = lisp_parse(repl_text);
-        repl_dbg(repl_forms);
+        if (repl_cont) {
+            var repl_forms = lisp_parse(repl_cont + repl_line);
+        } else {
+            var repl_forms = lisp_parse(repl_line);
+        }
+        
+        if (repl_forms) {
+            repl_cont = "";
+        } else {
+            if (repl_line == "") {
+                repl_cont = "";                
+                print("syntax error");
+                continue;
+            } else {
+                repl_cont += repl_line;
+                print("waiting for more input...");
+                continue;
+            }
+        }
+        
+        repl_debug_print(repl_forms);
         var repl_vop = { vopt: "progn", vops: repl_forms.map(lisp_compile) };
-        repl_dbg(repl_vop);
+        repl_debug_print(repl_vop);
         var repl_js = lisp_emit(repl_vop);
-        repl_dbg(repl_js);
+        repl_debug_print(repl_js);
         var repl_result = eval(repl_js);
         print(lisp_show(repl_result));
+        
     } catch(e) {
         print(e);
         print(e.stack);
     }
-}
-
-function repl_dbg(obj) {
-    if (repl_debug) print("; " + lisp_show(obj));
 }
