@@ -1,4 +1,4 @@
-print("CyberLisp 0.1");
+print("DNA Lisp 0.2");
 
 load("lisp.js");
 load("lisp-rt.js");
@@ -41,7 +41,6 @@ for(;;) {
                 continue;
             } else {
                 repl_cont += repl_line;
-                print("waiting for more input...");
                 continue;
             }
         }

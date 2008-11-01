@@ -1,1 +1,1 @@
-smjs lisp-repl.js
+cat boot.cyber - | smjs lisp-repl.js

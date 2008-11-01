@@ -269,7 +269,8 @@ function lisp_macro_function(name)
 function lisp_set_macro_function(name, expander)
 {
     var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);
+    var mangled_name = lisp_mangle_function(name);    
+    print("; Defined macro " + name.toUpperCase());
     lisp_macros_table[mangled_name] = expander;
 }
 
