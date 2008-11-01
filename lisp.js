@@ -253,6 +253,7 @@ var lisp_specials_table = {
     "%%defmacro": lisp_compile_special_defmacro,
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
+    "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
@@ -329,6 +330,20 @@ function lisp_compile_special_function(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     return { vopt: "fref", 
              name: name_form.name };
+}
+
+/* In CyberLisp `false' and `null' are considered false, all other
+   objects (including the number zero) are true.  
+   (%%if test consequent alternative) */
+function lisp_compile_special_if(form)
+{
+    var test = lisp_assert_not_null(form.elts[1]);
+    var consequent = lisp_assert_not_null(form.elts[2]);
+    var alternative = lisp_assert_not_null(form.elts[3]);
+    return { vopt: "if",
+             test: lisp_compile(test),
+             consequent: lisp_compile(consequent),
+             alternative: lisp_compile(alternative) };
 }
 
 /* Returns a lexical closure.  See heading ``Functions''.
@@ -765,6 +780,7 @@ var lisp_vop_table = {
     "fref": lisp_emit_vop_fref,
     "fset": lisp_emit_vop_fset,
     "funcall": lisp_emit_vop_funcall,
+    "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
     "macroset": lisp_emit_vop_macroset,
     "number": lisp_emit_vop_number,
@@ -819,6 +835,15 @@ function lisp_emit_vop_funcall(vop)
     var args = [ keywords_dict ].concat(pos_args).join(", ");
 
     return "(" + lisp_emit(fun) + "(" + args + "))";
+}
+
+/* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
+function lisp_emit_vop_if(vop)
+{
+    var test = lisp_emit(vop.test);
+    var consequent = lisp_emit(vop.consequent);
+    var alternative = lisp_emit(vop.alternative);
+    return "(lisp_is_true(" + test + ") ? " + consequent + " : " + alternative + ")";
 }
 
 /* Creates a lexical closure.
@@ -1003,6 +1028,11 @@ function lisp_mangle_keyword_arg(name)
 function lisp_fset(lisp_name, js_function)
 {
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
+}
+
+function lisp_set(lisp_name, js_object)
+{
+    eval(lisp_mangle_var(lisp_name) + " = " + js_object);
 }
 
 function lisp_show(obj)

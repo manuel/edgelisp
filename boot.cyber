@@ -17,3 +17,18 @@
 
 (defmacro lambda (sig &rest body)
   `(%%lambda ,sig (progn ,@body)))
+
+(defmacro defun (name sig &rest body)
+  `(%%defun ,name (lambda ,sig ,@body)))
+
+(defmacro defparameter (name value)
+  `(%%defparameter ,name ,value))
+
+(defmacro if (test consequent &opt alternative)
+  `(%%if ,test ,consequent ,alternative))
+
+(defmacro when (test &rest consequent)
+  `(if ,test (progn ,consequent)))
+
+(defmacro unless (test &rest alternative)
+  `(if ,test null (progn ,alternative)))

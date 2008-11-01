@@ -49,3 +49,12 @@ function lisp_rest_param(_arguments, pos_ct) {
     }
     return args;
 }
+
+function lisp_is_true(obj)
+{
+    return (obj != false) && (obj != null);
+}
+
+lisp_set("true", true);
+lisp_set("false", false);
+lisp_set("nil", null);

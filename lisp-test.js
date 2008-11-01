@@ -173,6 +173,11 @@ function lisp_test_all()
         // %%defmacro
         lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");
         lisp_test(lisp_eval("(m1)") == 1);
+
+        // %%if
+        lisp_test(lisp_eval("(%%if true true false)") == true);
+        lisp_test(lisp_eval("(%%if false true false)") == false);
+        lisp_test(lisp_eval("(%%if nil true false)") == false);
         
     } catch(e) {
         print(e);
