@@ -196,6 +196,7 @@ function lisp_compile(form)
         lisp_assert_symbol_form(form, "Bad symbol form", form);
         return { vopt: "ref", name: form.name };
     case "compound": 
+        lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(form);
     }
     lisp_error("Bad form", form);
@@ -204,7 +205,8 @@ function lisp_compile(form)
 function lisp_compile_compound_form(form)
 {
     var op = lisp_assert_symbol_form(form.elts[0], "Bad operator", form);
-    var special = lisp_special_function(op.name);
+    var name = lisp_assert_nonempty_string(op.name, "Bad operator name", form);
+    var special = lisp_special_function(name);
     if (special) {
         return special(form);
     } else {
@@ -459,7 +461,7 @@ function lisp_compile_special_quasiquote(form)
    rest_param, all_keys_param: the rest and all-keys parameters, or
    null.
 
-   Parameter are also represented as objects:
+   Parameters are also represented as objects:
 
    { name: <string> }
 
@@ -1088,8 +1090,8 @@ function lisp_compound_apply(_key_, fun, form)
     return fun.apply(thisArg, args);
 }
 
-/* Creates a compound from all positional arguments, which must be
-   forms. */
+/* Creates a compound form from all positional arguments, which must
+   be forms. */
 function lisp_make_compound(_key_)
 {
     var elts = [];
