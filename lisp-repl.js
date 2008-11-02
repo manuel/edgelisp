@@ -1,4 +1,4 @@
-print("DNA Lisp 0.2");
+print("DNALisp 0.25");
 
 load("lisp.js");
 load("lisp-rt.js");
@@ -24,6 +24,8 @@ for(;;) {
             load("lisp-repl.js");
         } else if ((repl_line == "") && (repl_cont == "")) {
             continue;
+        } else if (repl_line[0] == ";") {
+            continue;
         }
 
         if (repl_cont) {
@@ -36,8 +38,8 @@ for(;;) {
             repl_cont = "";
         } else {
             if (repl_line == "") {
-                repl_cont = "";                
-                print("syntax error");
+                print("syntax error:" + repl_cont);
+                repl_cont = "";
                 continue;
             } else {
                 repl_cont += repl_line;

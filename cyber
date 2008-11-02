@@ -1,1 +1,1 @@
-cat boot.cyber - | smjs lisp-repl.js
+cat boot.dna - | smjs lisp-repl.js

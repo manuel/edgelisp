@@ -159,16 +159,23 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2)") == null);
         lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2)") == null);
 
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r))"), []));
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r) 1)"), [1]));
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (&rest r) r) 1 2)"), [1, 2]));
-
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &rest r) a) 1 2 3)"), 1));
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &rest r) r) 1 2 3)"), [2, 3]));
-
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) a) 1 2 3 4)"), 1));
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) b) 1 2 3 4)"), 2));
-        lisp_test(lisp_objects_equal(lisp_eval("(%%funcall (%%lambda (a &opt b &rest r) r) 1 2 3 4)"), [3, 4]));
+        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r))", []);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r) 1)", [1]);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r) 1 2)", [1, 2]);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &rest r) a) 1 2 3)", 1);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &rest r) r) 1 2 3)", [2, 3]);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) a) 1 2 3 4)", 1);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) b) 1 2 3 4)", 2);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) r) 1 2 3 4)", [3, 4]);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (x 2)) x) 1)", 1);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (x 2)) x))", 2);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1)", 2);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1 0)", 0);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1 0 -10)", 0);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) x) 1 0 -10)", 0);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) r) 1 0 -10)", []);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) a) 1 0 -10)", 1);
+        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) z) 1 0 -10)", -10);
 
         // %%defmacro
         lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");
@@ -195,19 +202,29 @@ function lisp_emit_test(vop, result)
     lisp_test(eval(lisp_emit(vop)) == result);
 }
 
-function lisp_parse_form_test(input, result) {
+function lisp_parse_form_test(input, result) 
+{
     var ast = lisp_form(ps(input)).ast;
     if(!(lisp_objects_equal(ast, result))) {
         throw Error("Got: " + lisp_show(ast) + " expected: " + lisp_show(result));
     }
 }
 
-function lisp_parse_2_forms_test(input1, input2) {
+function lisp_parse_2_forms_test(input1, input2) 
+{
     var ast1 = lisp_form(ps(input1)).ast;
     var ast2 = lisp_form(ps(input2)).ast;
     if(!(lisp_objects_equal(ast1, ast2))) {
         throw Error("Got: " + lisp_show(ast1) + " expected: " + lisp_show(ast2));
     }
+}
+
+function lisp_eval_equal_test(input1, res)
+{
+    var res1 = lisp_eval(input1);
+    if(!(lisp_objects_equal(res1, res))) {
+        throw Error("Got: " + lisp_show(res1) + " expected: " + lisp_show(res));
+    }    
 }
 
 /* Returns true iff two JavaScript objects are "deeply" equal. */

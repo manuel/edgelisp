@@ -1,5 +1,5 @@
 /* CyberLisp: A Lisp that compiles to JavaScript 1.5.
-
+   
    Copyright (C) 2008 by Manuel Simoni.
    
    CyberLisp is free software; you can redistribute it and/or modify
@@ -383,8 +383,8 @@ function lisp_compile_special_quasiquote(form)
 
 /* A function can have required, optional, keyword, rest, and all-keys
    parameters.  Required, optional, and keyword parameters can be
-   typed.  Optional and keyword parameters can have default value
-   expressions.  A rest parameter is bound to a sequence of any
+   typed.  Optional and keyword parameters can have init forms
+   (default values).  A rest parameter is bound to a sequence of any
    remaining positional arguments.  An all-keys parameter is bound to
    a dictionary of all keyword arguments passed to a function.
    
@@ -419,14 +419,6 @@ function lisp_compile_special_quasiquote(form)
    (The function has no means to access these unrequested arguments,
    unless it has an all-keys parameter) */
 
-/**** Parameter default value expressions ****/
-
-/* Optional and keyword parameters can have default value expressions,
-   that are used when the parameter is not supplied with an argument.
-   A default value expression is evaluated in an environment where all
-   parameters to the left of it in the parameter list are bound to
-   their respective arguments (or default values). */
-    
 /**** Typed parameters ****/
 
 /* Required, optional, and keyword parameters can be typed.  If an
@@ -461,6 +453,18 @@ function lisp_compile_special_quasiquote(form)
    remaining positional arguments, and the parameter `c' is bound to
    the dictionary of supplied keyword arguments. */
 
+/**** Parameter init forms ****/
+
+/* Optional and keyword parameters can have init forms, that are used
+   when the parameter is not supplied with an argument.  An init form
+   is evaluated in an environment where all parameters to the left of
+   it in the parameter list are bound to their respective arguments
+   (or init forms).
+
+   A parameter and its init form are placed into a compound form --
+   for example, (&opt (log-file "/tmp/log")) is a signature with a
+   optional parameter named `log-file' with the init form "/tmp/log". */
+
 /**** Signature objects ****/
 
 /* Function signatures are represented as objects:
@@ -479,9 +483,15 @@ function lisp_compile_special_quasiquote(form)
 
    Parameters are also represented as objects:
 
-   { name: <string> }
+   { name: <string>,
+     init: <form> }
 
-   name: name of the parameter */
+   name: name of the parameter;
+   
+   init: VOP for the value to be used when no argument is supplied to
+   the parameter (only significant for optional and keyword
+   parameters).
+ */
 
 var lisp_optional_sig_keyword = "&opt";
 var lisp_key_sig_keyword = "&key";
@@ -508,6 +518,12 @@ function lisp_compile_sig(params)
     {
         if (param.formt == "symbol") {
             return { name: param.name };
+        } else if ((param.formt == "compound") &&
+                   ((cur == opt) || (cur == key))) {
+            var name_form = lisp_assert_symbol_form(param.elts[0]);
+            var init_form = lisp_assert_not_null(param.elts[1]);
+            return { name: name_form.name,
+                     init: lisp_compile(init_form) };
         } else {
             lisp_error("Bad parameter", param);
         }
@@ -870,23 +886,36 @@ function lisp_emit_vop_lambda(vop)
     var js_min = 1 + min; // Include calling convention argument
     var js_max = 1 + max; //
     if (rest_param) {
-        var arity_check = 
+        var check_arity = 
             "lisp_arity_min(arguments.length, " + js_min + "); ";
     } else {
-        var arity_check = 
+        var check_arity = 
             "lisp_arity_min_max(arguments.length, " + js_min + ", " + js_max + "); ";
     }
 
-    // Rest parameter
-    if (rest_param) {
-        var rest_param_setup = 
-            "var " + lisp_mangled_param_name(rest_param) + 
-            " = lisp_rest_param(arguments, " + max + "); ";
-    } else {
-        var rest_param_setup = "";
+    // Optional parameter init forms
+    var init_opt_params = "";
+    if (opt_params.length > 0) {
+        var s = "";
+        for (var i = js_min; i < js_max; i++) {
+            var param = opt_params[i - js_min];
+            if (!param.init) continue;
+            var name = lisp_mangled_param_name(param);
+            var value = lisp_emit(param.init);
+            s += "if (arguments.length < " + (i + 1) + ") " + name + " = " + value + "; ";
+        }
+        init_opt_params = s;
     }
 
-    var preamble = arity_check + rest_param_setup;
+    // Rest parameter
+    var setup_rest_param = "";
+    if (rest_param) {
+        setup_rest_param =
+            "var " + lisp_mangled_param_name(rest_param) + 
+            " = lisp_rest_param(arguments, " + max + "); ";
+    }
+
+    var preamble = check_arity + init_opt_params + setup_rest_param;
     var body = lisp_emit(vop.body);
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
@@ -1192,9 +1221,9 @@ function lisp_bif_macroexpand_1(_key_, form)
     return macro(null, form);
 }
 
-function lisp_bif_assert(_key_, test)
+function lisp_bif_print(_key_, object)
 {
-    if (!lisp_is_true(test)) throw "Assertion failed";
+    print(object);
 }
 
 function lisp_bif_eq(_key_, a, b)
@@ -1203,5 +1232,5 @@ function lisp_bif_eq(_key_, a, b)
 }
 
 lisp_fset("%%macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_fset("%%assert", "lisp_bif_assert");
+lisp_fset("%%print", "lisp_bif_print");
 lisp_fset("%%eq", "lisp_bif_eq");
