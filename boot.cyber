@@ -157,3 +157,4 @@
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
 (defclass (<restart> <exception>))
+

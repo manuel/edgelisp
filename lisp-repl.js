@@ -48,7 +48,7 @@ for(;;) {
         }
 
         if (repl_cont) {
-            var repl_forms = lisp_parse(repl_cont + repl_line);
+            var repl_forms = lisp_parse(repl_cont + "\n" + repl_line);
         } else {
             var repl_forms = lisp_parse(repl_line);
         }
@@ -61,7 +61,7 @@ for(;;) {
                 repl_cont = "";
                 continue;
             } else {
-                repl_cont += repl_line;
+                repl_cont = repl_cont + "\n" + repl_line;
                 continue;
             }
         }
