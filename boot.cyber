@@ -1,4 +1,4 @@
-;;; -*-LISP-*-
+;;; -*- LISP -*-
 ;;;
 ;;; CyberLisp: A Lisp that compiles to JavaScript 1.5.
 ;;;   
@@ -43,6 +43,10 @@
 (defmacro defparameter (name value)
   `(%%defparameter ,name ,value))
 
+;; Note that in contrast to other Lisps, CyberLisp does not allow
+;; mixing of runtime values and forms, so the alternative's default
+;; value cannot simply be the value `null', it has to be the form
+;; `null'.
 (defmacro if (test consequent &opt (alternative `null))
   `(%%if ,test ,consequent ,alternative))
 
@@ -52,23 +56,41 @@
 (defmacro unless (test &rest alternative)
   `(if ,test null (progn ,@alternative)))
 
+(defmacro set (name value)
+  `(%%set ,name ,value))
+
+(defun compound-map (fun compound)
+  (%%compound-map fun compound))
+
+(defun compound-elt (compound i)
+  (%%compound-elt compound i))
+
+(defun compound-slice (compound start)
+  (%%compound-slice compound start))
+
 (defmacro let (bindings &rest body)
-  `(%%funcall (lambda ,(%%compound-map (lambda (b) 
-                                         (%%compound-elt b 0))
-                                       bindings)
+  `(%%funcall (lambda ,(compound-map (lambda (b) 
+                                       (compound-elt b 0))
+                                     bindings)
                 ,@body)
-              ,@(%%compound-map (lambda (b) 
-                                  (%%compound-elt b 1)) 
-                                bindings)))
+              ,@(compound-map (lambda (b) 
+                                (compound-elt b 1)) 
+                              bindings)))
 
-(defmacro macroexpand-1 (form)
-  `(%%macroexpand-1 ,form))
+(defmacro boundp (name)
+  `(%%boundp ,name))
 
-(defmacro print (object)
-  `(%%print ,object))
+(defmacro fboundp (name)
+  `(%%fboundp ,name))
 
-(defmacro eq (a b)
-  `(%%eq ,a ,b))
+(defun macroexpand-1 (form)
+  (%%macroexpand-1 form))
+
+(defun print (object)
+  (%%print object))
+
+(defun eq (a b)
+  (%%eq a b))
 
 (defun assert (test &opt (msg "Assertion failed"))
   (unless test
@@ -76,3 +98,51 @@
 
 (defun not (x)
   (if x false true))
+
+(defun symbol-name (symbol)
+  (%%symbol-name symbol))
+
+(defun symbolp (form)
+  (%%symbolp form))
+
+(defun compoundp (form)
+  (%%compoundp form))
+
+(defun make-class ()
+  (%%make-class))
+
+(defun set-super-class (class super-class)
+  (%%set-super-class class super-class))
+
+(defun make (class)
+  (%%make class))
+
+(defun typeof (obj)
+  (%%typeof obj))
+
+(defun subtypep (type-1 type-2)
+  (%%subtypep type-1 type-2))
+
+(defmacro defclass (name &rest slots)
+  (let ((name (if (symbolp name) name (compound-elt name 0)))
+        (super-class (if (symbolp name) null (compound-elt name 1))))
+    `(progn
+       (unless (boundp ,name)
+         (set ,name (make-class)))
+       ,(if super-class
+            `(set-super-class ,name ,super-class)
+            `null))))
+
+(defmacro list (&rest args)
+  `(%%list ,@args))
+
+(defmacro catch (handler-specs &rest body)
+  `(%%catch (list ,@(compound-map (lambda (handler-spec)
+                                    `(list ,(compound-elt handler-spec 0)
+                                           ,(compound-elt handler-spec 1)))
+                                  handler-specs))
+            (lambda () ,@body)))
+
+(defun throw (exception)
+  (%%throw exception))
+

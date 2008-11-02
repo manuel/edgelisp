@@ -248,14 +248,17 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
+    "%%boundp": lisp_compile_special_boundp,
     "%%defparameter": lisp_compile_special_defparameter,
     "%%defun": lisp_compile_special_defun,
     "%%defmacro": lisp_compile_special_defmacro,
+    "%%fboundp": lisp_compile_special_fboundp,
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
+    "%%set": lisp_compile_special_set,
     "%%quasiquote": lisp_compile_special_quasiquote,
 };
 
@@ -278,6 +281,16 @@ function lisp_set_macro_function(name, expander)
 var lisp_macros_table = {};
 
 /**** List of special forms ****/
+
+/* Returns true if `name' is bound (unlike Common Lisp's `boundp',
+   name is not evaluated).  
+   (%%boundp name) */
+function lisp_compile_special_boundp(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    return { vopt: "boundp", 
+             name: name_form.name };
+}
 
 /* Assigns the `value' to the global variable named `name'.
    (%%defparameter name value) */
@@ -311,6 +324,16 @@ function lisp_compile_special_defmacro(form)
     return { vopt: "macroset", 
              name: name_form.name, 
              expander: lisp_compile(expander_form) };
+}
+
+/* Returns true if `name' is bound in the function namespace (unlike
+   Common Lisp's `fboundp', name is not evaluated).  
+   (%%fboundp name) */
+function lisp_compile_special_fboundp(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    return { vopt: "fboundp", 
+             name: name_form.name };
 }
 
 /* Calls a function passed as argument.
@@ -366,6 +389,16 @@ function lisp_compile_special_progn(form)
     var vops = form.elts.slice(1);
     return { vopt: "progn", 
              vops: vops.map(lisp_compile) };
+}
+
+/* (%%set name value) */
+function lisp_compile_special_set(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    var value_form = lisp_assert_not_null(form.elts[2]);
+    return { vopt: "set",
+             name: name_form.name,
+             value: lisp_compile(value_form) };
 }
 
 /* See heading ``Quasiquotation''.
@@ -795,6 +828,8 @@ function lisp_vop_function(vopt)
 /**** List of VOPs ****/
 
 var lisp_vop_table = {
+    "boundp": lisp_emit_vop_boundp,
+    "fboundp": lisp_emit_vop_fboundp,
     "fref": lisp_emit_vop_fref,
     "fset": lisp_emit_vop_fset,
     "funcall": lisp_emit_vop_funcall,
@@ -808,6 +843,20 @@ var lisp_vop_table = {
     "set": lisp_emit_vop_set,
     "string": lisp_emit_vop_string,
 };
+
+/* { vopt: "boundp", name: <string> } */
+function lisp_emit_vop_boundp(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name);
+    return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
+}
+
+/* { vopt: "fboundp", name: <string> } */
+function lisp_emit_vop_fboundp(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name);
+    return "(typeof " + lisp_mangle_function(name) + " != \"undefined\")";
+}
 
 /* Function reference. 
    { vopt: "fref", name: <string> }
@@ -826,7 +875,9 @@ function lisp_emit_vop_fset(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
     var value = lisp_assert_not_null(vop.value, "Bad value", vop);
-    return "(" + lisp_mangle_function(name) + " = " + lisp_emit(value) + ")";
+    var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
+    var name_upper = name.toUpperCase();
+    return "(" + assignment + ", print(\"; Defined function " + name_upper + "\"))";
 }
 
 /* Calls a function.
@@ -1137,7 +1188,6 @@ function lisp_assert_compound_form(value, message, arg)
     lisp_assert_not_null(value.elts.length, message, arg);
     return value;
 }
-
 /**** Built-in form manipulation functions ****/
 
 /* Applies a Lisp function to the elements of a compound form, a
@@ -1212,25 +1262,3 @@ lisp_fset("%%append-compounds", "lisp_append_compounds");
 lisp_fset("%%compound-elt", "lisp_compound_elt");
 lisp_fset("%%compound-slice", "lisp_compound_slice");
 lisp_fset("%%compound-map", "lisp_compound_map");
-
-/*** Other built-ins ***/
-
-function lisp_bif_macroexpand_1(_key_, form)
-{
-    var macro = lisp_macro_function(form.elts[0].name);
-    return macro(null, form);
-}
-
-function lisp_bif_print(_key_, object)
-{
-    print(object);
-}
-
-function lisp_bif_eq(_key_, a, b)
-{
-    return a === b;
-}
-
-lisp_fset("%%macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_fset("%%print", "lisp_bif_print");
-lisp_fset("%%eq", "lisp_bif_eq");

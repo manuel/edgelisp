@@ -41,9 +41,9 @@ for(;;) {
             continue;
         } else if (repl_line == "/r") {
             load("lisp-repl.js");
-        } else if ((repl_line == "") && (repl_cont == "")) {
-            continue;
         } else if (repl_line[0] == ";") {
+            continue;
+        } else if ((repl_line == "") && (repl_cont == "")) {
             continue;
         }
 
@@ -67,9 +67,9 @@ for(;;) {
         }
         
         repl_debug_print(repl_forms);
-        var repl_vop = { vopt: "progn", vops: repl_forms.map(lisp_compile) };
-        repl_debug_print(repl_vop);
-        var repl_js = lisp_emit(repl_vop);
+        var repl_vops = repl_forms.map(lisp_compile);
+        repl_debug_print(repl_vops);
+        var repl_js = lisp_emit({ vopt: "progn", vops: repl_vops });
         repl_debug_print(repl_js);
         var repl_result = eval(repl_js);
         print(lisp_show(repl_result));

@@ -216,7 +216,18 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%if true true false)") == true);
         lisp_test(lisp_eval("(%%if false true false)") == false);
         lisp_test(lisp_eval("(%%if null true false)") == false);
+
+        // %%boundp
+        lisp_eval("(%%defparameter b1 1)");
+        lisp_test(lisp_eval("(%%boundp b1)"));
+        lisp_test(!lisp_eval("(%%boundp b2)"));
         
+        // %%fboundp
+        lisp_eval("(%%defun fb1 (%%lambda () null))");
+        lisp_test(lisp_eval("(%%fboundp fb1)"));
+        lisp_test(!lisp_eval("(%%fboundp fb2)"));
+        lisp_test(!lisp_eval("(%%fboundp b2)"));
+
     } catch(e) {
         print(e);
         print(e.stack);

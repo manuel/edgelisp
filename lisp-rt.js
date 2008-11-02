@@ -18,10 +18,13 @@
    Boston, MA 02110-1301, USA. */
    
 /* Lisp runtime: this file should contain all functions needed to run
-   compiled Lisp code.
+   compiled Lisp code.  At the moment, it does have some dependencies
+   on functions in `lisp.js', though.
 
    Lisp code that does use `eval' will always need to include the
    compiler, `lisp.js', too. */
+
+/*** Functions ***/
 
 function lisp_arity_min(length, min)
 {
@@ -36,13 +39,12 @@ function lisp_arity_min_max(length, min, max)
         throw Error("Too many arguments ");
 }
 
-/* Called with a function's arguments and the count of positional
-   (required and optional) parameters of the function, returns the
-   sequence of arguments to which the rest parameter is bound. */
-function lisp_rest_param(_arguments, pos_ct) {
-    // Don't include calling convention argument.
-    var offset = 1 + pos_ct;
+/* Returns the sequence of arguments to which the rest parameter is
+   bound; called with a function's arguments and the count of
+   positional (required and optional) parameters of the function. */
+function lisp_rest_param(_arguments, max) {
     var args = [];
+    var offset = 1 + max; // Skip calling convention argument.
     var len = _arguments.length;
     for (var i = offset; i < len; i++) {
         args[i - offset] = _arguments[i];
@@ -50,11 +52,231 @@ function lisp_rest_param(_arguments, pos_ct) {
     return args;
 }
 
+/*** Truth ***/
+
 function lisp_is_true(obj)
 {
-    return (obj != false) && (obj != null);
+    return (obj !== false) && (obj !== null);
 }
 
 lisp_set("true", "true");
 lisp_set("false", "false");
 lisp_set("null", "null");
+
+/*** Exceptions ***/
+
+/* CyberLisp uses the same exception system as Dylan and Goo (which is
+   basically Common Lisp's but with exception handlers and restarts
+   unified into a single concept).
+   
+   What's noteworthy about this system is that throwing an exception
+   does not unwind the stack -- an exception handler runs as a
+   subroutine of the thrower, and thus may advice the thrower on
+   different ways to handle an exceptional situation.  Unwinding the
+   stack, if desired, has to be done manually through the use of a
+   non-local exit.
+   
+   Together with `unwind-protect' ("finally"), this system is strictly
+   more powerful than the exception systems of languages like Java and
+   Python.  It should also be noted that non-unwinding, restartable
+   exceptions pose no algorithmic or implementational complexity over
+   ordinary, automatically unwinding exceptions. */
+
+/* CyberLisp maintains a stack of exception handler frames, because it
+   cannot use JavaScript's try/catch construct.  The handler stack
+   grows downward, so that the most recently established exception
+   handlers reside in the bottom-most, deepest frame.
+   
+   An exception handler frame is an object:
+   
+   { handlers: <list>, 
+     parent_frame: <handler_frame> }
+   
+   handlers: a list of handler objects;
+   parent_frame: the parent of the current frame or null if it is the
+   top-most frame.
+
+   A handler object:
+   
+   [ <type>, <fun> ]
+   
+   type: type of exception handled by this handler;
+   fun: handler function.
+
+   A handler function is called with two arguments: an exception and a
+   next-handler function.  It has three possibilities: (1) return a
+   value -- this will be the result of the `lisp_throw' that invoked
+   the handler; (2) take a non-local exit, aborting execution of the
+   thrower; (3) decline handling the exception by calling the
+   next-handler function (without arguments), which will continue the
+   search for an applicable handler stack-upwards. */
+
+var lisp_handler_frame = null; // bottom-most frame or null
+
+function lisp_bif_catch(_key_, handlers, fun)
+{
+    try {
+        var orig_frame = lisp_handler_frame;
+        lisp_handler_frame = { handlers: handlers, 
+                               parent_frame: orig_frame };
+        return fun(null);
+    } finally {
+        lisp_handler_frame = orig_frame;
+    }
+}
+
+function lisp_bif_throw(_key_, exception)
+{
+    function handler_type(handler) { return handler[0]; }
+    function handler_fun(handler) { return handler[1]; }
+
+    function find_handler(exception, handler_frame)
+    {
+        if (!handler_frame) return null;
+        var handlers = handler_frame.handlers;
+        var type = lisp_typeof(exception);
+        for (var i in handlers) {
+            var handler = handlers[i];
+            if (lisp_subtypep(type, handler_type(handler))) {
+                return [handler, handler_frame];
+            }
+        }
+        return find_handler(exception, handler_frame.parent_frame);
+    }
+    
+    function do_throw(exception, handler_frame)
+    {
+        var handler_and_frame = find_handler(exception, handler_frame);
+        if (handler_and_frame) {
+            var handler = handler_and_frame[0];
+            var frame = handler_and_frame[1];
+            function next_handler(_key_)
+            {
+                return do_throw(exception, frame.parent_frame);
+            }
+            return (handler_fun(handler))(null, exception, next_handler);
+        } else {
+            lisp_error("No applicable handler", exception);
+        }
+    }
+
+    return do_throw(exception, lisp_handler_frame);
+}
+
+lisp_fset("%%catch", "lisp_bif_catch");
+lisp_fset("%%throw", "lisp_bif_throw");
+
+/*** Other built-ins ***/
+
+function lisp_bif_macroexpand_1(_key_, form)
+{
+    var macro = lisp_macro_function(form.elts[0].name);
+    return macro(null, form);
+}
+
+function lisp_bif_print(_key_, object)
+{
+    print(object);
+}
+
+function lisp_bif_eq(_key_, a, b)
+{
+    return a === b;
+}
+
+lisp_fset("%%macroexpand-1", "lisp_bif_macroexpand_1");
+lisp_fset("%%print", "lisp_bif_print");
+lisp_fset("%%eq", "lisp_bif_eq");
+
+/*** Types ***/
+
+function lisp_typeof(obj)
+{
+    return obj.__proto__;
+}
+
+function lisp_bif_typeof(_key_, obj) 
+{
+    return lisp_typeof(obj);
+}
+
+lisp_fset("%%typeof", "lisp_bif_typeof");
+
+/* Returns true iff type1 is a general subtype of type2, meaning
+   either equal to type2, or a subtype of type2. */
+function lisp_subtypep(type1, type2)
+{
+    if (type1 == type2) 
+        return true;
+
+    var supertype = type1.__proto__;
+    if (supertype)
+        return lisp_subtypep(supertype, type2);
+    
+    return false;
+}
+
+function lisp_bif_subtypep(_key_, type1, type2)
+{
+    return lisp_subtypep(type1, type2);
+}
+
+lisp_fset("%%subtypep", "lisp_bif_subtypep");
+
+/*** Classes ***/
+
+function lisp_bif_make_class(_key_)
+{
+    return {};
+}
+
+function lisp_bif_set_super_class(_key_, clsA, clsB)
+{
+    clsA.__proto__ = clsB;
+}
+
+function lisp_bif_make(_key_, cls)
+{
+    var obj = {};
+    obj.__proto__ = cls;
+    return obj;
+}
+
+lisp_fset("%%make-class", "lisp_bif_make_class");
+lisp_fset("%%set-super-class", "lisp_bif_set_super_class");
+lisp_fset("%%make", "lisp_bif_make");
+
+/*** More form manipulation functions ***/
+
+function lisp_bif_symbol_name(_key_, symbol)
+{
+    lisp_assert_symbol_form(symbol);
+    return symbol.name;
+}
+
+function lisp_bif_symbolp(_key_, form)
+{
+    return form.formt == "symbol";
+}
+
+function lisp_bif_compoundp(_key_, form)
+{
+    return form.formt == "compound";
+}
+
+lisp_fset("%%symbol-name", "lisp_bif_symbol_name");
+lisp_fset("%%symbolp", "lisp_bif_symbolp");
+lisp_fset("%%compoundp", "lisp_bif_compoundp");
+
+/*** Lists ***/
+
+function lisp_bif_list(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+        elts.push(arguments[i]);
+    }
+    return elts;
+}
+
+lisp_fset("%%list", "lisp_bif_list");
