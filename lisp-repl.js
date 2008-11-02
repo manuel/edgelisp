@@ -1,4 +1,4 @@
-print("DNALisp 0.25");
+print("CyberLisp 0.25");
 
 load("lisp.js");
 load("lisp-rt.js");
