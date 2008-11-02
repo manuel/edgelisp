@@ -1226,7 +1226,7 @@ function lisp_append_compounds(_key_)
         if (elt.formt == "compound") {
             elts = elts.concat(elt.elts);
         } else {
-            lisp_assert(elt.length, "%%append-compounds", elt);
+            lisp_assert(elt.length != null, "%%append-compounds", elt);
             elts = elts.concat(elt);
         }
     }

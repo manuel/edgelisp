@@ -1,0 +1,48 @@
+;; -*- LISP -*-
+
+(assert-eq (progn 1 2 3) 3)
+(assert-eq (progn 1) 1)
+(assert-eq (progn) null)
+
+(assert-eq (%%funcall (lambda ())) null)
+(assert-eq (%%funcall (lambda () 1)) 1)
+(assert-eq (%%funcall (lambda (x) x) 1) 1)
+
+(defun test-x () 117)
+(assert-eq (test-x) 117)
+
+(defun test-y (y) y)
+(assert-eq (test-y 133) 133)
+
+(defclass (<my-error> <error>))
+(defclass (<your-error> <error>))
+
+(defvar test-counter 0)
+(catch ((<my-error> (lambda (e next-handler)
+                      (set test-counter 1))))
+  (throw (make <my-error>)))
+(assert-eq test-counter 1)
+
+(set test-counter 0)
+(catch ((<your-error> (lambda (e next-handler)
+                        (set test-counter 2))))
+  (catch ((<my-error> (lambda (e next-handler)
+                        (set test-counter 1))))
+    (throw (make <your-error>))))
+(assert-eq test-counter 2)
+
+(set test-counter 0)
+(catch ((<your-error> (lambda (e next-handler)
+                        (set test-counter 2)))
+        (<my-error> (lambda (e next-handler)
+                      (set test-counter 1))))
+  (throw (make <your-error>)))
+(assert-eq test-counter 2)
+
+(set test-counter 0)
+(catch ((<your-error> (lambda (e next-handler)
+                        (set test-counter 2)))
+        (<my-error> (lambda (e next-handler)
+                      (set test-counter 1))))
+  (throw (make <my-error>)))
+(assert-eq test-counter 1)

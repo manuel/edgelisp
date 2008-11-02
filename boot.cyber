@@ -43,6 +43,16 @@
 (defmacro defparameter (name value)
   `(%%defparameter ,name ,value))
 
+(defmacro boundp (name)
+  `(%%boundp ,name))
+
+(defmacro fboundp (name)
+  `(%%fboundp ,name))
+
+(defmacro defvar (name value)
+  `(unless (boundp ,name)
+     (defparameter ,name ,value)))
+
 ;; Note that in contrast to other Lisps, CyberLisp does not allow
 ;; mixing of runtime values and forms, so the alternative's default
 ;; value cannot simply be the value `null', it has to be the form
@@ -77,12 +87,6 @@
                                 (compound-elt b 1)) 
                               bindings)))
 
-(defmacro boundp (name)
-  `(%%boundp ,name))
-
-(defmacro fboundp (name)
-  `(%%fboundp ,name))
-
 (defun macroexpand-1 (form)
   (%%macroexpand-1 form))
 
@@ -92,9 +96,12 @@
 (defun eq (a b)
   (%%eq a b))
 
-(defun assert (test &opt (msg "Assertion failed"))
-  (unless test
-    (print msg)))
+(defmacro assert (test)
+  `(unless ,test
+     (print "assertion failed")))
+
+(defmacro assert-eq (a b)
+  `(assert (eq ,a ,b)))
 
 (defun not (x)
   (if x false true))
@@ -146,3 +153,7 @@
 (defun throw (exception)
   (%%throw exception))
 
+(defclass <exception>)
+(defclass (<error> <exception>))
+(defclass (<warning> <exception>))
+(defclass (<restart> <exception>))

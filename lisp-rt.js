@@ -71,7 +71,7 @@ lisp_set("null", "null");
    
    What's noteworthy about this system is that throwing an exception
    does not unwind the stack -- an exception handler runs as a
-   subroutine of the thrower, and thus may advice the thrower on
+   subroutine of the thrower, and thus may advise the thrower on
    different ways to handle an exceptional situation.  Unwinding the
    stack, if desired, has to be done manually through the use of a
    non-local exit.
@@ -105,8 +105,8 @@ lisp_set("null", "null");
 
    A handler function is called with two arguments: an exception and a
    next-handler function.  It has three possibilities: (1) return a
-   value -- this will be the result of the `lisp_throw' that invoked
-   the handler; (2) take a non-local exit, aborting execution of the
+   value -- this will be the result of the `throw' that invoked the
+   handler; (2) take a non-local exit, aborting execution of the
    thrower; (3) decline handling the exception by calling the
    next-handler function (without arguments), which will continue the
    search for an applicable handler stack-upwards. */
@@ -176,7 +176,7 @@ function lisp_bif_macroexpand_1(_key_, form)
 
 function lisp_bif_print(_key_, object)
 {
-    print(object);
+    print(lisp_show(object));
 }
 
 function lisp_bif_eq(_key_, a, b)
