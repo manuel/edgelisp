@@ -19,6 +19,8 @@
 ;;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;;; Boston, MA 02110-1301, USA.
 
+;;; (defmacro name sig &rest body)  [defmacro-form]
+;;;  0        1    2         3
 (%%defmacro defmacro
   (%%lambda (defmacro-form)
     `(%%defmacro ,(%%compound-elt defmacro-form 1)
@@ -41,7 +43,7 @@
 (defmacro defparameter (name value)
   `(%%defparameter ,name ,value))
 
-(defmacro if (test consequent alternative)
+(defmacro if (test consequent &opt (alternative `null))
   `(%%if ,test ,consequent ,alternative))
 
 (defmacro when (test &rest consequent)
