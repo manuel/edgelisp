@@ -50,6 +50,28 @@
   (throw (make <my-error>)))
 (assert-eq test-counter 1)
 
+(set test-counter 0)
+(catch ((<my-error> (lambda (e next-handler)
+                      (set test-counter 1))))
+  (catch ((<your-error> (lambda (e next-handler)
+                          (set test-counter 2)))
+          (<my-error> (lambda (e next-handler)
+                        (%%funcall next-handler))))
+    (throw (make <my-error>))))
+(assert-eq test-counter 1)
+
+(set test-counter 0)
+(catch ((<my-error> (lambda (e next-handler)
+                      (assert-eq test-counter 3))))
+  (catch ((<your-error> (lambda (e next-handler)
+                          (set test-counter 2)))
+          (<my-error> (lambda (e next-handler)
+                        (set test-counter 3)
+                        (%%funcall next-handler))))
+    (throw (make <my-error>))))
+(assert-eq test-counter 3)
+
+
 ;; #' syntax
 
 (defun foo () 12)
