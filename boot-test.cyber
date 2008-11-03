@@ -47,5 +47,12 @@
         (<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
   (throw (make <my-error>)))
-(assert-eq test-counter 2)
+(assert-eq test-counter 1)
+
+
+(defun foo () 12)
+(assert #'foo)
+(assert-eq #'foo (%%function foo))
+(assert-eq (%%funcall #'foo) 12)
+
 

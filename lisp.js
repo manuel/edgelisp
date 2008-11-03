@@ -126,21 +126,27 @@ function lisp_compound_form_action(ast)
 
 var lisp_quote_form =
     action(sequence("'", lisp_form),
-           lisp_make_qq_action("%%quote"));
+           lisp_shortcut_action("%%quote"));
 
 var lisp_quasiquote_form =
     action(sequence("`", lisp_form),
-           lisp_make_qq_action("%%quasiquote"));
+           lisp_shortcut_action("%%quasiquote"));
 
 var lisp_unquote_form =
     action(sequence(",", lisp_form),
-           lisp_make_qq_action("%%unquote"));
+           lisp_shortcut_action("%%unquote"));
 
 var lisp_unquote_splicing_form =
     action(sequence(",@", lisp_form),
-           lisp_make_qq_action("%%unquote-splicing"));
+           lisp_shortcut_action("%%unquote-splicing"));
 
-function lisp_make_qq_action(name)
+/**** Misc syntax ****/
+
+var lisp_function_form =
+    action(sequence("#'", lisp_symbol_form),
+           lisp_shortcut_action("%%function"));
+
+function lisp_shortcut_action(name)
 {
     return function(ast) {
         return { formt: "compound", 
@@ -158,7 +164,8 @@ var lisp_form =
                       lisp_quote_form,
                       lisp_quasiquote_form,
                       lisp_unquote_form,
-                      lisp_unquote_splicing_form));
+                      lisp_unquote_splicing_form,
+                      lisp_function_form));
 
 var lisp_forms =
     whitespace(repeat1(lisp_form));
@@ -416,6 +423,7 @@ function lisp_compile_special_quasiquote(form)
     return lisp_compile_qq(quasiquoted, 0);
 }
 
+/* (%%quote form) */
 function lisp_compile_special_quote(form)
 {
     var quoted = lisp_assert_not_null(form.elts[1]);

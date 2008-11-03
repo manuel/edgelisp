@@ -53,6 +53,9 @@
   `(unless (boundp ,name)
      (defparameter ,name ,value)))
 
+(defmacro function (name)
+  `(%%function ,name))
+
 ;; Note that in contrast to other Lisps, CyberLisp does not allow
 ;; mixing of runtime values and forms, so the alternative's default
 ;; value cannot simply be the value `null', it has to be the form
