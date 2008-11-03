@@ -59,9 +59,9 @@ var lisp_number_form =
 
 function lisp_number_form_action(ast)
 {    
-    var sign = ast[0] ? ast[0] : "";
+    var sign = ast[0] || "";
     var decimal_digits = ast[1];
-    var dot_digits = ast[2] ? ast[2] : "";
+    var dot_digits = ast[2] || "";
     return { formt: "number", n: sign + decimal_digits + dot_digits };
 }
 
@@ -275,6 +275,7 @@ function lisp_set_macro_function(name, expander)
     var mangled_name = lisp_mangle_function(name);    
     print("; Defined macro " + name.toUpperCase());
     lisp_macros_table[mangled_name] = expander;
+    return expander;
 }
 
 /* Maps the mangled names of macros to their expander functions. */
@@ -950,9 +951,8 @@ function lisp_emit_vop_lambda(vop)
         var s = "";
         for (var i = js_min; i < js_max; i++) {
             var param = opt_params[i - js_min];
-            if (!param.init) continue;
             var name = lisp_mangled_param_name(param);
-            var value = lisp_emit(param.init);
+            var value = param.init ? lisp_emit(param.init) : "null";
             s += "if (arguments.length < " + (i + 1) + ") " + name + " = " + value + "; ";
         }
         init_opt_params = s;
@@ -1119,7 +1119,13 @@ function lisp_set(lisp_name, js_object)
 
 function lisp_show(obj)
 {
-    return JSON.stringify(obj);
+    if (obj === null) {
+        return "null";
+    } else if (typeof obj == "function") {
+        return "#<function>";
+    } else {
+        return JSON.stringify(obj);
+    }
 }
 
 function lisp_array_contains(array, elt)

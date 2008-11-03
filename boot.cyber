@@ -96,13 +96,6 @@
 (defun eq (a b)
   (%%eq a b))
 
-(defmacro assert (test)
-  `(unless ,test
-     (print "assertion failed")))
-
-(defmacro assert-eq (a b)
-  `(assert (eq ,a ,b)))
-
 (defun not (x)
   (if x false true))
 
@@ -157,4 +150,13 @@
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
 (defclass (<restart> <exception>))
+
+(defclass (<failed-assertion> <error>))
+
+(defmacro assert (test)
+  `(unless ,test
+     (throw (make <failed-assertion>))))
+
+(defmacro assert-eq (a b)
+  `(assert (eq ,a ,b)))
 

@@ -197,13 +197,13 @@ function lisp_test_all()
         lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) z) 1 0 -10)", -10);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a))", 1);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b))", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c))", undefined);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c))", null);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10)", 10);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10)", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10)", undefined);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10)", null);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20)", 10);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20)", 20);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20)", undefined);
+        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20)", null);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20 30)", 10);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20 30)", 20);
         lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20 30)", 30);
@@ -282,7 +282,7 @@ function lisp_objects_equal(a, b)
 
     if ((typeof a) != (typeof b)) return false;
 
-    if (typeof a == "object") 
+    if ((a != null) && typeof a == "object")
         return deep_compare_objects(a, b);
     else
         return a == b;
