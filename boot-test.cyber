@@ -49,10 +49,22 @@
   (throw (make <my-error>)))
 (assert-eq test-counter 1)
 
+;; #' syntax
 
 (defun foo () 12)
 (assert #'foo)
 (assert-eq #'foo (%%function foo))
 (assert-eq (%%funcall #'foo) 12)
 
+;; Escape functions
 
+(assert-eq 1 (block x (return-from x 1)))
+(assert-eq 1 (block x (block y (return-from x 1))))
+(assert-eq 2 (block x (block y 2)))
+(assert-eq 3 (block x (block y 2) 3))
+(assert-eq 3 (block x (block y (return-from y 4)) 3))
+(assert-eq 4 (block x (block y (return-from y 4))))
+
+(defun jumper (exit) 
+  (return-from exit 33))
+(assert-eq 33 (block outer (jumper outer)))

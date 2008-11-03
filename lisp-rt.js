@@ -166,6 +166,27 @@ function lisp_bif_throw(_key_, exception)
 lisp_fset("%%catch", "lisp_bif_catch");
 lisp_fset("%%throw", "lisp_bif_throw");
 
+/*** Escape functions ***/
+
+function lisp_call_with_escape_function(_key_, fun) {
+    var token = {};
+    var escape_function = function(_key_, result) {
+        token.result = result;
+        throw token;
+    };
+    try {
+        return fun(null, escape_function);
+    } catch(obj) {
+        if (obj == token) {
+            return token.result;
+        } else {
+            throw obj;
+        }
+    }
+}
+
+lisp_fset("%%call-with-escape-function", "lisp_call_with_escape_function");
+
 /*** Other built-ins ***/
 
 function lisp_bif_macroexpand_1(_key_, form)
@@ -296,3 +317,4 @@ function lisp_bif_stringize(_key_, obj)
 }
 
 lisp_fset("stringize", "lisp_bif_stringize");
+

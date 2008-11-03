@@ -166,3 +166,11 @@
 
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
+
+;; Escape functions
+
+(defmacro block (name &rest body)
+  `(%%call-with-escape-function (lambda (,name) ,@body)))
+
+(defmacro return-from (name value)
+  `(%%funcall ,name ,value))
