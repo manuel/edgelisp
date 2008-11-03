@@ -153,10 +153,13 @@
 
 (defclass (<failed-assertion> <error>))
 
-(defmacro assert (test)
+;; Note that the message string needs to be quoted, turning it into a
+;; string form.  Strings cannot be inserted into a code template, only
+;; forms can.
+(defmacro assert (test &opt (msg `"assertion failed"))
   `(unless ,test
-     (throw (make <failed-assertion>))))
+     (print ,msg)
+     (print ',test)))
 
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
-

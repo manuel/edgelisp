@@ -122,7 +122,11 @@ function lisp_compound_form_action(ast)
     return { formt: "compound", elts: ast[1] };
 }
 
-/**** Quasiquotation forms ****/
+/**** (Quasi-)quotation forms ****/
+
+var lisp_quote_form =
+    action(sequence("'", lisp_form),
+           lisp_make_qq_action("%%quote"));
 
 var lisp_quasiquote_form =
     action(sequence("`", lisp_form),
@@ -151,6 +155,7 @@ var lisp_form =
                       lisp_string_form,
                       lisp_symbol_form,
                       lisp_compound_form,
+                      lisp_quote_form,
                       lisp_quasiquote_form,
                       lisp_unquote_form,
                       lisp_unquote_splicing_form));
@@ -260,6 +265,7 @@ var lisp_specials_table = {
     "%%progn": lisp_compile_special_progn,
     "%%set": lisp_compile_special_set,
     "%%quasiquote": lisp_compile_special_quasiquote,
+    "%%quote": lisp_compile_special_quote,
 };
 
 function lisp_macro_function(name)
@@ -408,6 +414,13 @@ function lisp_compile_special_quasiquote(form)
 {
     var quasiquoted = lisp_assert_not_null(form.elts[1]);
     return lisp_compile_qq(quasiquoted, 0);
+}
+
+function lisp_compile_special_quote(form)
+{
+    var quoted = lisp_assert_not_null(form.elts[1]);
+    return { vopt: "quote", 
+             form: quoted };
 }
 
 

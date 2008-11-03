@@ -280,3 +280,19 @@ function lisp_bif_list(_key_)
 }
 
 lisp_fset("%%list", "lisp_bif_list");
+
+
+
+function lisp_bif_show(_key_, obj)
+{
+    return lisp_show(obj);
+}
+
+lisp_fset("show", "lisp_bif_show");
+
+function lisp_bif_stringize(_key_, obj)
+{
+    return { formt: "string", s: obj };
+}
+
+lisp_fset("stringize", "lisp_bif_stringize");

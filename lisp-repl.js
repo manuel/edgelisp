@@ -17,7 +17,7 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
    
-print("CyberLisp 0.25");
+print("CyberLisp 0.26");
 
 load("lisp.js");
 load("lisp-rt.js");
