@@ -187,6 +187,19 @@ function lisp_call_with_escape_function(_key_, fun) {
 
 lisp_fset("%%call-with-escape-function", "lisp_call_with_escape_function");
 
+/*** Unwind protect ***/
+
+function lisp_call_unwind_protected(_key_, protected_fun, cleanup_fun)
+{
+    try {
+        return protected_fun(null);
+    } finally {
+        cleanup_fun(null);
+    }
+}
+
+lisp_fset("%%call-unwind-protected", "lisp_call_unwind_protected");
+
 /*** Other built-ins ***/
 
 function lisp_bif_macroexpand_1(_key_, form)

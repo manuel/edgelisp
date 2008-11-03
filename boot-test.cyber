@@ -16,6 +16,8 @@
 (defun test-y (y) y)
 (assert-eq (test-y 133) 133)
 
+;; Exceptions
+
 (defclass (<my-error> <error>))
 (defclass (<your-error> <error>))
 
@@ -68,3 +70,22 @@
 (defun jumper (exit) 
   (return-from exit 33))
 (assert-eq 33 (block outer (jumper outer)))
+
+;; Unwind protect
+
+(defclass (<another-error> <error>))
+
+(defvar unwind-ct 0)
+
+(catch ((<another-error> (lambda (e next-handler))))
+  (unwind-protect (throw (make <another-error>))
+    (set unwind-ct 1)))
+
+(assert-eq unwind-ct 1)
+
+(set unwind-ct 0)
+
+(assert-eq 2 (unwind-protect 2
+               (set unwind-ct 1)))
+
+(assert-eq unwind-ct 1)
