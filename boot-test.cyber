@@ -7,7 +7,6 @@
 (assert-eq (%%funcall (lambda ())) null)
 (assert-eq (%%funcall (lambda () 1)) 1)
 (assert-eq (%%funcall (lambda (x) x) 1) 1)
-
 (assert-eq (%%funcall (lambda (x &opt (y x)) y) 1) 1)
 
 (defun test-x () 117)
@@ -76,16 +75,20 @@
 (defclass (<another-error> <error>))
 
 (defvar unwind-ct 0)
-
 (catch ((<another-error> (lambda (e next-handler))))
   (unwind-protect (throw (make <another-error>))
     (set unwind-ct 1)))
-
 (assert-eq unwind-ct 1)
 
 (set unwind-ct 0)
-
 (assert-eq 2 (unwind-protect 2
                (set unwind-ct 1)))
-
 (assert-eq unwind-ct 1)
+
+(set unwind-ct 0)
+(assert-eq 12 (block exit
+                (unwind-protect (return-from exit 12)
+                  (set unwind-ct 1))))
+(assert-eq unwind-ct 1)
+
+

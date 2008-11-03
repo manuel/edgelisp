@@ -120,8 +120,8 @@
 (defun make (class)
   (%%make class))
 
-(defun typeof (obj)
-  (%%typeof obj))
+(defun type-of (obj)
+  (%%type-of obj))
 
 (defun subtypep (type-1 type-2)
   (%%subtypep type-1 type-2))
@@ -180,3 +180,4 @@
 (defmacro unwind-protect (protected &rest cleanups)
   `(%%call-unwind-protected (lambda () ,protected)
                             (lambda () ,@cleanups)))
+

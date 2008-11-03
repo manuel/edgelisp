@@ -134,7 +134,7 @@ function lisp_bif_throw(_key_, exception)
     {
         if (!handler_frame) return null;
         var handlers = handler_frame.handlers;
-        var type = lisp_typeof(exception);
+        var type = lisp_type_of(exception);
         for (var i in handlers) {
             var handler = handlers[i];
             if (lisp_subtypep(type, handler_type(handler))) {
@@ -224,17 +224,17 @@ lisp_fset("%%eq", "lisp_bif_eq");
 
 /*** Types ***/
 
-function lisp_typeof(obj)
+function lisp_type_of(obj)
 {
     return obj.__proto__;
 }
 
-function lisp_bif_typeof(_key_, obj) 
+function lisp_bif_type_of(_key_, obj) 
 {
-    return lisp_typeof(obj);
+    return lisp_type_of(obj);
 }
 
-lisp_fset("%%typeof", "lisp_bif_typeof");
+lisp_fset("%%type-of", "lisp_bif_type_of");
 
 /* Returns true iff type1 is a general subtype of type2, meaning
    either equal to type2, or a subtype of type2. */
@@ -314,20 +314,3 @@ function lisp_bif_list(_key_)
 }
 
 lisp_fset("%%list", "lisp_bif_list");
-
-
-
-function lisp_bif_show(_key_, obj)
-{
-    return lisp_show(obj);
-}
-
-lisp_fset("show", "lisp_bif_show");
-
-function lisp_bif_stringize(_key_, obj)
-{
-    return { formt: "string", s: obj };
-}
-
-lisp_fset("stringize", "lisp_bif_stringize");
-

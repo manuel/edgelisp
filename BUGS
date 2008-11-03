@@ -1,4 +1,2 @@
 * In the REPL the line "1 '" yields 1, and the erroneous "'" character
   is silently ignored.
-* (assert-eq (%%funcall (lambda (&opt x) x)) null) fails
-  need to get undefined/null sorted out!
