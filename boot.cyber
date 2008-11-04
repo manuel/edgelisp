@@ -147,7 +147,7 @@
 (defun subtypep (type-1 type-2)
   (%%subtypep type-1 type-2))
 
-(defmacro defclass (name &rest slots)
+(defmacro defclass (name &opt (slots `()) (ctor `null))
   (let ((name (if (symbolp name) name (compound-elt name 0)))
         (super-class (if (symbolp name) null (compound-elt name 1))))
     `(progn
@@ -155,7 +155,10 @@
          (set ,name (make-class)))
        ,(if super-class
             `(set-super-class ,name ,super-class)
-            `null))))
+            `null)
+       ,@(compound-map (lambda (slot)
+                         )
+                       slots))))
 
 (defmacro catch (handler-specs &rest body)
   `(%%catch (list ,@(compound-map (lambda (handler-spec)

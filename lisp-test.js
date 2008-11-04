@@ -46,6 +46,13 @@ function lisp_test_all()
         lisp_test(!lisp_is_keyword_arg("foo:bar"));
         lisp_test(lisp_clean_keyword_arg("foo:") == "foo");
 
+        lisp_test(lisp_is_type_name("<string>"));
+        lisp_test(lisp_is_type_name("<s>"));
+        lisp_test(!lisp_is_type_name("<>"));
+        lisp_test(!lisp_is_type_name("<>a"));
+        lisp_test(lisp_clean_type_name("<string>") == "string");
+        lisp_test(lisp_clean_type_name("<s>") == "s");
+
         // Name Mangling
         lisp_test(lisp_mangle("foo-bar") == "fooHbar");
         lisp_test(lisp_mangle("foobar") == "foobar");

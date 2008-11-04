@@ -259,6 +259,12 @@ function lisp_bif_subtypep(_key_, type1, type2)
 
 lisp_set_function("%%subtypep", "lisp_bif_subtypep");
 
+function lisp_check_type(obj, type)
+{
+    if (!lisp_subtypep(lisp_type_of(obj), type))
+        lisp_error("Type error", obj);
+}
+
 /*** Classes and objects ***/
 
 function lisp_bif_make_class(_key_)

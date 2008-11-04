@@ -508,6 +508,18 @@ function lisp_compile_special_quote(form)
    remaining positional arguments, and the parameter `c' is bound to
    the dictionary of supplied keyword arguments. */
 
+/**** Typed parameter syntax ****/
+
+/* Required parameters can be typed, meaning they will only accept
+   arguments that are general instances of a given type.  For example,
+   the following signature has two typed parameters:
+
+   ((s <string>) (n <number>))
+
+   There is a shortcut syntax:
+
+   (<string> <number>) === ((string <string>) (number <number>)) */
+
 /**** Parameter init forms ****/
 
 /* Optional and keyword parameters can have init forms, that are used
@@ -539,13 +551,17 @@ function lisp_compile_special_quote(form)
    Parameters are also represented as objects:
 
    { name: <string>,
-     init: <form> }
+     init: <form>,
+     specializer: <string> }
 
    name: name of the parameter;
    
    init: VOP for the value to be used when no argument is supplied to
    the parameter (only significant for optional and keyword
    parameters).
+
+   specializer: name of the parameter's type (only significant for
+   required parameters).
  */
 
 var lisp_optional_sig_keyword = "&opt";
@@ -563,6 +579,18 @@ function lisp_is_sig_keyword(string)
     return lisp_array_contains(lisp_sig_keywords, string);
 }
 
+function lisp_is_type_name(string)
+{
+    return ((string.length >= 3) &&
+            (string[0] == "<") &&
+            (string[string.length - 1] == ">"));
+}
+
+function lisp_clean_type_name(string)
+{
+    return string.slice(1, string.length - 1);
+}
+
 /* Given a list of parameter forms, return a signature. */
 function lisp_compile_sig(params)
 {
@@ -572,9 +600,25 @@ function lisp_compile_sig(params)
     function compile_parameter(param)
     {
         if (param.formt == "symbol") {
-            return { name: param.name };
+            var name = param.name;
+            if (lisp_is_type_name(name)) {
+                // Typed parameter shortcut
+                return { name: lisp_clean_type_name(name),
+                         specializer: name };
+            } else {
+                // Just a named parameter
+                return { name: param.name };
+            }
+        } else if ((param.formt == "compound") &&
+                   (cur == req)) {
+            // Specialized required parameter
+            var specializer_form = lisp_assert_symbol_form(param.elts[0]);
+            var name_form = lisp_assert_symbol_form(param.elts[1]);
+            return { name: name_form.name,
+                     specializer: specializer_form.name };
         } else if ((param.formt == "compound") &&
                    ((cur == opt) || (cur == key))) {
+            // Optional or keyword parameter with init form
             var name_form = lisp_assert_symbol_form(param.elts[0]);
             var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
@@ -953,6 +997,17 @@ function lisp_emit_vop_lambda(vop)
             "lisp_arity_min_max(arguments.length, " + js_min + ", " + js_max + "); ";
     }
 
+    // Required arguments type checks
+    var check_types = "";
+    for (var i in req_params) {
+        var param = req_params[i];
+        if (param.specializer) {
+            var name = lisp_mangle_var(param.name);
+            var type_name = lisp_mangle_var(param.specializer);
+            check_types += "lisp_check_type(" + name + ", " + type_name + "); ";
+        }
+    }
+
     // Optional parameter init forms
     var init_opt_params = "";
     if (opt_params.length > 0) {
@@ -974,7 +1029,11 @@ function lisp_emit_vop_lambda(vop)
             " = lisp_rest_param(arguments, " + max + "); ";
     }
 
-    var preamble = check_arity + init_opt_params + setup_rest_param;
+    var preamble = 
+        check_arity + 
+        check_types + 
+        init_opt_params + 
+        setup_rest_param;
     var body = lisp_emit(vop.body);
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
