@@ -168,7 +168,7 @@ lisp_set_function("%%throw", "lisp_bif_throw");
 
 /*** Escape functions ***/
 
-function lisp_call_with_escape_function(_key_, fun) {
+function lisp_bif_call_with_escape_function(_key_, fun) {
     var token = {};
     var escape_function = function(_key_, result) {
         token.result = result;
@@ -185,11 +185,12 @@ function lisp_call_with_escape_function(_key_, fun) {
     }
 }
 
-lisp_set_function("%%call-with-escape-function", "lisp_call_with_escape_function");
+lisp_set_function("%%call-with-escape-function", 
+                  "lisp_bif_call_with_escape_function");
 
 /*** Unwind protect ***/
 
-function lisp_call_unwind_protected(_key_, protected_fun, cleanup_fun)
+function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
 {
     try {
         return protected_fun(null);
@@ -198,7 +199,8 @@ function lisp_call_unwind_protected(_key_, protected_fun, cleanup_fun)
     }
 }
 
-lisp_set_function("%%call-unwind-protected", "lisp_call_unwind_protected");
+lisp_set_function("%%call-unwind-protected", 
+                  "lisp_bif_call_unwind_protected");
 
 /*** Other built-ins ***/
 
@@ -257,7 +259,7 @@ function lisp_bif_subtypep(_key_, type1, type2)
 
 lisp_set_function("%%subtypep", "lisp_bif_subtypep");
 
-/*** Classes ***/
+/*** Classes and objects ***/
 
 function lisp_bif_make_class(_key_)
 {
@@ -276,9 +278,38 @@ function lisp_bif_make(_key_, cls)
     return obj;
 }
 
+function lisp_bif_slot_value(_key_, obj, name)
+{
+    return obj[lisp_mangle_slot(name)] || null;
+}
+
+function lisp_bif_set_slot_value(_key_, obj, name, value)
+{
+    return obj[lisp_mangle_slot(name)] = value;
+}
+
+function lisp_bif_set_method(_key_, cls, name, fun)
+{
+    return cls[lisp_mangle_method(name)] = fun;
+}
+
+function lisp_bif_invoke_method(_key_, obj, name, args, all_keys)
+{
+    // This won't win the speed record.  Maybe create a second version
+    // for methods without keyword arguments.  Also, the mangling
+    // could be done at compile-time.
+    var fun = obj[lisp_mangle_method(name)];
+    var args = [ all_keys ].concat(args);
+    return fun.apply(null, args);
+}
+
 lisp_set_function("%%make-class", "lisp_bif_make_class");
 lisp_set_function("%%set-super-class", "lisp_bif_set_super_class");
 lisp_set_function("%%make", "lisp_bif_make");
+lisp_set_function("%%slot-value", "lisp_bif_slot_value");
+lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
+lisp_set_function("%%set-method", "lisp_bif_set_method");
+lisp_set_function("%%invoke-method", "lisp_bif_invoke_method");
 
 /*** More form manipulation functions ***/
 

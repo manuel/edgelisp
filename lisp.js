@@ -261,20 +261,18 @@ function lisp_special_function(name)
 
 var lisp_specials_table = {
     "%%boundp": lisp_compile_special_boundp,
+    "%%defmacro": lisp_compile_special_defmacro,
     "%%defparameter": lisp_compile_special_defparameter,
     "%%defun": lisp_compile_special_defun,
-    "%%defmacro": lisp_compile_special_defmacro,
     "%%fboundp": lisp_compile_special_fboundp,
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
-    "%%get-slot": lisp_compile_special_get_slot,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
-    "%%set": lisp_compile_special_set,
-    "%%set-slot": lisp_compile_special_set_slot,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
+    "%%set": lisp_compile_special_set,
 };
 
 function lisp_macro_function(name)
@@ -372,16 +370,6 @@ function lisp_compile_special_function(form)
              name: name_form.name };
 }
 
-/* (%%get-slot obj name) */
-function lisp_compile_special_get_slot(form)
-{
-    var obj_form = lisp_assert_not_null(form.elts[1]);
-    var name_form = lisp_assert_symbol_form(form.elts[2]);
-    return { vopt: "get_slot",
-             obj: lisp_compile(obj_form),
-             name: name_form.name };
-}
-
 /* In CyberLisp `false' and `null' are considered false, all other
    objects (including the number zero) are true.  
    (%%if test consequent alternative) */
@@ -423,18 +411,6 @@ function lisp_compile_special_set(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set",
-             name: name_form.name,
-             value: lisp_compile(value_form) };
-}
-
-/* (%%set-slot obj name value) */
-function lisp_compile_special_set_slot(form)
-{
-    var obj_form = lisp_assert_not_null(form.elts[1]);
-    var name_form = lisp_assert_symbol_form(form.elts[2]);
-    var value_form = lisp_assert_not_null(form.elts[3]);
-    return { vopt: "set_slot",
-             obj: lisp_compile(obj_form),
              name: name_form.name,
              value: lisp_compile(value_form) };
 }
@@ -876,19 +852,17 @@ function lisp_vop_function(vopt)
 var lisp_vop_table = {
     "boundp": lisp_emit_vop_boundp,
     "fboundp": lisp_emit_vop_fboundp,
-    "function_ref": lisp_emit_vop_function_ref,
-    "set_function": lisp_emit_vop_set_function,
     "funcall": lisp_emit_vop_funcall,
-    "get_slot": lisp_emit_vop_get_slot,
+    "function_ref": lisp_emit_vop_function_ref,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
-    "set_macro": lisp_emit_vop_set_macro,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
     "quote": lisp_emit_vop_quote,
     "ref": lisp_emit_vop_ref,
     "set": lisp_emit_vop_set,
-    "set_slot": lisp_emit_vop_set_slot,
+    "set_function": lisp_emit_vop_set_function,
+    "set_macro": lisp_emit_vop_set_macro,
     "string": lisp_emit_vop_string,
 };
 
@@ -904,28 +878,6 @@ function lisp_emit_vop_fboundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     return "(typeof " + lisp_mangle_function(name) + " != \"undefined\")";
-}
-
-/* Function reference. 
-   { vopt: "function_ref", name: <string> }
-   name: the name of the function. */
-function lisp_emit_vop_function_ref(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
-    return lisp_mangle_function(name);
-}
-
-/* Assigns a value to a function.
-   { vopt: "set_function", name: <string>, value: <vop> }
-   name: the name of the function;
-   value: VOP for the value. */
-function lisp_emit_vop_set_function(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
-    var value = lisp_assert_not_null(vop.value, "Bad value", vop);
-    var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
-    var name_upper = name.toUpperCase();
-    return "(" + assignment + ", print(\"; Defined function " + name_upper + "\"))";
 }
 
 /* Calls a function.
@@ -954,12 +906,13 @@ function lisp_emit_vop_funcall(vop)
     return "(" + lisp_emit(fun) + "(" + args + "))";
 }
 
-/* { vopt: "get_slot", obj: <vop>, name: <string> } */
-function lisp_emit_vop_get_slot(vop)
+/* Function reference. 
+   { vopt: "function_ref", name: <string> }
+   name: the name of the function. */
+function lisp_emit_vop_function_ref(vop)
 {
-    var obj = lisp_assert_not_null(vop.obj);
-    var name = lisp_assert_nonempty_string(vop.name);
-    return "(" + lisp_emit(obj) + "." + lisp_mangle_slot(name) + " || null)";
+    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
+    return lisp_mangle_function(name);
 }
 
 /* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
@@ -1026,25 +979,6 @@ function lisp_emit_vop_lambda(vop)
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
 
-/* { vopt: "set_macro", name: <string>, expander: <vop> }
-   name: macro's name;
-   expander: VOP for expander function. */
-function lisp_emit_vop_set_macro(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name);
-    var expander = lisp_assert_not_null(vop.expander);
-    return "(lisp_set_macro_function(\"" + name + "\", " + lisp_emit(expander) + "))";
-}
-
-/* { vopt: "set_slot", obj: <vop>, name: <string>, value: <vop> } */
-function lisp_emit_vop_set_slot(vop)
-{
-    var obj = lisp_assert_not_null(vop.obj);
-    var name = lisp_assert_nonempty_string(vop.name);
-    var value = lisp_assert_not_null(vop.value);
-    return "(" + lisp_emit(obj) + "." + lisp_mangle_slot(name) + " = " + lisp_emit(value) + ")";
-}
-
 /* Number literal.
    { vopt: "number", n: <string> }
    n: the number in JavaScript syntax. */
@@ -1093,6 +1027,29 @@ function lisp_emit_vop_set(vop)
     var name = lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
     var value = lisp_emit(vop.value);
     return "(" + lisp_mangle_var(name) + " = " + value + ")";
+}
+
+/* Assigns a value to a function.
+   { vopt: "set_function", name: <string>, value: <vop> }
+   name: the name of the function;
+   value: VOP for the value. */
+function lisp_emit_vop_set_function(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
+    var value = lisp_assert_not_null(vop.value, "Bad value", vop);
+    var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
+    var name_upper = name.toUpperCase();
+    return "(" + assignment + ", print(\"; Defined function " + name_upper + "\"))";
+}
+
+/* { vopt: "set_macro", name: <string>, expander: <vop> }
+   name: macro's name;
+   expander: VOP for expander function. */
+function lisp_emit_vop_set_macro(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name);
+    var expander = lisp_assert_not_null(vop.expander);
+    return "(lisp_set_macro_function(\"" + name + "\", " + lisp_emit(expander) + "))";
 }
 
 /* String literal.

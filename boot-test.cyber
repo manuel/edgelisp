@@ -117,12 +117,18 @@
 
 (defclass <foo>)
 (defvar foo (make <foo>))
-(assert-eq (get-slot foo slot1) null)
-(assert-eq (get-slot foo slot2) null)
-(set-slot foo slot1 1)
-(assert-eq (get-slot foo slot1) 1)
-(assert-eq (get-slot foo slot2) null)
-(set-slot foo slot1 null)
-(assert-eq (get-slot foo slot1) null)
-(assert-eq (get-slot foo slot2) null)
+(assert-eq (slot-value foo "slot1") null)
+(assert-eq (slot-value foo "slot2") null)
+(set-slot-value foo "slot1" 1)
+(assert-eq (slot-value foo "slot1") 1)
+(assert-eq (slot-value foo "slot2") null)
+(set-slot-value foo "slot1" null)
+(assert-eq (slot-value foo "slot1") null)
+(assert-eq (slot-value foo "slot2") null)
 
+;; Methods
+
+(defvar <c> (make-class))
+(set-method <c> "m1" (lambda (c) 12))
+(defvar c (make <c>))
+(assert-eq (invoke-method c "m1" (list c) null) 12)
