@@ -237,7 +237,7 @@ function lisp_compile_function_application(form)
 {
     var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "fref", name: name };
+    var fun = { vopt: "function_ref", name: name };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -325,7 +325,7 @@ function lisp_compile_special_defun(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "fset", 
+    return { vopt: "set_function", 
              name: name_form.name, 
              value: lisp_compile(value_form) };
 }
@@ -368,7 +368,7 @@ function lisp_compile_special_funcall(form)
 function lisp_compile_special_function(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "fref", 
+    return { vopt: "function_ref", 
              name: name_form.name };
 }
 
@@ -828,14 +828,14 @@ function lisp_compile_qq_compound(x, depth)
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "fref", name: "%%make-compound" },
+                 fun: { vopt: "function_ref", name: "%%make-compound" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "fref", name: "%%append-compounds" },
+                 fun: { vopt: "function_ref", name: "%%append-compounds" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -876,8 +876,8 @@ function lisp_vop_function(vopt)
 var lisp_vop_table = {
     "boundp": lisp_emit_vop_boundp,
     "fboundp": lisp_emit_vop_fboundp,
-    "fref": lisp_emit_vop_fref,
-    "fset": lisp_emit_vop_fset,
+    "function_ref": lisp_emit_vop_function_ref,
+    "set_function": lisp_emit_vop_set_function,
     "funcall": lisp_emit_vop_funcall,
     "get_slot": lisp_emit_vop_get_slot,
     "if": lisp_emit_vop_if,
@@ -907,19 +907,19 @@ function lisp_emit_vop_fboundp(vop)
 }
 
 /* Function reference. 
-   { vopt: "fref", name: <string> }
+   { vopt: "function_ref", name: <string> }
    name: the name of the function. */
-function lisp_emit_vop_fref(vop)
+function lisp_emit_vop_function_ref(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
     return lisp_mangle_function(name);
 }
 
 /* Assigns a value to a function.
-   { vopt: "fset", name: <string>, value: <vop> }
+   { vopt: "set_function", name: <string>, value: <vop> }
    name: the name of the function;
    value: VOP for the value. */
-function lisp_emit_vop_fset(vop)
+function lisp_emit_vop_set_function(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
     var value = lisp_assert_not_null(vop.value, "Bad value", vop);
@@ -1171,7 +1171,7 @@ function lisp_mangle_keyword_arg(name)
 
 /*** Utilities ***/
 
-function lisp_fset(lisp_name, js_function)
+function lisp_set_function(lisp_name, js_function)
 {
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
 }
@@ -1326,9 +1326,9 @@ function lisp_compound_slice(_key_, compound, start)
     return { formt: "compound", elts: compound.elts.slice(start) };
 }
 
-lisp_fset("%%compound-apply", "lisp_compound_apply");
-lisp_fset("%%make-compound", "lisp_make_compound");
-lisp_fset("%%append-compounds", "lisp_append_compounds");
-lisp_fset("%%compound-elt", "lisp_compound_elt");
-lisp_fset("%%compound-slice", "lisp_compound_slice");
-lisp_fset("%%compound-map", "lisp_compound_map");
+lisp_set_function("%%compound-apply", "lisp_compound_apply");
+lisp_set_function("%%make-compound", "lisp_make_compound");
+lisp_set_function("%%append-compounds", "lisp_append_compounds");
+lisp_set_function("%%compound-elt", "lisp_compound_elt");
+lisp_set_function("%%compound-slice", "lisp_compound_slice");
+lisp_set_function("%%compound-map", "lisp_compound_map");
