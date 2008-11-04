@@ -181,3 +181,11 @@
   `(%%call-unwind-protected (lambda () ,protected)
                             (lambda () ,@cleanups)))
 
+
+;; Slots
+
+(defmacro get-slot (obj name)
+  `(%%get-slot ,obj ,name))
+
+(defmacro set-slot (obj name value)
+  `(%%set-slot ,obj ,name ,value))

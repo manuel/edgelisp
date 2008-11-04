@@ -113,4 +113,16 @@
                   (set unwind-ct 1))))
 (assert-eq unwind-ct 1)
 
+;; Slots
+
+(defclass <foo>)
+(defvar foo (make <foo>))
+(assert-eq (get-slot foo slot1) null)
+(assert-eq (get-slot foo slot2) null)
+(set-slot foo slot1 1)
+(assert-eq (get-slot foo slot1) 1)
+(assert-eq (get-slot foo slot2) null)
+(set-slot foo slot1 null)
+(assert-eq (get-slot foo slot1) null)
+(assert-eq (get-slot foo slot2) null)
 

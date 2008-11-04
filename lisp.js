@@ -267,10 +267,12 @@ var lisp_specials_table = {
     "%%fboundp": lisp_compile_special_fboundp,
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
+    "%%get-slot": lisp_compile_special_get_slot,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
     "%%set": lisp_compile_special_set,
+    "%%set-slot": lisp_compile_special_set_slot,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
 };
@@ -335,7 +337,7 @@ function lisp_compile_special_defmacro(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "macroset", 
+    return { vopt: "set_macro", 
              name: name_form.name, 
              expander: lisp_compile(expander_form) };
 }
@@ -367,6 +369,16 @@ function lisp_compile_special_function(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     return { vopt: "fref", 
+             name: name_form.name };
+}
+
+/* (%%get-slot obj name) */
+function lisp_compile_special_get_slot(form)
+{
+    var obj_form = lisp_assert_not_null(form.elts[1]);
+    var name_form = lisp_assert_symbol_form(form.elts[2]);
+    return { vopt: "get_slot",
+             obj: lisp_compile(obj_form),
              name: name_form.name };
 }
 
@@ -411,6 +423,18 @@ function lisp_compile_special_set(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set",
+             name: name_form.name,
+             value: lisp_compile(value_form) };
+}
+
+/* (%%set-slot obj name value) */
+function lisp_compile_special_set_slot(form)
+{
+    var obj_form = lisp_assert_not_null(form.elts[1]);
+    var name_form = lisp_assert_symbol_form(form.elts[2]);
+    var value_form = lisp_assert_not_null(form.elts[3]);
+    return { vopt: "set_slot",
+             obj: lisp_compile(obj_form),
              name: name_form.name,
              value: lisp_compile(value_form) };
 }
@@ -855,14 +879,16 @@ var lisp_vop_table = {
     "fref": lisp_emit_vop_fref,
     "fset": lisp_emit_vop_fset,
     "funcall": lisp_emit_vop_funcall,
+    "get_slot": lisp_emit_vop_get_slot,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
-    "macroset": lisp_emit_vop_macroset,
+    "set_macro": lisp_emit_vop_set_macro,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
     "quote": lisp_emit_vop_quote,
     "ref": lisp_emit_vop_ref,
     "set": lisp_emit_vop_set,
+    "set_slot": lisp_emit_vop_set_slot,
     "string": lisp_emit_vop_string,
 };
 
@@ -926,6 +952,14 @@ function lisp_emit_vop_funcall(vop)
     var args = [ keywords_dict ].concat(pos_args).join(", ");
 
     return "(" + lisp_emit(fun) + "(" + args + "))";
+}
+
+/* { vopt: "get_slot", obj: <vop>, name: <string> } */
+function lisp_emit_vop_get_slot(vop)
+{
+    var obj = lisp_assert_not_null(vop.obj);
+    var name = lisp_assert_nonempty_string(vop.name);
+    return "(" + lisp_emit(obj) + "." + lisp_mangle_slot(name) + " || null)";
 }
 
 /* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
@@ -992,14 +1026,23 @@ function lisp_emit_vop_lambda(vop)
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
 
-/* { vopt: "macroset", name: <string>, expander: <vop> }
+/* { vopt: "set_macro", name: <string>, expander: <vop> }
    name: macro's name;
    expander: VOP for expander function. */
-function lisp_emit_vop_macroset(vop)
+function lisp_emit_vop_set_macro(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     var expander = lisp_assert_not_null(vop.expander);
     return "(lisp_set_macro_function(\"" + name + "\", " + lisp_emit(expander) + "))";
+}
+
+/* { vopt: "set_slot", obj: <vop>, name: <string>, value: <vop> } */
+function lisp_emit_vop_set_slot(vop)
+{
+    var obj = lisp_assert_not_null(vop.obj);
+    var name = lisp_assert_nonempty_string(vop.name);
+    var value = lisp_assert_not_null(vop.value);
+    return "(" + lisp_emit(obj) + "." + lisp_mangle_slot(name) + " = " + lisp_emit(value) + ")";
 }
 
 /* Number literal.
