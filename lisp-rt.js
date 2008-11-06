@@ -299,23 +299,12 @@ function lisp_bif_set_method(_key_, cls, name, fun)
     return cls[lisp_mangle_method(name)] = fun;
 }
 
-function lisp_bif_invoke_method(_key_, obj, name, args, all_keys)
-{
-    // This won't win the speed record.  Maybe create a second version
-    // for methods without keyword arguments.  Also, the mangling
-    // could be done at compile-time.
-    var fun = obj[lisp_mangle_method(name)];
-    var args = [ all_keys ].concat(args);
-    return fun.apply(null, args);
-}
-
 lisp_set_function("%%make-class", "lisp_bif_make_class");
 lisp_set_function("%%set-super-class", "lisp_bif_set_super_class");
 lisp_set_function("%%make", "lisp_bif_make");
 lisp_set_function("%%slot-value", "lisp_bif_slot_value");
 lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("%%set-method", "lisp_bif_set_method");
-lisp_set_function("%%invoke-method", "lisp_bif_invoke_method");
 
 /*** More form manipulation functions ***/
 
@@ -351,3 +340,12 @@ function lisp_bif_list(_key_)
 }
 
 lisp_set_function("%%list", "lisp_bif_list");
+
+/*** Misc ***/
+
+function lisp_bif_is_typename(_key_, string)
+{
+    return lisp_is_type_name(string);
+}
+
+lisp_set_function("%%type-name-p", "lisp_is_type_name");

@@ -129,6 +129,8 @@
 ;; Methods
 
 (defvar <c> (make-class))
-(set-method <c> "m1" (lambda (c) 12))
+(set-method <c> "m1" (lambda (c x) x))
 (defvar c (make <c>))
-(assert-eq (invoke-method c "m1" (list c) null) 12)
+(defun m1 (c x)
+  (%%invoke-method m1))
+(assert-eq (m1 c 12) 12)

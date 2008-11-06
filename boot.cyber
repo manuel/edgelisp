@@ -116,19 +116,16 @@
 
 ;; Slots
 
-(defun slot-value (obj name)
-  (%%slot-value obj name))
+(defmacro slot-value (obj name)
+  `(%%slot-value ,obj ,name))
 
-(defun set-slot-value (obj name value)
-  (%%set-slot-value obj name value))
+(defmacro set-slot-value (obj name value)
+  `(%%set-slot-value ,obj ,name ,value))
 
 ;; Methods
 
 (defun set-method (obj name fun)
   (%%set-method obj name fun))
-
-(defun invoke-method (obj name args all-keys)
-  (%%invoke-method obj name args all-keys))
 
 ;; Classes
 
@@ -160,6 +157,24 @@
                          )
                        slots))))
 
+(defun defmethod-param-type (param)
+  (if (compoundp param)
+      (assert (compound-elt param 1))
+      (if (symbolp param)
+          (let ((param-name (symbol-name param)))
+            (assert (type-name-p param-name))
+            param-name)
+          (assert false))))
+
+(defmacro defmethod (name params &rest body)
+  (let ((class (defmethod-param-type (compound-elt params 0))))
+    `(progn
+       (set-method ,class ,name (lambda ,params ,@body))
+       (defun ,name (&rest args &all-keys keys)
+         (invoke-method (elt args 0) ,name ,args ,keys)))))
+
+;; Exceptions
+
 (defmacro catch (handler-specs &rest body)
   `(%%catch (list ,@(compound-map (lambda (handler-spec)
                                     `(list ,(compound-elt handler-spec 0)
@@ -184,9 +199,12 @@
 ;; string form.  Strings cannot be inserted into a code template, only
 ;; forms can.
 (defmacro assert (test &opt (msg `"assertion failed"))
-  `(unless ,test
-     (print ,msg)
-     (print ',test)))
+  `(let ((result ,test))
+     (if result
+         result
+         (progn
+           (print ,msg)
+           (print ',test)))))
 
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))

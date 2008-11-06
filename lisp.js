@@ -268,6 +268,7 @@ var lisp_specials_table = {
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
     "%%if": lisp_compile_special_if,
+    "%%invoke-method": lisp_compile_special_invoke_method,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
@@ -384,6 +385,16 @@ function lisp_compile_special_if(form)
              alternative: lisp_compile(alternative) };
 }
 
+/* Method invocation from inside a generic function needs to be as
+   fast as possible, so there's a special primitive for it.
+   (%%invoke-method name) */
+function lisp_compile_special_invoke_method(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    return { vopt: "invoke_method",
+             name: name_form.name };
+}
+
 /* Returns a lexical closure.  See heading ``Functions''.
    (%%lambda sig body) */
 function lisp_compile_special_lambda(form)
@@ -437,11 +448,11 @@ function lisp_compile_special_quote(form)
 /**** Overview ****/
 
 /* A function can have required, optional, keyword, rest, and all-keys
-   parameters.  Required, optional, and keyword parameters can be
-   typed.  Optional and keyword parameters can have init forms
-   (default values).  A rest parameter is bound to a sequence of any
-   remaining positional arguments.  An all-keys parameter is bound to
-   a dictionary of all keyword arguments passed to a function.
+   parameters.  Required parameters can be typed.  Optional and
+   keyword parameters can have init forms (default values).  A rest
+   parameter is bound to a sequence of any remaining positional
+   arguments.  An all-keys parameter is bound to a dictionary of all
+   keyword arguments passed to a function.
    
    Required and optional parameters are called positional, because
    they are bound from left to right. */
@@ -474,12 +485,6 @@ function lisp_compile_special_quote(form)
    (The function has no means to access these unrequested arguments,
    unless it has an all-keys parameter) */
 
-/**** Typed parameters ****/
-
-/* Required, optional, and keyword parameters can be typed.  If an
-   argument's type is not a general subtype of a parameter's type, an
-   exception is thrown. */
-   
 /**** Signature syntax ****/
 
 /* The different kinds of parameters in a function signature are
@@ -899,6 +904,7 @@ var lisp_vop_table = {
     "funcall": lisp_emit_vop_funcall,
     "function_ref": lisp_emit_vop_function_ref,
     "if": lisp_emit_vop_if,
+    "invoke_method": lisp_emit_vop_invoke_method,
     "lambda": lisp_emit_vop_lambda,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
@@ -966,6 +972,13 @@ function lisp_emit_vop_if(vop)
     var consequent = lisp_emit(vop.consequent);
     var alternative = lisp_emit(vop.alternative);
     return "(lisp_is_true(" + test + ") ? " + consequent + " : " + alternative + ")";
+}
+
+/* { vopt: "invoke_method", name: <string> */
+function lisp_emit_vop_invoke_method(vop)
+{
+    var name = lisp_assert_nonempty_string(vop.name);
+    return "(arguments[1]." + lisp_mangle_method(name) + ".apply(null, arguments))";
 }
 
 /* Creates a lexical closure.
