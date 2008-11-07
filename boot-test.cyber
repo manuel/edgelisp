@@ -129,8 +129,8 @@
 ;; Methods
 
 (defclass <quux>)
-(set-method <quux> "m33" (lambda (obj) 33))
-(set-method <quux> "m44" (lambda (obj) 44))
+(set-method <quux> "m33" (lambda ((quux <quux>)) 33))
+(set-method <quux> "m44" (lambda ((quux <quux>)) 44))
 (defvar quux (make <quux>))
 (assert-eq (%%funcall (get-method quux "m33") quux) 33)
 (assert-eq (%%funcall (get-method quux "m44") quux) 44)
@@ -138,4 +138,7 @@
 (defvar sub (make <sub>))
 (assert-eq (%%funcall (get-method sub "m33") sub) 33)
 (assert-eq (%%funcall (get-method sub "m44") sub) 44)
+
+(defmethod m55 ((quux <quux>)) 55)
+(assert-eq (m55 quux) 55)
 

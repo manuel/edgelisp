@@ -345,7 +345,13 @@ function lisp_bif_list(_key_)
     return elts;
 }
 
+function lisp_bif_list_elt(_key_, list, i)
+{
+    return list[i];
+}
+
 lisp_set_function("%%list", "lisp_bif_list");
+lisp_set_function("%%list-elt", "lisp_bif_list_elt");
 
 /*** Misc ***/
 
@@ -355,3 +361,17 @@ function lisp_bif_is_typename(_key_, string)
 }
 
 lisp_set_function("%%type-name-p", "lisp_is_type_name");
+
+function lisp_bif_string_to_syntax(_key_, string)
+{
+    return { formt: "string", s: string };
+}
+
+lisp_set_function("%%string-to-syntax", "lisp_bif_string_to_syntax");
+
+function lisp_bif_apply(_key_, fun, args)
+{
+    return fun.apply(null, [ null ].concat(args));
+}
+
+lisp_set_function("%%apply", "lisp_bif_apply");

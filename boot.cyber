@@ -56,6 +56,9 @@
 (defmacro function (name)
   `(%%function ,name))
 
+(defun apply (fun args)
+  (%%apply fun args))
+
 ;; Note that in contrast to other Lisps, CyberLisp does not allow
 ;; mixing of runtime values and forms, so the alternative's default
 ;; value cannot simply be the value `null', it has to be the form
@@ -74,6 +77,9 @@
 
 (defmacro list (&rest args)
   `(%%list ,@args))
+
+(defun list-elt (list i)
+  (%%list-elt list i))
 
 (defun compound-map (fun compound)
   (%%compound-map fun compound))
@@ -162,19 +168,20 @@
 
 (defun defmethod-param-type (param)
   (if (compoundp param)
-      (assert (compound-elt param 1))
+      (compound-elt param 1)
       (if (symbolp param)
-          (let ((param-name (symbol-name param)))
-            (assert (type-name-p param-name))
-            param-name)
+          param
           (assert false))))
 
 (defmacro defmethod (name params &rest body)
-  (let ((class (defmethod-param-type (compound-elt params 0))))
+  (let ((class (defmethod-param-type (compound-elt params 0)))
+        (name-string (%%string-to-syntax (symbol-name name))))
     `(progn
-       (set-method ,class ,name (lambda ,params ,@body))
-       (defun ,name (&rest args &all-keys keys)
-         (invoke-method (elt args 0) ,name ,args ,keys)))))
+       (set-method ,class ,name-string (lambda ,params ,@body))
+       (defun ,name (&rest args)
+         (let ((obj (list-elt args 0)))
+           (print args)
+           (apply (get-method obj ,name-string) args))))))
 
 ;; Exceptions
 

@@ -260,7 +260,6 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "%%apply": lisp_compile_special_apply,
     "%%boundp": lisp_compile_special_boundp,
     "%%defmacro": lisp_compile_special_defmacro,
     "%%defparameter": lisp_compile_special_defparameter,
@@ -296,12 +295,6 @@ function lisp_set_macro_function(name, expander)
 var lisp_macros_table = {};
 
 /**** List of special forms ****/
-
-/* (%%apply fun &rest args+ &key all-keys) */
-function lisp_compile_special_apply(form)
-{
-    
-}
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  
@@ -603,7 +596,7 @@ function lisp_compile_sig(params)
         if (param.formt == "symbol") {
             var name = param.name;
             if (lisp_is_type_name(name)) {
-                // Typed parameter shortcut
+                // Typed required parameter shortcut
                 return { name: lisp_clean_type_name(name),
                          specializer: name };
             } else {
@@ -612,9 +605,9 @@ function lisp_compile_sig(params)
             }
         } else if ((param.formt == "compound") &&
                    (cur == req)) {
-            // Specialized required parameter
-            var specializer_form = lisp_assert_symbol_form(param.elts[0]);
-            var name_form = lisp_assert_symbol_form(param.elts[1]);
+            // Typed required parameter
+            var name_form = lisp_assert_symbol_form(param.elts[0]);
+            var specializer_form = lisp_assert_symbol_form(param.elts[1]);
             return { name: name_form.name,
                      specializer: specializer_form.name };
         } else if ((param.formt == "compound") &&
