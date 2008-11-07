@@ -116,13 +116,16 @@
 
 ;; Slots
 
-(defmacro slot-value (obj name)
-  `(%%slot-value ,obj ,name))
+(defun slot-value (obj name)
+  (%%slot-value obj name))
 
-(defmacro set-slot-value (obj name value)
-  `(%%set-slot-value ,obj ,name ,value))
+(defun set-slot-value (obj name value)
+  (%%set-slot-value obj name value))
 
 ;; Methods
+
+(defun get-method (obj name)
+  (%%get-method obj name))
 
 (defun set-method (obj name fun)
   (%%set-method obj name fun))

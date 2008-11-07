@@ -126,3 +126,16 @@
 (assert-eq (slot-value foo "slot1") null)
 (assert-eq (slot-value foo "slot2") null)
 
+;; Methods
+
+(defclass <quux>)
+(set-method <quux> "m33" (lambda (obj) 33))
+(set-method <quux> "m44" (lambda (obj) 44))
+(defvar quux (make <quux>))
+(assert-eq (%%funcall (get-method quux "m33") quux) 33)
+(assert-eq (%%funcall (get-method quux "m44") quux) 44)
+(defclass (<sub> <quux>))
+(defvar sub (make <sub>))
+(assert-eq (%%funcall (get-method sub "m33") sub) 33)
+(assert-eq (%%funcall (get-method sub "m44") sub) 44)
+

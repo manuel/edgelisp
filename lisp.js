@@ -260,6 +260,7 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
+    "%%apply": lisp_compile_special_apply,
     "%%boundp": lisp_compile_special_boundp,
     "%%defmacro": lisp_compile_special_defmacro,
     "%%defparameter": lisp_compile_special_defparameter,
@@ -295,6 +296,12 @@ function lisp_set_macro_function(name, expander)
 var lisp_macros_table = {};
 
 /**** List of special forms ****/
+
+/* (%%apply fun &rest args+ &key all-keys) */
+function lisp_compile_special_apply(form)
+{
+    
+}
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  

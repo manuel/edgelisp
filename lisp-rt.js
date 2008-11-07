@@ -294,9 +294,14 @@ function lisp_bif_set_slot_value(_key_, obj, name, value)
     return obj[lisp_mangle_slot(name)] = value;
 }
 
-function lisp_bif_set_method(_key_, cls, name, fun)
+function lisp_bif_get_method(_key_, obj, name)
 {
-    return cls[lisp_mangle_method(name)] = fun;
+    return obj[lisp_mangle_method(name)];
+}
+
+function lisp_bif_set_method(_key_, obj, name, fun)
+{
+    return obj[lisp_mangle_method(name)] = fun;
 }
 
 lisp_set_function("%%make-class", "lisp_bif_make_class");
@@ -305,6 +310,7 @@ lisp_set_function("%%make", "lisp_bif_make");
 lisp_set_function("%%slot-value", "lisp_bif_slot_value");
 lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("%%set-method", "lisp_bif_set_method");
+lisp_set_function("%%get-method", "lisp_bif_get_method");
 
 /*** More form manipulation functions ***/
 
