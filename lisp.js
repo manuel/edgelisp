@@ -268,7 +268,6 @@ var lisp_specials_table = {
     "%%funcall": lisp_compile_special_funcall,
     "%%function": lisp_compile_special_function,
     "%%if": lisp_compile_special_if,
-    "%%invoke-method": lisp_compile_special_invoke_method,
     "%%lambda": lisp_compile_special_lambda,
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
@@ -383,16 +382,6 @@ function lisp_compile_special_if(form)
              test: lisp_compile(test),
              consequent: lisp_compile(consequent),
              alternative: lisp_compile(alternative) };
-}
-
-/* Method invocation from inside a generic function needs to be as
-   fast as possible, so there's a special primitive for it.
-   (%%invoke-method name) */
-function lisp_compile_special_invoke_method(form)
-{
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "invoke_method",
-             name: name_form.name };
 }
 
 /* Returns a lexical closure.  See heading ``Functions''.
@@ -904,7 +893,6 @@ var lisp_vop_table = {
     "funcall": lisp_emit_vop_funcall,
     "function_ref": lisp_emit_vop_function_ref,
     "if": lisp_emit_vop_if,
-    "invoke_method": lisp_emit_vop_invoke_method,
     "lambda": lisp_emit_vop_lambda,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
@@ -972,13 +960,6 @@ function lisp_emit_vop_if(vop)
     var consequent = lisp_emit(vop.consequent);
     var alternative = lisp_emit(vop.alternative);
     return "(lisp_is_true(" + test + ") ? " + consequent + " : " + alternative + ")";
-}
-
-/* { vopt: "invoke_method", name: <string> */
-function lisp_emit_vop_invoke_method(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name);
-    return "(arguments[1]." + lisp_mangle_method(name) + ".apply(null, arguments))";
 }
 
 /* Creates a lexical closure.

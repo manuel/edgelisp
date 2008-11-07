@@ -126,11 +126,3 @@
 (assert-eq (slot-value foo "slot1") null)
 (assert-eq (slot-value foo "slot2") null)
 
-;; Methods
-
-(defvar <c> (make-class))
-(set-method <c> "m1" (lambda (c x) x))
-(defvar c (make <c>))
-(defun m1 (c x)
-  (%%invoke-method m1))
-(assert-eq (m1 c 12) 12)
