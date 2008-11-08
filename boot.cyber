@@ -72,8 +72,8 @@
 (defmacro unless (test &rest alternative)
   `(if ,test null (progn ,@alternative)))
 
-(defmacro set (name value)
-  `(%%set ,name ,value))
+(defmacro set (place value)
+  `(%%set ,place ,value))
 
 (defmacro list (&rest args)
   `(%%list ,@args))
@@ -97,6 +97,19 @@
                 ,@body)
               ,@(compound-map (lambda (b) 
                                 (compound-elt b 1)) 
+                              bindings)))
+
+;; This is R6RS's `letrec*'.
+(defmacro let* (bindings &rest body)
+  `(%%funcall (lambda ,(compound-map (lambda (b) 
+                                       (compound-elt b 0))
+                                     bindings)
+                ,@(compound-map (lambda (b) 
+                                  `(set ,(compound-elt b 0) ,(compound-elt b 1)))
+                                bindings)
+                ,@body)
+              ,@(compound-map (lambda (b) 
+                                `null)
                               bindings)))
 
 (defun macroexpand-1 (form)
@@ -154,19 +167,22 @@
   (%%subtypep type-1 type-2))
 
 (defmacro defclass (name &opt (slots `()) (ctor `null))
-  (let ((name (if (symbolp name) name (compound-elt name 0)))
+  (let ((class-name (if (symbolp name) name (compound-elt name 0)))
         (super-class (if (symbolp name) null (compound-elt name 1))))
     `(progn
-       (unless (boundp ,name)
-         (set ,name (make-class)))
+       (unless (boundp ,class-name)
+         (set ,class-name (make-class)))
        ,(if super-class
-            `(set-super-class ,name ,super-class)
+            `(set-super-class ,class-name ,super-class)
             `null)
        ,@(compound-map (lambda (slot)
-                         )
+                         (let* ((slot-name (symbol-name slot))
+                                (accessor-name (%%string-concat "." slot-name)))
+                           `(defmethod ,(%%string-to-symbol accessor-name) ((obj ,class-name))
+                              (slot-value obj ,(%%string-to-syntax slot-name)))))
                        slots))))
 
-(defun defmethod-param-type (param)
+(defun %%defmethod-param-type (param)
   (if (compoundp param)
       (compound-elt param 1)
       (if (symbolp param)
@@ -174,7 +190,7 @@
           (assert false))))
 
 (defmacro defmethod (name params &rest body)
-  (let ((class (defmethod-param-type (compound-elt params 0)))
+  (let ((class (%%defmethod-param-type (compound-elt params 0)))
         (name-string (%%string-to-syntax (symbol-name name))))
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))

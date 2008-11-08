@@ -141,4 +141,8 @@
 
 (defmethod m55 ((quux <quux>)) 55)
 (assert-eq (m55 quux) 55)
+(assert-eq (m55 sub) 55)
 
+(defmethod mid ((quux <quux>) x) x)
+(assert-eq (mid quux 12) 12)
+(assert-eq (mid sub 12) 12)

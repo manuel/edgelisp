@@ -59,10 +59,6 @@ function lisp_is_true(obj)
     return (obj !== false) && (obj !== null);
 }
 
-lisp_set("true", "true");
-lisp_set("false", "false");
-lisp_set("null", "null");
-
 /*** Exceptions ***/
 
 /* CyberLisp uses the same exception system as Dylan and Goo (which is
@@ -163,9 +159,6 @@ function lisp_bif_throw(_key_, exception)
     return do_throw(exception, lisp_handler_frame);
 }
 
-lisp_set_function("%%catch", "lisp_bif_catch");
-lisp_set_function("%%throw", "lisp_bif_throw");
-
 /*** Escape functions ***/
 
 function lisp_bif_call_with_escape_function(_key_, fun) {
@@ -185,9 +178,6 @@ function lisp_bif_call_with_escape_function(_key_, fun) {
     }
 }
 
-lisp_set_function("%%call-with-escape-function", 
-                  "lisp_bif_call_with_escape_function");
-
 /*** Unwind protect ***/
 
 function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
@@ -198,9 +188,6 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
         cleanup_fun(null);
     }
 }
-
-lisp_set_function("%%call-unwind-protected", 
-                  "lisp_bif_call_unwind_protected");
 
 /*** Other built-ins ***/
 
@@ -220,10 +207,6 @@ function lisp_bif_eq(_key_, a, b)
     return a === b;
 }
 
-lisp_set_function("%%macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_set_function("%%print", "lisp_bif_print");
-lisp_set_function("%%eq", "lisp_bif_eq");
-
 /*** Types ***/
 
 function lisp_type_of(obj)
@@ -235,8 +218,6 @@ function lisp_bif_type_of(_key_, obj)
 {
     return lisp_type_of(obj);
 }
-
-lisp_set_function("%%type-of", "lisp_bif_type_of");
 
 /* Returns true iff type1 is a general subtype of type2, meaning
    either equal to type2, or a subtype of type2. */
@@ -256,8 +237,6 @@ function lisp_bif_subtypep(_key_, type1, type2)
 {
     return lisp_subtypep(type1, type2);
 }
-
-lisp_set_function("%%subtypep", "lisp_bif_subtypep");
 
 function lisp_check_type(obj, type)
 {
@@ -304,14 +283,6 @@ function lisp_bif_set_method(_key_, obj, name, fun)
     return obj[lisp_mangle_method(name)] = fun;
 }
 
-lisp_set_function("%%make-class", "lisp_bif_make_class");
-lisp_set_function("%%set-super-class", "lisp_bif_set_super_class");
-lisp_set_function("%%make", "lisp_bif_make");
-lisp_set_function("%%slot-value", "lisp_bif_slot_value");
-lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
-lisp_set_function("%%set-method", "lisp_bif_set_method");
-lisp_set_function("%%get-method", "lisp_bif_get_method");
-
 /*** More form manipulation functions ***/
 
 function lisp_bif_symbol_name(_key_, symbol)
@@ -330,10 +301,6 @@ function lisp_bif_compoundp(_key_, form)
     return form.formt == "compound";
 }
 
-lisp_set_function("%%symbol-name", "lisp_bif_symbol_name");
-lisp_set_function("%%symbolp", "lisp_bif_symbolp");
-lisp_set_function("%%compoundp", "lisp_bif_compoundp");
-
 /*** Lists ***/
 
 function lisp_bif_list(_key_)
@@ -350,8 +317,17 @@ function lisp_bif_list_elt(_key_, list, i)
     return list[i];
 }
 
-lisp_set_function("%%list", "lisp_bif_list");
-lisp_set_function("%%list-elt", "lisp_bif_list_elt");
+/*** Strings ***/
+
+function lisp_bif_string_concat(_key_, s1, s2)
+{
+    return s1.concat(s2);
+}
+
+function lisp_bif_string_to_syntax(_key_, string)
+{
+    return { formt: "string", s: string };
+}
 
 /*** Misc ***/
 
@@ -360,18 +336,37 @@ function lisp_bif_is_typename(_key_, string)
     return lisp_is_type_name(string);
 }
 
-lisp_set_function("%%type-name-p", "lisp_is_type_name");
-
-function lisp_bif_string_to_syntax(_key_, string)
-{
-    return { formt: "string", s: string };
-}
-
-lisp_set_function("%%string-to-syntax", "lisp_bif_string_to_syntax");
-
 function lisp_bif_apply(_key_, fun, args)
 {
     return fun.apply(null, [ null ].concat(args));
 }
 
+lisp_set("true", "true");
+lisp_set("false", "false");
+lisp_set("null", "null");
+
 lisp_set_function("%%apply", "lisp_bif_apply");
+lisp_set_function("%%call-unwind-protected", "lisp_bif_call_unwind_protected");
+lisp_set_function("%%call-with-escape-function", "lisp_bif_call_with_escape_function");
+lisp_set_function("%%catch", "lisp_bif_catch");
+lisp_set_function("%%compoundp", "lisp_bif_compoundp");
+lisp_set_function("%%eq", "lisp_bif_eq");
+lisp_set_function("%%get-method", "lisp_bif_get_method");
+lisp_set_function("%%list", "lisp_bif_list");
+lisp_set_function("%%list-elt", "lisp_bif_list_elt");
+lisp_set_function("%%macroexpand-1", "lisp_bif_macroexpand_1");
+lisp_set_function("%%make", "lisp_bif_make");
+lisp_set_function("%%make-class", "lisp_bif_make_class");
+lisp_set_function("%%print", "lisp_bif_print");
+lisp_set_function("%%set-method", "lisp_bif_set_method");
+lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
+lisp_set_function("%%set-super-class", "lisp_bif_set_super_class");
+lisp_set_function("%%slot-value", "lisp_bif_slot_value");
+lisp_set_function("%%string-concat", "lisp_bif_string_concat");
+lisp_set_function("%%string-to-syntax", "lisp_bif_string_to_syntax");
+lisp_set_function("%%subtypep", "lisp_bif_subtypep");
+lisp_set_function("%%symbol-name", "lisp_bif_symbol_name");
+lisp_set_function("%%symbolp", "lisp_bif_symbolp");
+lisp_set_function("%%throw", "lisp_bif_throw");
+lisp_set_function("%%type-name-p", "lisp_is_type_name");
+lisp_set_function("%%type-of", "lisp_bif_type_of");
