@@ -194,9 +194,13 @@
         (name-string (%%string-to-syntax (symbol-name name))))
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))
-       (defun ,name (&rest args)
-         (let ((obj (list-elt args 0)))
-           (apply (get-method obj ,name-string) args))))))
+       (defgeneric ,name))))
+
+(defmacro defgeneric (name)
+  (let ((name-string (%%string-to-syntax (symbol-name name))))
+    `(defun ,name (&rest args)
+       (let ((obj (list-elt args 0)))
+         (apply (get-method obj ,name-string) args)))))
 
 ;; Exceptions
 
