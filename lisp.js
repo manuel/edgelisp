@@ -997,6 +997,7 @@ function lisp_emit_vop_lambda(vop)
     var opt_params = lisp_assert_not_null(vop.sig.opt_params);
     var key_params = lisp_assert_not_null(vop.sig.key_params);
     var rest_param = vop.sig.rest_param;
+    var all_keys_param = vop.sig.all_keys_param;
 
     // Signature (calling convention keywords dict + positional parameters)
     var param_names = [ lisp_keywords_dict ];
@@ -1071,13 +1072,23 @@ function lisp_emit_vop_lambda(vop)
             " = lisp_rest_param(arguments, " + max + "); ";
     }
 
+    // All-keys parameter
+    var setup_all_keys_param = "";
+    if (all_keys_param) {
+        setup_all_keys_param = "var " + lisp_mangled_param_name(all_keys_param) + " = " +
+            lisp_keywords_dict + " ? " + lisp_keywords_dict + " : lisp_fast_string_dict({}); ";
+    }
+
     var preamble = 
         check_arity + 
         check_types + 
         init_opt_params + 
         init_key_params +
-        setup_rest_param;
+        setup_rest_param +
+        setup_all_keys_param;
+
     var body = lisp_emit(vop.body);
+
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
 
@@ -1411,16 +1422,22 @@ function Lisp_string_dict()
 
 /* Turns an ordinary dictionary into a string dictionary.  May only be
    called if the caller has ensured that all keys are properly
-   mangled. */
+   mangled, or that the dictionary is empty. */
 function lisp_fast_string_dict(js_dict)
 {
     js_dict.__proto__ = Lisp_string_dict.prototype;
     return js_dict;
 }
 
-lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");
-lisp_set_function("%%make-compound", "lisp_bif_make_compound");
+function lisp_bif_string_dict_get(_key_, dict, key)
+{
+    return dict[lisp_mangle_string_dict_key(key)];
+}
+
 lisp_set_function("%%append-compounds", "lisp_bif_append_compounds");
+lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("%%compound-elt", "lisp_bif_compound_elt");
-lisp_set_function("%%compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("%%compound-map", "lisp_bif_compound_map");
+lisp_set_function("%%compound-slice", "lisp_bif_compound_slice");
+lisp_set_function("%%make-compound", "lisp_bif_make_compound");
+lisp_set_function("%%string-dict-get", "lisp_bif_string_dict_get");

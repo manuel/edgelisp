@@ -204,7 +204,7 @@ function lisp_bif_print(_key_, object)
 
 function lisp_bif_eq(_key_, a, b)
 {
-    return a === b;
+    return a == b;
 }
 
 /*** Types ***/
