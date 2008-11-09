@@ -283,19 +283,19 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
+    "%%if": lisp_compile_special_if,
+    "%%lambda": lisp_compile_special_lambda,
+    "%%set": lisp_compile_special_set,
     "bound?": lisp_compile_special_boundp,
-    "set-expander": lisp_compile_special_set_expander,
     "defparameter": lisp_compile_special_defparameter,
-    "set-function": lisp_compile_special_set_function,
     "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "function": lisp_compile_special_function,
-    "%%if": lisp_compile_special_if,
-    "%%lambda": lisp_compile_special_lambda,
     "progn": lisp_compile_special_progn,
     "quasiquote": lisp_compile_special_quasiquote,
     "quote": lisp_compile_special_quote,
-    "%%set": lisp_compile_special_set,
+    "set-expander": lisp_compile_special_set_expander,
+    "set-function": lisp_compile_special_set_function,
 };
 
 function lisp_macro_function(name)
@@ -1464,5 +1464,5 @@ lisp_set_function("compound-map", "lisp_bif_compound_map");
 lisp_set_function("compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("make-compound", "lisp_bif_make_compound");
 lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");
-lisp_set_function("string-dict-put", "lisp_bif_string_dict_put");
 lisp_set_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
+lisp_set_function("string-dict-put", "lisp_bif_string_dict_put");
