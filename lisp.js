@@ -1408,6 +1408,7 @@ function lisp_bif_compound_slice(_key_, compound, start)
 
 function lisp_mangle_string_dict_key(name)
 {
+    lisp_assert_string(name);
     return "%" + name;
 }
 
@@ -1434,6 +1435,16 @@ function lisp_bif_string_dict_get(_key_, dict, key)
     return dict[lisp_mangle_string_dict_key(key)];
 }
 
+function lisp_bif_string_dict_put(_key_, dict, key, value)
+{
+    dict[lisp_mangle_string_dict_key(key)] = value;
+}
+
+function lisp_bif_string_dict_has_key(_key_, dict, key)
+{
+    return lisp_mangle_string_dict_key(key) in dict;
+}
+
 /*** Export classes and built-in functions ***/
 
 lisp_set("<boolean>", "Boolean.prototype");
@@ -1453,3 +1464,5 @@ lisp_set_function("%%compound-map", "lisp_bif_compound_map");
 lisp_set_function("%%compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("%%make-compound", "lisp_bif_make_compound");
 lisp_set_function("%%string-dict-get", "lisp_bif_string_dict_get");
+lisp_set_function("%%string-dict-put", "lisp_bif_string_dict_put");
+lisp_set_function("%%string-dict-has-key", "lisp_bif_string_dict_has_key");
