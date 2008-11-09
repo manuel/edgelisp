@@ -43,24 +43,28 @@ load("lib/json2.js");
                elts: [ { formt: "symbol", name: "foo" } ] } 
 */
 
-function lisp_make_number_form(n)
+function Lisp_number_form(n)
 {
-    return { formt: "number", n: n };
+    this.formt = "number";
+    this.n = n;
 }
 
-function lisp_make_string_form(s)
+function Lisp_string_form(s)
 {
-    return { formt: "string", s: s };
+    this.formt = "string";
+    this.s = s;
 }
 
-function lisp_make_symbol_form(name)
+function Lisp_symbol_form(name)
 {
-    return { formt: "symbol", name: name };
+    this.formt = "symbol";
+    this.name = name;
 }
 
-function lisp_make_compound_form(elts)
+function Lisp_compound_form(elts)
 {
-    return { formt: "compound", elts: elts };
+    this.formt = "compound";
+    this.elts = elts;
 }
 
 var lisp_expression_syntax =
@@ -82,7 +86,7 @@ function lisp_number_syntax_action(ast)
     var sign = ast[0] || "";
     var decimal_digits = ast[1];
     var dot_digits = ast[2] || "";
-    return lisp_make_number_form(sign + decimal_digits + dot_digits);
+    return new Lisp_number_form(sign + decimal_digits + dot_digits);
 }
 
 /**** Strings ****/
@@ -110,7 +114,7 @@ function lisp_escape_sequence_action(ast)
 
 function lisp_string_syntax_action(ast)
 {
-    return lisp_make_string_form(ast[1]);
+    return new Lisp_string_form(ast[1]);
 }
 
 /**** Symbols ****/
@@ -128,7 +132,7 @@ var lisp_symbol_syntax =
 
 function lisp_symbol_syntax_action(ast)
 {
-    return lisp_make_symbol_form(ast);
+    return new Lisp_symbol_form(ast);
 }
 
 /**** Compounds ****/
@@ -139,7 +143,7 @@ var lisp_compound_syntax =
 
 function lisp_compound_syntax_action(ast)
 {
-    return lisp_make_compound_form(ast[1]);
+    return new Lisp_compound_form(ast[1]);
 }
 
 /**** (Quasi-)quotation ****/
@@ -169,8 +173,8 @@ var lisp_function_syntax =
 function lisp_shortcut_syntax_action(name)
 {
     return function(ast) {
-        return lisp_make_compound_form([ lisp_make_symbol_form(name),
-                                         ast[1] ]);
+        return new Lisp_compound_form([ new Lisp_symbol_form(name),
+                                        ast[1] ]);
     }
 }
 
@@ -875,7 +879,7 @@ function lisp_compile_qq_compound(x, depth)
 
     function symbol(name)
     {
-        return lisp_make_symbol_form(name);
+        return new Lisp_symbol_form(name);
     }
 
     function quote(form)
@@ -1311,7 +1315,7 @@ function lisp_make_compound(_key_)
         lisp_assert(elt && elt.formt, "%%make-compound", elt);
         elts = elts.concat(elt);
     }
-    return lisp_make_compound_form(elts);
+    return new Lisp_compound_form(elts);
 }
 
 /* Creates a compound form by appending all positional arguments,
@@ -1330,7 +1334,7 @@ function lisp_append_compounds(_key_)
             elts = elts.concat(elt);
         }
     }
-    return lisp_make_compound_form(elts);
+    return new Lisp_compound_form(elts);
 }
 
 function lisp_compound_map(_key_, fun, compound)
@@ -1340,7 +1344,7 @@ function lisp_compound_map(_key_, fun, compound)
     }
     lisp_assert_not_null(fun);
     lisp_assert_compound_form(compound);
-    return lisp_make_compound_form(compound.elts.map(js_fun));
+    return new Lisp_compound_form(compound.elts.map(js_fun));
 }
 
 function lisp_compound_elt(_key_, compound, i)
@@ -1353,7 +1357,7 @@ function lisp_compound_elt(_key_, compound, i)
 function lisp_compound_slice(_key_, compound, start)
 {
     lisp_assert_compound_form(compound, "%%compound-slice", compound);
-    return lisp_make_compound_form(compound.elts.slice(start));
+    return new Lisp_compound_form(compound.elts.slice(start));
 }
 
 lisp_set_function("%%compound-apply", "lisp_compound_apply");
