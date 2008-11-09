@@ -106,8 +106,8 @@
   `(assert (eq ,a ,b)))
 
 (defmacro defclass (name &opt (slots `()) (ctor `null))
-  (let ((class-name (if (symbolp name) name (compound-elt name 0)))
-        (super-class (if (symbolp name) null (compound-elt name 1))))
+  (let ((class-name (if (symbol? name) name (compound-elt name 0)))
+        (super-class (if (symbol? name) null (compound-elt name 1))))
     `(progn
        (unless (boundp ,class-name)
          (set ,class-name (make-class)))
@@ -122,9 +122,9 @@
                        slots))))
 
 (defun %%defmethod-param-type (param)
-  (if (compoundp param)
+  (if (compound? param)
       (compound-elt param 1)
-      (if (symbolp param)
+      (if (symbol? param)
           param
           (assert false))))
 

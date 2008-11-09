@@ -121,7 +121,7 @@ function lisp_string_syntax_action(ast)
 
 var lisp_symbol_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
-    choice("&", ":", ".", "=", ">","-", "<", "%", "+", "/", "*");
+    choice("&", ":", ".", "=", ">","-", "<", "%", "+", "?", "/", "*");
 
 var lisp_symbol_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
@@ -1194,6 +1194,7 @@ var lisp_mangle_table =
      ["<", "L"],
      ["%", "N"],
      ["+", "P"],
+     ["?", "Q"],
      ["/", "S"],
      ["*", "T"],
      ];
