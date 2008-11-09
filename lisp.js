@@ -1292,12 +1292,13 @@ function lisp_assert_compound_form(value, message, arg)
     lisp_assert_not_null(value.elts.length, message, arg);
     return value;
 }
+
 /**** Built-in form manipulation functions ****/
 
 /* Applies a Lisp function to the elements of a compound form, a
    simple form of destructuring.  The form's elements are simply
    supplied as the function's positional arguments. */
-function lisp_compound_apply(_key_, fun, form)
+function lisp_bif_compound_apply(_key_, fun, form)
 {
     var _key_ = null;
     var args = [ _key_ ].concat(form.elts);
@@ -1307,7 +1308,7 @@ function lisp_compound_apply(_key_, fun, form)
 
 /* Creates a compound form from all positional arguments, which must
    be forms. */
-function lisp_make_compound(_key_)
+function lisp_bif_make_compound(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
@@ -1322,7 +1323,7 @@ function lisp_make_compound(_key_)
    which must be compound forms or lists.  This fuzzyness in accepting
    both compound forms and lists enables the splicing in of forms
    supplied via the rest parameter. */
-function lisp_append_compounds(_key_)
+function lisp_bif_append_compounds(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
@@ -1337,7 +1338,7 @@ function lisp_append_compounds(_key_)
     return new Lisp_compound_form(elts);
 }
 
-function lisp_compound_map(_key_, fun, compound)
+function lisp_bif_compound_map(_key_, fun, compound)
 {
     function js_fun(elt) {
         return fun(null, elt);
@@ -1347,22 +1348,22 @@ function lisp_compound_map(_key_, fun, compound)
     return new Lisp_compound_form(compound.elts.map(js_fun));
 }
 
-function lisp_compound_elt(_key_, compound, i)
+function lisp_bif_compound_elt(_key_, compound, i)
 {
     lisp_assert_compound_form(compound, "%%compound-elt", compound);
     var elt = compound.elts[i];
     return elt;
 }
 
-function lisp_compound_slice(_key_, compound, start)
+function lisp_bif_compound_slice(_key_, compound, start)
 {
     lisp_assert_compound_form(compound, "%%compound-slice", compound);
     return new Lisp_compound_form(compound.elts.slice(start));
 }
 
-lisp_set_function("%%compound-apply", "lisp_compound_apply");
-lisp_set_function("%%make-compound", "lisp_make_compound");
-lisp_set_function("%%append-compounds", "lisp_append_compounds");
-lisp_set_function("%%compound-elt", "lisp_compound_elt");
-lisp_set_function("%%compound-slice", "lisp_compound_slice");
-lisp_set_function("%%compound-map", "lisp_compound_map");
+lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");
+lisp_set_function("%%make-compound", "lisp_bif_make_compound");
+lisp_set_function("%%append-compounds", "lisp_bif_append_compounds");
+lisp_set_function("%%compound-elt", "lisp_bif_compound_elt");
+lisp_set_function("%%compound-slice", "lisp_bif_compound_slice");
+lisp_set_function("%%compound-map", "lisp_bif_compound_map");
