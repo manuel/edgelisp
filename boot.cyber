@@ -38,7 +38,7 @@
   `(set-function ,name (lambda ,sig ,@body)))
 
 (defmacro defvar (name value)
-  `(unless (boundp ,name)
+  `(unless (bound? ,name)
      (defparameter ,name ,value)))
 
 (defmacro set (place value)
@@ -109,7 +109,7 @@
   (let ((class-name (if (symbol? name) name (compound-elt name 0)))
         (super-class (if (symbol? name) null (compound-elt name 1))))
     `(progn
-       (unless (boundp ,class-name)
+       (unless (bound? ,class-name)
          (set ,class-name (make-class)))
        ,(if super-class
             `(set-super-class ,class-name ,super-class)

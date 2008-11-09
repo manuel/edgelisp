@@ -284,11 +284,11 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "boundp": lisp_compile_special_boundp,
+    "bound?": lisp_compile_special_boundp,
     "set-expander": lisp_compile_special_set_expander,
     "defparameter": lisp_compile_special_defparameter,
     "set-function": lisp_compile_special_set_function,
-    "fboundp": lisp_compile_special_fboundp,
+    "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "function": lisp_compile_special_function,
     "%%if": lisp_compile_special_if,
