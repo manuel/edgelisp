@@ -237,7 +237,7 @@ function lisp_compile_function_application(form)
 {
     var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "function_ref", name: name };
+    var fun = { vopt: "function", name: name };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -366,7 +366,7 @@ function lisp_compile_special_funcall(form)
 function lisp_compile_special_function(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "function_ref", 
+    return { vopt: "function", 
              name: name_form.name };
 }
 
@@ -842,14 +842,14 @@ function lisp_compile_qq_compound(x, depth)
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function_ref", name: "%%make-compound" },
+                 fun: { vopt: "function", name: "%%make-compound" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function_ref", name: "%%append-compounds" },
+                 fun: { vopt: "function", name: "%%append-compounds" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -891,7 +891,7 @@ var lisp_vop_table = {
     "boundp": lisp_emit_vop_boundp,
     "fboundp": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
-    "function_ref": lisp_emit_vop_function_ref,
+    "function": lisp_emit_vop_function,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
     "number": lisp_emit_vop_number,
@@ -945,9 +945,9 @@ function lisp_emit_vop_funcall(vop)
 }
 
 /* Function reference. 
-   { vopt: "function_ref", name: <string> }
+   { vopt: "function", name: <string> }
    name: the name of the function. */
-function lisp_emit_vop_function_ref(vop)
+function lisp_emit_vop_function(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
     return lisp_mangle_function(name);
