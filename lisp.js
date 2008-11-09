@@ -1053,9 +1053,9 @@ function lisp_emit_vop_lambda(vop)
             var key_name = lisp_mangle_string_dict_key(param.name);
             var init = param.init ? lisp_emit(param.init) : "null";
             with_key_dict += "if (\"" + key_name + "\" in " + lisp_keywords_dict + ") " +
-                                 name + " = " + lisp_keywords_dict + "[\"" + key_name + "\"]; " +
-                             "else " + name + " = " + init + "; ";
-            wout_key_dict += name + " = " + init + "; ";
+                                 "var " + name + " = " + lisp_keywords_dict + "[\"" + key_name + "\"]; " +
+                             "else var " + name + " = " + init + "; ";
+            wout_key_dict += "var " + name + " = " + init + "; ";
         }
         init_key_params = "if (" + lisp_keywords_dict + ") { " + 
                               with_key_dict + 

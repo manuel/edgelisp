@@ -190,3 +190,13 @@
 
 (assert-eq (%%funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "k")) k: 1) 1)
 (assert-eq (%%funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) null)
+
+;; apply
+
+(defvar dict (make <string-dict>))
+(put dict "foo" 1)
+(put dict "bar" 2)
+(defun x (&key foo bar) foo)
+(defun y (&key foo bar) bar)
+(assert-eq (apply #'x (list) dict) 1)
+(assert-eq (apply #'y (list) dict) 2)

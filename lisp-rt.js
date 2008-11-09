@@ -336,9 +336,9 @@ function lisp_bif_is_typename(_key_, string)
     return lisp_is_type_name(string);
 }
 
-function lisp_bif_apply(_key_, fun, args)
+function lisp_bif_apply(_key_, fun, args, keys)
 {
-    return fun.apply(null, [ null ].concat(args));
+    return fun.apply(null, [ keys ].concat(args));
 }
 
 lisp_set("true", "true");

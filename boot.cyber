@@ -56,8 +56,8 @@
 (defmacro function (name)
   `(%%function ,name))
 
-(defun apply (fun args)
-  (%%apply fun args))
+(defun apply (fun args &opt keys)
+  (%%apply fun args keys))
 
 ;; Note that in contrast to other Lisps, CyberLisp does not allow
 ;; mixing of runtime values and forms, so the alternative's default
@@ -198,9 +198,9 @@
 
 (defmacro defgeneric (name &rest args)
   (let ((name-string (%%string-to-syntax (symbol-name name))))
-    `(defun ,name (&rest args)
+    `(defun ,name (&rest args &all-keys keys)
        (let ((obj (list-elt args 0)))
-         (apply (get-method obj ,name-string) args)))))
+         (apply (get-method obj ,name-string) args keys)))))
 
 ;; Exceptions
 
