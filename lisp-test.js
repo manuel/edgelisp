@@ -118,18 +118,18 @@ function lisp_test_all()
                                        { formt: "symbol", name: "a" } ] });
         
         // Quasiquote syntax
-        lisp_parse_2_forms_test("`x", "(%%quasiquote x)");
-        lisp_parse_2_forms_test("``x", "(%%quasiquote (%%quasiquote x))");
-        lisp_parse_2_forms_test("`,x", "(%%quasiquote (%%unquote x))");
-        lisp_parse_2_forms_test("`,@x", "(%%quasiquote (%%unquote-splicing x))");
-        lisp_parse_2_forms_test("`,@(x)", "(%%quasiquote (%%unquote-splicing (x)))");
-        lisp_parse_2_forms_test("`,(x)", "(%%quasiquote (%%unquote (x)))");
-        lisp_parse_2_forms_test("`(x)", "(%%quasiquote (x))");
-        lisp_parse_2_forms_test("`(x y z)", "(%%quasiquote (x y z))");
-        lisp_parse_2_forms_test("`(x y ,(z))", "(%%quasiquote (x y (%%unquote (z))))");
-        lisp_parse_2_forms_test("`(x y ,@(z zz))", "(%%quasiquote (x y (%%unquote-splicing (z zz))))");
-        lisp_parse_2_forms_test("`,`z", "(%%quasiquote (%%unquote (%%quasiquote z)))");
-        lisp_parse_2_forms_test("`(,`z)", "(%%quasiquote ((%%unquote (%%quasiquote z))))");
+        lisp_parse_2_forms_test("`x", "(quasiquote x)");
+        lisp_parse_2_forms_test("``x", "(quasiquote (quasiquote x))");
+        lisp_parse_2_forms_test("`,x", "(quasiquote (unquote x))");
+        lisp_parse_2_forms_test("`,@x", "(quasiquote (unquote-splicing x))");
+        lisp_parse_2_forms_test("`,@(x)", "(quasiquote (unquote-splicing (x)))");
+        lisp_parse_2_forms_test("`,(x)", "(quasiquote (unquote (x)))");
+        lisp_parse_2_forms_test("`(x)", "(quasiquote (x))");
+        lisp_parse_2_forms_test("`(x y z)", "(quasiquote (x y z))");
+        lisp_parse_2_forms_test("`(x y ,(z))", "(quasiquote (x y (unquote (z))))");
+        lisp_parse_2_forms_test("`(x y ,@(z zz))", "(quasiquote (x y (unquote-splicing (z zz))))");
+        lisp_parse_2_forms_test("`,`z", "(quasiquote (unquote (quasiquote z)))");
+        lisp_parse_2_forms_test("`(,`z)", "(quasiquote ((unquote (quasiquote z))))");
 
         // Number VOP
         lisp_emit_test({ vopt: "number", n: "12" }, 12);
@@ -145,78 +145,78 @@ function lisp_test_all()
         lisp_emit_test({ vopt: "string", s: "" }, "");
         lisp_emit_test({ vopt: "string", s: "\"" }, "\"");
 
-        // %%defparameter
-        lisp_eval("(%%defparameter foo 1)");
+        // defparameter
+        lisp_eval("(defparameter foo 1)");
         lisp_test(lisp_eval("foo") == 1);
 
-        lisp_eval("(%%defparameter foo \"bar\")");
+        lisp_eval("(defparameter foo \"bar\")");
         lisp_test(lisp_eval("foo") == "bar");
 
-        lisp_eval("(%%defparameter quux \"bar\")");
+        lisp_eval("(defparameter quux \"bar\")");
         lisp_test(lisp_eval("quux") == "bar");
 
-        // %%defun, %%function
-        lisp_eval("(%%defun foo 2)");
-        lisp_test(lisp_eval("(%%function foo)") == 2);
+        // defun, function
+        lisp_eval("(set-function foo 2)");
+        lisp_test(lisp_eval("(function foo)") == 2);
         lisp_test(lisp_eval("foo") == "bar");
 
-        lisp_eval("(%%defun foo \"bar\")");
-        lisp_test(lisp_eval("(%%function foo)") == "bar");
+        lisp_eval("(set-function foo \"bar\")");
+        lisp_test(lisp_eval("(function foo)") == "bar");
 
-        lisp_eval("(%%defun quux \"bar\")");
-        lisp_test(lisp_eval("(%%function quux)") == "bar");
+        lisp_eval("(set-function quux \"bar\")");
+        lisp_test(lisp_eval("(function quux)") == "bar");
 
-        // %%progn
-        lisp_test(lisp_eval("(%%progn)") == null);
-        lisp_test(lisp_eval("(%%progn 1)") == 1);
-        lisp_test(lisp_eval("(%%progn 0 1)") == 1);
-        lisp_test(lisp_eval("(%%progn -1 0 1)") == 1);
+        // progn
+        lisp_test(lisp_eval("(progn)") == null);
+        lisp_test(lisp_eval("(progn 1)") == 1);
+        lisp_test(lisp_eval("(progn 0 1)") == 1);
+        lisp_test(lisp_eval("(progn -1 0 1)") == 1);
 
-        // %%funcall, %%lambda
-        lisp_test(lisp_eval("(%%funcall (%%lambda (a) a) 1)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (a b) a) 1 2)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (a b) b) 1 2)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (&opt a b) a) 1 2)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (&opt a b) b) 1 2)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) r1) 1 2 3 4)") == 1);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) r2) 1 2 3 4)") == 2);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2 3 4)") == 3);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2 3 4)") == 4);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) a) 1 2)") == null);
-        lisp_test(lisp_eval("(%%funcall (%%lambda (r1 r2 &opt a b) b) 1 2)") == null);
+        // funcall, lambda
+        lisp_test(lisp_eval("(funcall (%%lambda (a) a) 1)") == 1);
+        lisp_test(lisp_eval("(funcall (%%lambda (a b) a) 1 2)") == 1);
+        lisp_test(lisp_eval("(funcall (%%lambda (a b) b) 1 2)") == 2);
+        lisp_test(lisp_eval("(funcall (%%lambda (&opt a b) a) 1 2)") == 1);
+        lisp_test(lisp_eval("(funcall (%%lambda (&opt a b) b) 1 2)") == 2);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) r1) 1 2 3 4)") == 1);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) r2) 1 2 3 4)") == 2);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) a) 1 2 3 4)") == 3);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) b) 1 2 3 4)") == 4);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) a) 1 2)") == null);
+        lisp_test(lisp_eval("(funcall (%%lambda (r1 r2 &opt a b) b) 1 2)") == null);
 
-        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r))", []);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r) 1)", [1]);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&rest r) r) 1 2)", [1, 2]);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &rest r) a) 1 2 3)", 1);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &rest r) r) 1 2 3)", [2, 3]);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) a) 1 2 3 4)", 1);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) b) 1 2 3 4)", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt b &rest r) r) 1 2 3 4)", [3, 4]);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (x 2)) x) 1)", 1);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (x 2)) x))", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1)", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1 0)", 0);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z) x) 1 0 -10)", 0);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) x) 1 0 -10)", 0);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) r) 1 0 -10)", []);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) a) 1 0 -10)", 1);
-        lisp_eval_equal_test("(%%funcall (%%lambda (a &opt (x 2) z &rest r) z) 1 0 -10)", -10);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a))", 1);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b))", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c))", null);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10)", 10);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10)", 2);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10)", null);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20)", 10);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20)", 20);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20)", null);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20 30)", 10);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20 30)", 20);
-        lisp_eval_equal_test("(%%funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20 30)", 30);
+        lisp_eval_equal_test("(funcall (%%lambda (&rest r) r))", []);
+        lisp_eval_equal_test("(funcall (%%lambda (&rest r) r) 1)", [1]);
+        lisp_eval_equal_test("(funcall (%%lambda (&rest r) r) 1 2)", [1, 2]);
+        lisp_eval_equal_test("(funcall (%%lambda (a &rest r) a) 1 2 3)", 1);
+        lisp_eval_equal_test("(funcall (%%lambda (a &rest r) r) 1 2 3)", [2, 3]);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt b &rest r) a) 1 2 3 4)", 1);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt b &rest r) b) 1 2 3 4)", 2);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt b &rest r) r) 1 2 3 4)", [3, 4]);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (x 2)) x) 1)", 1);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (x 2)) x))", 2);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z) x) 1)", 2);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z) x) 1 0)", 0);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z) x) 1 0 -10)", 0);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z &rest r) x) 1 0 -10)", 0);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z &rest r) r) 1 0 -10)", []);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z &rest r) a) 1 0 -10)", 1);
+        lisp_eval_equal_test("(funcall (%%lambda (a &opt (x 2) z &rest r) z) 1 0 -10)", -10);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) a))", 1);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) b))", 2);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) c))", null);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) a) 10)", 10);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) b) 10)", 2);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) c) 10)", null);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20)", 10);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20)", 20);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20)", null);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) a) 10 20 30)", 10);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) b) 10 20 30)", 20);
+        lisp_eval_equal_test("(funcall (%%lambda (&opt (a 1) (b 2) c) c) 10 20 30)", 30);
 
-        // %%defmacro
-        lisp_eval("(%%defmacro m1 (%%lambda (form) `1))");
+        // set-expander
+        lisp_eval("(set-expander m1 (%%lambda (form) `1))");
         lisp_test(lisp_eval("(m1)") == 1);
 
         // %%if
@@ -224,16 +224,16 @@ function lisp_test_all()
         lisp_test(lisp_eval("(%%if false true false)") == false);
         lisp_test(lisp_eval("(%%if null true false)") == false);
 
-        // %%boundp
-        lisp_eval("(%%defparameter b1 1)");
-        lisp_test(lisp_eval("(%%boundp b1)"));
-        lisp_test(!lisp_eval("(%%boundp b2)"));
+        // bound?
+        lisp_eval("(defparameter b1 1)");
+        lisp_test(lisp_eval("(bound? b1)"));
+        lisp_test(!lisp_eval("(bound? b2)"));
         
-        // %%fboundp
-        lisp_eval("(%%defun fb1 (%%lambda () null))");
-        lisp_test(lisp_eval("(%%fboundp fb1)"));
-        lisp_test(!lisp_eval("(%%fboundp fb2)"));
-        lisp_test(!lisp_eval("(%%fboundp b2)"));
+        // fbound?
+        lisp_eval("(set-function fb1 (%%lambda () null))");
+        lisp_test(lisp_eval("(fbound? fb1)"));
+        lisp_test(!lisp_eval("(fbound? fb2)"));
+        lisp_test(!lisp_eval("(fbound? b2)"));
 
     } catch(e) {
         print(e);
