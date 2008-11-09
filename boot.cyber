@@ -23,16 +23,13 @@
 ;;;  0        1    2         3
 (%%defmacro defmacro
   (%%lambda (defmacro-form)
-    `(%%defmacro ,(%%compound-elt defmacro-form 1)
-       (%%lambda (%%form)         
-         (%%compound-apply            
-           (%%lambda ,(%%compound-elt defmacro-form 2)             
-             (%%progn               
-               ,@(%%compound-slice defmacro-form 3)))           
-           (%%compound-slice %%form 1))))))
-
-(defmacro progn (&rest body)
-  `(%%progn ,@body))
+    `(%%defmacro ,(compound-elt defmacro-form 1)
+       (%%lambda (%%form)
+         (compound-apply
+           (%%lambda ,(compound-elt defmacro-form 2)
+             (progn
+               ,@(compound-slice defmacro-form 3)))           
+           (compound-slice %%form 1))))))
 
 (defmacro lambda (sig &rest body)
   `(%%lambda ,sig (progn ,@body)))
@@ -40,29 +37,13 @@
 (defmacro defun (name sig &rest body)
   `(%%defun ,name (lambda ,sig ,@body)))
 
-(defmacro defparameter (name value)
-  `(%%defparameter ,name ,value))
-
-(defmacro boundp (name)
-  `(%%boundp ,name))
-
-(defmacro fboundp (name)
-  `(%%fboundp ,name))
-
 (defmacro defvar (name value)
   `(unless (boundp ,name)
      (defparameter ,name ,value)))
 
-(defmacro function (name)
-  `(%%function ,name))
+(defmacro set (place value)
+  `(%%set ,place ,value))
 
-(defun apply (fun args &opt keys)
-  (%%apply fun args keys))
-
-;; Note that in contrast to other Lisps, CyberLisp does not allow
-;; mixing of runtime values and forms, so the alternative's default
-;; value cannot simply be the value `null', it has to be the form
-;; `null'.
 (defmacro if (test consequent &opt (alternative `null))
   `(%%if ,test ,consequent ,alternative))
 
@@ -72,99 +53,57 @@
 (defmacro unless (test &rest alternative)
   `(if ,test null (progn ,@alternative)))
 
-(defmacro set (place value)
-  `(%%set ,place ,value))
-
-(defmacro list (&rest args)
-  `(%%list ,@args))
-
-(defun list-elt (list i)
-  (%%list-elt list i))
-
-(defun compound-map (fun compound)
-  (%%compound-map fun compound))
-
-(defun compound-elt (compound i)
-  (%%compound-elt compound i))
-
-(defun compound-slice (compound start)
-  (%%compound-slice compound start))
-
 (defmacro let (bindings &rest body)
-  `(%%funcall (lambda ,(compound-map (lambda (b) 
-                                       (compound-elt b 0))
-                                     bindings)
-                ,@body)
-              ,@(compound-map (lambda (b) 
-                                (compound-elt b 1)) 
-                              bindings)))
+  `(funcall (lambda ,(compound-map (lambda (b) 
+                                     (compound-elt b 0))
+                                   bindings)
+              ,@body)
+            ,@(compound-map (lambda (b) 
+                              (compound-elt b 1)) 
+                            bindings)))
 
-;; This is R6RS's `letrec*'.
 (defmacro let* (bindings &rest body)
-  `(%%funcall (lambda ,(compound-map (lambda (b) 
-                                       (compound-elt b 0))
-                                     bindings)
-                ,@(compound-map (lambda (b) 
-                                  `(set ,(compound-elt b 0) ,(compound-elt b 1)))
-                                bindings)
-                ,@body)
+  `(funcall (lambda ,(compound-map (lambda (b) 
+                                     (compound-elt b 0))
+                                   bindings)
               ,@(compound-map (lambda (b) 
-                                `null)
-                              bindings)))
-
-(defun macroexpand-1 (form)
-  (%%macroexpand-1 form))
-
-(defun print (object)
-  (%%print object))
-
-(defun eq (a b)
-  (%%eq a b))
+                                `(set ,(compound-elt b 0) ,(compound-elt b 1)))
+                              bindings)
+              ,@body)
+            ,@(compound-map (lambda (b) 
+                              `null)
+                            bindings)))
 
 (defun not (x)
   (if x false true))
 
-(defun symbol-name (symbol)
-  (%%symbol-name symbol))
+(defmacro block (name &rest body)
+  `(call-with-escape-function (lambda (,name) ,@body)))
 
-(defun symbolp (form)
-  (%%symbolp form))
+(defmacro return-from (name value)
+  `(funcall ,name ,value))
 
-(defun compoundp (form)
-  (%%compoundp form))
+(defmacro unwind-protect (protected &rest cleanups)
+  `(call-unwind-protected (lambda () ,protected)
+                          (lambda () ,@cleanups)))
 
-;; Slots
+(defmacro catch (handler-specs &rest body)
+  `(%%catch (list ,@(compound-map (lambda (handler-spec)
+                                    `(list ,(compound-elt handler-spec 0)
+                                           ,(compound-elt handler-spec 1)))
+                                  handler-specs))
+            (lambda () ,@body)))
 
-(defun slot-value (obj name)
-  (%%slot-value obj name))
+(defmacro assert (test &opt (msg `"assertion failed"))
+  `(let ((result ,test))
+     (if result
+         result
+         (progn
+           (print ,msg)
+           (print ',test)))))
 
-(defun set-slot-value (obj name value)
-  (%%set-slot-value obj name value))
-
-;; Methods
-
-(defun get-method (obj name)
-  (%%get-method obj name))
-
-(defun set-method (obj name fun)
-  (%%set-method obj name fun))
-
-;; Classes
-
-(defun make-class ()
-  (%%make-class))
-
-(defun set-super-class (class super-class)
-  (%%set-super-class class super-class))
-
-(defun make (class)
-  (%%make class))
-
-(defun type-of (obj)
-  (%%type-of obj))
-
-(defun subtypep (type-1 type-2)
-  (%%subtypep type-1 type-2))
+(defmacro assert-eq (a b)
+  `(assert (eq ,a ,b)))
 
 (defmacro defclass (name &opt (slots `()) (ctor `null))
   (let ((class-name (if (symbolp name) name (compound-elt name 0)))
@@ -177,9 +116,9 @@
             `null)
        ,@(compound-map (lambda (slot)
                          (let* ((slot-name (symbol-name slot))
-                                (accessor-name (%%string-concat "." slot-name)))
-                           `(defmethod ,(%%string-to-symbol accessor-name) ((obj ,class-name))
-                              (slot-value obj ,(%%string-to-syntax slot-name)))))
+                                (accessor-name (string-concat "." slot-name)))
+                           `(defmethod ,(string-to-symbol accessor-name) ((obj ,class-name))
+                              (slot-value obj ,(string-to-syntax slot-name)))))
                        slots))))
 
 (defun %%defmethod-param-type (param)
@@ -191,28 +130,18 @@
 
 (defmacro defmethod (name params &rest body)
   (let ((class (%%defmethod-param-type (compound-elt params 0)))
-        (name-string (%%string-to-syntax (symbol-name name))))
+        (name-string (string-to-syntax (symbol-name name))))
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))
        (defgeneric ,name))))
 
 (defmacro defgeneric (name &rest args)
-  (let ((name-string (%%string-to-syntax (symbol-name name))))
+  (let ((name-string (string-to-syntax (symbol-name name))))
     `(defun ,name (&rest args &all-keys keys)
        (let ((obj (list-elt args 0)))
          (apply (get-method obj ,name-string) args keys)))))
 
-;; Exceptions
-
-(defmacro catch (handler-specs &rest body)
-  `(%%catch (list ,@(compound-map (lambda (handler-spec)
-                                    `(list ,(compound-elt handler-spec 0)
-                                           ,(compound-elt handler-spec 1)))
-                                  handler-specs))
-            (lambda () ,@body)))
-
-(defun throw (exception)
-  (%%throw exception))
+(defclass <object>)
 
 (defclass <exception>)
 (defclass (<error> <exception>))
@@ -224,46 +153,6 @@
 
 (deferror <failed-assertion>)
 
-;; Note that the message string needs to be quoted, turning it into a
-;; string form.  Strings cannot be inserted into a code template, only
-;; forms can.
-(defmacro assert (test &opt (msg `"assertion failed"))
-  `(let ((result ,test))
-     (if result
-         result
-         (progn
-           (print ,msg)
-           (print ',test)))))
-
-(defmacro assert-eq (a b)
-  `(assert (eq ,a ,b)))
-
-;; Non-local exits 
-;;
-;; (Note that in contrast to Common Lisp's `block' and `return-form',
-;; CyberLisp's non-local exits are first-class objects.)
-
-(defmacro block (name &rest body)
-  `(%%call-with-escape-function (lambda (,name) ,@body)))
-
-(defmacro return-from (name value)
-  `(%%funcall ,name ,value))
-
-;; Unwind protect
-
-(defmacro unwind-protect (protected &rest cleanups)
-  `(%%call-unwind-protected (lambda () ,protected)
-                            (lambda () ,@cleanups)))
-
-(defclass <object>)
-
-;; Numbers
-
-(defmacro inc (place &opt (amount `1))
-  `(set ,place (+ ,amount ,place)))
-
-;; Dictionaries
-
 (defclass <dict>)
 
 (defgeneric get (dict key &opt default))
@@ -274,12 +163,11 @@
 
 (defmethod get ((dict <string-dict>) (key <string>) &opt default)
   (if (has-key dict key)
-      (%%string-dict-get dict key)
+      (string-dict-get dict key)
       default))
 
 (defmethod put (<string-dict> (key <string>) value)
-  (%%string-dict-put string-dict key value))
+  (string-dict-put string-dict key value))
 
 (defmethod has-key (<string-dict> (key <string>))
-  (%%string-dict-has-key string-dict key))
-
+  (string-dict-has-key string-dict key))

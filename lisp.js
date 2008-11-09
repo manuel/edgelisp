@@ -150,25 +150,25 @@ function lisp_compound_syntax_action(ast)
 
 var lisp_quote_syntax =
     action(sequence("'", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("%%quote"));
+           lisp_shortcut_syntax_action("quote"));
 
 var lisp_quasiquote_syntax =
     action(sequence("`", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("%%quasiquote"));
+           lisp_shortcut_syntax_action("quasiquote"));
 
 var lisp_unquote_syntax =
     action(sequence(",", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("%%unquote"));
+           lisp_shortcut_syntax_action("unquote"));
 
 var lisp_unquote_splicing_syntax =
     action(sequence(",@", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("%%unquote-splicing"));
+           lisp_shortcut_syntax_action("unquote-splicing"));
 
 /**** Misc ****/
 
 var lisp_function_syntax =
     action(sequence("#'", lisp_symbol_syntax),
-           lisp_shortcut_syntax_action("%%function"));
+           lisp_shortcut_syntax_action("function"));
 
 function lisp_shortcut_syntax_action(name)
 {
@@ -273,7 +273,7 @@ function lisp_compile_function_application(form)
 
 /* Special forms are built-in forms with special evaluation rules
    (e.g. `%%if').  Special forms are very low-level, and generally not
-   directly used by CyberLisp programmers.  The names of all special
+   directly used by CyberLisp programmers.  The names of some special
    forms are prefixed with "%%", so more comfortable wrappers around
    them can be defined later (e.g. `if'). */
 
@@ -284,18 +284,18 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "%%boundp": lisp_compile_special_boundp,
+    "boundp": lisp_compile_special_boundp,
     "%%defmacro": lisp_compile_special_defmacro,
-    "%%defparameter": lisp_compile_special_defparameter,
+    "defparameter": lisp_compile_special_defparameter,
     "%%defun": lisp_compile_special_defun,
-    "%%fboundp": lisp_compile_special_fboundp,
-    "%%funcall": lisp_compile_special_funcall,
-    "%%function": lisp_compile_special_function,
+    "fboundp": lisp_compile_special_fboundp,
+    "funcall": lisp_compile_special_funcall,
+    "function": lisp_compile_special_function,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
-    "%%progn": lisp_compile_special_progn,
-    "%%quasiquote": lisp_compile_special_quasiquote,
-    "%%quote": lisp_compile_special_quote,
+    "progn": lisp_compile_special_progn,
+    "quasiquote": lisp_compile_special_quasiquote,
+    "quote": lisp_compile_special_quote,
     "%%set": lisp_compile_special_set,
 };
 
@@ -322,7 +322,7 @@ var lisp_macros_table = {};
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (%%boundp name) */
+   (boundp name) */
 function lisp_compile_special_boundp(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
@@ -331,7 +331,7 @@ function lisp_compile_special_boundp(form)
 }
 
 /* Assigns the `value' to the global variable named `name'.
-   (%%defparameter name value) */
+   (defparameter name value) */
 function lisp_compile_special_defparameter(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
@@ -366,7 +366,7 @@ function lisp_compile_special_defmacro(form)
 
 /* Returns true if `name' is bound in the function namespace (unlike
    Common Lisp's `fboundp', name is not evaluated).  
-   (%%fboundp name) */
+   (fboundp name) */
 function lisp_compile_special_fboundp(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
@@ -375,7 +375,7 @@ function lisp_compile_special_fboundp(form)
 }
 
 /* Calls a function passed as argument.
-   (%%funcall fun &rest args &all-keys keys) => result */
+   (funcall fun &rest args &all-keys keys) => result */
 function lisp_compile_special_funcall(form)
 {
     var fun = lisp_assert_not_null(form.elts[1]);
@@ -386,7 +386,7 @@ function lisp_compile_special_funcall(form)
 }
 
 /* Accesses the functional value of a name.
-   (%%function name) => function */
+   (function name) => function */
 function lisp_compile_special_function(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
@@ -421,7 +421,7 @@ function lisp_compile_special_lambda(form)
 }
 
 /* Evaluates a number of forms in sequence and returns the value of the last.
-   (%%progn &rest forms) */
+   (progn &rest forms) */
 function lisp_compile_special_progn(form)
 {
     var vops = form.elts.slice(1);
@@ -440,14 +440,14 @@ function lisp_compile_special_set(form)
 }
 
 /* See heading ``Quasiquotation''.
-   (%%quasiquote form) */
+   (quasiquote form) */
 function lisp_compile_special_quasiquote(form)
 {
     var quasiquoted = lisp_assert_not_null(form.elts[1]);
     return lisp_compile_qq(quasiquoted, 0);
 }
 
-/* (%%quote form) */
+/* (quote form) */
 function lisp_compile_special_quote(form)
 {
     var quoted = lisp_assert_not_null(form.elts[1]);
@@ -830,48 +830,48 @@ function lisp_compile_qq_compound(x, depth)
 
     function is_quasiquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%quasiquote");
+        return op && (op.formt == "symbol") && (op.name == "quasiquote");
     }
 
     function is_unquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%unquote");
+        return op && (op.formt == "symbol") && (op.name == "unquote");
     }
 
     function is_unquote_splicing(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%unquote-splicing");
+        return op && (op.formt == "symbol") && (op.name == "unquote-splicing");
     }
 
     function quasiquote(x, depth)
     {
-        return make_compound([quote(symbol("%%quasiquote")), 
+        return make_compound([quote(symbol("quasiquote")), 
                               lisp_compile_qq(x, depth)]);
     }
 
     function unquote(x, depth)
     {
-        return make_compound([quote(symbol("%%unquote")), 
+        return make_compound([quote(symbol("unquote")), 
                               lisp_compile_qq(x, depth)]);
     }
 
     function unquote_splicing(x, depth)
     {
-        return make_compound([quote(symbol("%%unquote-splicing")), 
+        return make_compound([quote(symbol("unquote-splicing")), 
                               lisp_compile_qq(x, depth)]);
     }
 
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function", name: "%%make-compound" },
+                 fun: { vopt: "function", name: "make-compound" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function", name: "%%append-compounds" },
+                 fun: { vopt: "function", name: "append-compounds" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -1347,7 +1347,7 @@ function lisp_bif_make_compound(_key_)
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
         var elt = arguments[i];
-        lisp_assert(elt && elt.formt, "%%make-compound", elt);
+        lisp_assert(elt && elt.formt, "make-compound", elt);
         elts = elts.concat(elt);
     }
     return new Lisp_compound_form(elts);
@@ -1365,7 +1365,7 @@ function lisp_bif_append_compounds(_key_)
         if (elt.formt == "compound") {
             elts = elts.concat(elt.elts);
         } else {
-            lisp_assert(elt.length != null, "%%append-compounds", elt);
+            lisp_assert(elt.length != null, "append-compounds", elt);
             elts = elts.concat(elt);
         }
     }
@@ -1384,14 +1384,14 @@ function lisp_bif_compound_map(_key_, fun, compound)
 
 function lisp_bif_compound_elt(_key_, compound, i)
 {
-    lisp_assert_compound_form(compound, "%%compound-elt", compound);
+    lisp_assert_compound_form(compound, "compound-elt", compound);
     var elt = compound.elts[i];
     return elt;
 }
 
 function lisp_bif_compound_slice(_key_, compound, start)
 {
-    lisp_assert_compound_form(compound, "%%compound-slice", compound);
+    lisp_assert_compound_form(compound, "compound-slice", compound);
     return new Lisp_compound_form(compound.elts.slice(start));
 }
 
@@ -1457,12 +1457,12 @@ lisp_set("<string-form>", "Lisp_string_form.prototype");
 lisp_set("<string>", "String.prototype");
 lisp_set("<symbol-form>", "Lisp_symbol_form.prototype");
 
-lisp_set_function("%%append-compounds", "lisp_bif_append_compounds");
-lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");
-lisp_set_function("%%compound-elt", "lisp_bif_compound_elt");
-lisp_set_function("%%compound-map", "lisp_bif_compound_map");
-lisp_set_function("%%compound-slice", "lisp_bif_compound_slice");
-lisp_set_function("%%make-compound", "lisp_bif_make_compound");
-lisp_set_function("%%string-dict-get", "lisp_bif_string_dict_get");
-lisp_set_function("%%string-dict-put", "lisp_bif_string_dict_put");
-lisp_set_function("%%string-dict-has-key", "lisp_bif_string_dict_has_key");
+lisp_set_function("append-compounds", "lisp_bif_append_compounds");
+lisp_set_function("compound-apply", "lisp_bif_compound_apply");
+lisp_set_function("compound-elt", "lisp_bif_compound_elt");
+lisp_set_function("compound-map", "lisp_bif_compound_map");
+lisp_set_function("compound-slice", "lisp_bif_compound_slice");
+lisp_set_function("make-compound", "lisp_bif_make_compound");
+lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");
+lisp_set_function("string-dict-put", "lisp_bif_string_dict_put");
+lisp_set_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
