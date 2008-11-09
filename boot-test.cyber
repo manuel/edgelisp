@@ -117,14 +117,17 @@
 
 (defclass <foo>)
 (defvar foo (make <foo>))
-(assert-eq (slot-value foo "slot1") null)
-(assert-eq (slot-value foo "slot2") null)
-(set-slot-value foo "slot1" 1)
-(assert-eq (slot-value foo "slot1") 1)
-(assert-eq (slot-value foo "slot2") null)
-(set-slot-value foo "slot1" null)
-(assert-eq (slot-value foo "slot1") null)
-(assert-eq (slot-value foo "slot2") null)
+(assert-eq (slot foo "slot1") null)
+(assert-eq (slot foo "slot2") null)
+(set-slot foo "slot1" 1)
+(assert-eq (slot foo "slot1") 1)
+(assert-eq (slot foo "slot2") null)
+(set-slot foo "slot1" null)
+(assert-eq (slot foo "slot1") null)
+(assert-eq (slot foo "slot2") null)
+
+(assert (has-slot foo "slot1"))
+(assert (not (has-slot foo "slot2")))
 
 ;; Methods
 
@@ -200,3 +203,5 @@
 (defun y (&key foo bar) bar)
 (assert-eq (apply #'x (list) dict) 1)
 (assert-eq (apply #'y (list) dict) 2)
+
+

@@ -263,14 +263,22 @@ function lisp_bif_make(_key_, cls)
     return obj;
 }
 
-function lisp_bif_slot_value(_key_, obj, name)
+function lisp_bif_slot(_key_, obj, name)
 {
+    lisp_assert_string(name);
     return obj[lisp_mangle_slot(name)] || null;
 }
 
-function lisp_bif_set_slot_value(_key_, obj, name, value)
+function lisp_bif_set_slot(_key_, obj, name, value)
 {
+    lisp_assert_string(name);
     return obj[lisp_mangle_slot(name)] = value;
+}
+
+function lisp_bif_has_slot(_key_, obj, name)
+{
+    lisp_assert_string(name);
+    return obj.hasOwnProperty(lisp_mangle_slot(name));
 }
 
 function lisp_bif_get_method(_key_, obj, name)
@@ -365,9 +373,7 @@ lisp_set_function("%%make", "lisp_bif_make");
 lisp_set_function("%%make-class", "lisp_bif_make_class");
 lisp_set_function("%%print", "lisp_bif_print");
 lisp_set_function("%%set-method", "lisp_bif_set_method");
-lisp_set_function("%%set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("%%set-super-class", "lisp_bif_set_super_class");
-lisp_set_function("%%slot-value", "lisp_bif_slot_value");
 lisp_set_function("%%string-concat", "lisp_bif_string_concat");
 lisp_set_function("%%string-to-syntax", "lisp_bif_string_to_syntax");
 lisp_set_function("%%subtypep", "lisp_bif_subtypep");
@@ -376,3 +382,6 @@ lisp_set_function("%%symbolp", "lisp_bif_symbolp");
 lisp_set_function("%%throw", "lisp_bif_throw");
 lisp_set_function("%%type-name-p", "lisp_is_type_name");
 lisp_set_function("%%type-of", "lisp_bif_type_of");
+lisp_set_function("has-slot", "lisp_bif_has_slot");
+lisp_set_function("set-slot", "lisp_bif_set_slot");
+lisp_set_function("slot", "lisp_bif_slot");
