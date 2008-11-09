@@ -129,6 +129,18 @@
 (assert (has-slot foo "slot1"))
 (assert (not (has-slot foo "slot2")))
 
+(defclass <z> (a b c))
+(defvar z (<z>))
+(assert-eq (.a z) null)
+(assert-eq (.b z) null)
+(assert-eq (.c z) null)
+(set (.a z) 1)
+(set (.b z) 2)
+(set (.c z) 3)
+(assert-eq (.a z) 1)
+(assert-eq (.b z) 2)
+(assert-eq (.c z) 3)
+
 ;; Methods
 
 (defclass <quux>)
@@ -203,5 +215,3 @@
 (defun y (&key foo bar) bar)
 (assert-eq (apply #'x (list) dict) 1)
 (assert-eq (apply #'y (list) dict) 2)
-
-

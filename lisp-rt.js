@@ -317,6 +317,11 @@ function lisp_bif_string_to_form(_key_, string)
     return new Lisp_string_form(string);
 }
 
+function lisp_bif_string_to_symbol(_key_, string)
+{
+    return new Lisp_symbol_form(string);
+}
+
 function lisp_bif_is_typename(_key_, string)
 {
     return lisp_is_type_name(string);
@@ -357,6 +362,7 @@ lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("slot", "lisp_bif_slot");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
 lisp_set_function("string-to-form", "lisp_bif_string_to_form");
+lisp_set_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");

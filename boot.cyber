@@ -41,9 +41,6 @@
   `(unless (bound? ,name)
      (defparameter ,name ,value)))
 
-(defmacro set (place value)
-  `(%%set ,place ,value))
-
 (defmacro if (test consequent &opt (alternative `null))
   `(%%if ,test ,consequent ,alternative))
 
@@ -94,6 +91,16 @@
                                         handler-specs))
                   (lambda () ,@body)))
 
+(defun setter-name (getter-name)
+  (string-concat getter-name "-setter"))
+
+(defmacro set (place value)
+  (if (symbol? place)
+      `(%%set ,place ,value)
+      `(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
+        ,@(compound-slice place 1)
+        ,value)))
+      
 (defmacro assert (test &opt (msg '"assertion failed"))
   `(let ((result ,test))
      (if result
@@ -105,8 +112,6 @@
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
 
-(defvar *setter-suffix* "-setter")
-
 (defmacro defclass (name-and-super &opt (slots '()))
   (let ((class-name null)
         (superclass null))
@@ -116,16 +121,22 @@
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
     `(progn
-       (when (not (bound? ,class-name)) (set ,class-name (make-class)))
-       ,(if superclass `(set-superclass ,class-name ,superclass) `null)
-       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot)) slots)
+       (when (not (bound? ,class-name)) 
+         (set ,class-name (make-class)))
+       ,(if superclass 
+            `(set-superclass ,class-name ,superclass) 
+            `null)
+       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot)) 
+                       slots)
+       (defun ,class-name ()
+         (make ,class-name))
        ,class-name)))
 
 (defun defclass-do-slot (class-name slot)
   (let* ((slot-name (symbol-name slot))
          (slot-name-form (string-to-form slot-name))
          (getter-name (string-concat "." slot-name))
-         (setter-name (string-concat getter-name *setter-suffix*)))
+         (setter-name (setter-name getter-name)))
     `(progn
        (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
          (slot obj ,slot-name-form))
