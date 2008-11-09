@@ -272,10 +272,9 @@ function lisp_compile_function_application(form)
 /*** Special forms ***/
 
 /* Special forms are built-in forms with special evaluation rules
-   (e.g. `%%if').  Special forms are very low-level, and generally not
-   directly used by CyberLisp programmers.  The names of some special
-   forms are prefixed with "%%", so more comfortable wrappers around
-   them can be defined later (e.g. `if'). */
+   (e.g. `%%if').  The names of some special forms are prefixed with
+   "%%", so more comfortable wrappers around them can be defined later
+   (e.g. `if' with an optional alternative). */
 
 function lisp_special_function(name)
 {

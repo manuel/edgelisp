@@ -28,7 +28,7 @@
          (compound-apply
            (%%lambda ,(compound-elt defmacro-form 2)
              (progn
-               ,@(compound-slice defmacro-form 3)))           
+               ,@(compound-slice defmacro-form 3)))
            (compound-slice %%form 1))))))
 
 (defmacro lambda (sig &rest body)
@@ -94,7 +94,7 @@
                                         handler-specs))
                   (lambda () ,@body)))
 
-(defmacro assert (test &opt (msg `"assertion failed"))
+(defmacro assert (test &opt (msg '"assertion failed"))
   `(let ((result ,test))
      (if result
          result
@@ -105,21 +105,32 @@
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
 
-(defmacro defclass (name &opt (slots `()) (ctor `null))
-  (let ((class-name (if (symbol? name) name (compound-elt name 0)))
-        (super-class (if (symbol? name) null (compound-elt name 1))))
+(defvar *setter-suffix* "-setter")
+
+(defmacro defclass (name-and-super &opt (slots '()))
+  (let ((class-name null)
+        (superclass null))
+    (if (symbol? name-and-super)
+        (progn (set class-name name-and-super)
+               (set superclass null))
+        (progn (set class-name (compound-elt name-and-super 0))
+               (set superclass (compound-elt name-and-super 1))))
     `(progn
-       (unless (bound? ,class-name)
-         (set ,class-name (make-class)))
-       ,(if super-class
-            `(set-super-class ,class-name ,super-class)
-            `null)
-       ,@(compound-map (lambda (slot)
-                         (let* ((slot-name (symbol-name slot))
-                                (accessor-name (string-concat "." slot-name)))
-                           `(defmethod ,(string-to-symbol accessor-name) ((obj ,class-name))
-                              (slot-value obj ,(string-to-syntax slot-name)))))
-                       slots))))
+       (when (not (bound? ,class-name)) (set ,class-name (make-class)))
+       ,(if superclass `(set-superclass ,class-name ,superclass) `null)
+       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot)) slots)
+       ,class-name)))
+
+(defun defclass-do-slot (class-name slot)
+  (let* ((slot-name (symbol-name slot))
+         (slot-name-form (string-to-form slot-name))
+         (getter-name (string-concat "." slot-name))
+         (setter-name (string-concat getter-name *setter-suffix*)))
+    `(progn
+       (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
+         (slot obj ,slot-name-form))
+       (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
+         (set-slot obj ,slot-name-form value)))))
 
 (defun %%defmethod-param-type (param)
   (if (compound? param)
@@ -130,13 +141,13 @@
 
 (defmacro defmethod (name params &rest body)
   (let ((class (%%defmethod-param-type (compound-elt params 0)))
-        (name-string (string-to-syntax (symbol-name name))))
+        (name-string (string-to-form (symbol-name name))))
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))
        (defgeneric ,name))))
 
 (defmacro defgeneric (name &rest args)
-  (let ((name-string (string-to-syntax (symbol-name name))))
+  (let ((name-string (string-to-form (symbol-name name))))
     `(defun ,name (&rest args &all-keys keys)
        (let ((obj (list-elt args 0)))
          (apply (get-method obj ,name-string) args keys)))))

@@ -232,7 +232,7 @@ function lisp_bif_make_class(_key_)
     return {};
 }
 
-function lisp_bif_set_super_class(_key_, clsA, clsB)
+function lisp_bif_set_superclass(_key_, clsA, clsB)
 {
     clsA.__proto__ = clsB;
 }
@@ -312,9 +312,9 @@ function lisp_bif_string_concat(_key_, s1, s2)
     return s1.concat(s2);
 }
 
-function lisp_bif_string_to_syntax(_key_, string)
+function lisp_bif_string_to_form(_key_, string)
 {
-    return { formt: "string", s: string };
+    return new Lisp_string_form(string);
 }
 
 function lisp_bif_is_typename(_key_, string)
@@ -353,10 +353,10 @@ lisp_set_function("make-class", "lisp_bif_make_class");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("set-method", "lisp_bif_set_method");
 lisp_set_function("set-slot", "lisp_bif_set_slot");
-lisp_set_function("set-super-class", "lisp_bif_set_super_class");
+lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("slot", "lisp_bif_slot");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
-lisp_set_function("string-to-syntax", "lisp_bif_string_to_syntax");
+lisp_set_function("string-to-form", "lisp_bif_string_to_form");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");
