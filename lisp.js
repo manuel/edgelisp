@@ -43,29 +43,49 @@ load("lib/json2.js");
                elts: [ { formt: "symbol", name: "foo" } ] } 
 */
 
-var lisp_form =
-    function(input) { return lisp_form(input); }; // forward decl.
+function lisp_make_number_form(n)
+{
+    return { formt: "number", n: n };
+}
 
-/**** Number forms ****/
+function lisp_make_string_form(s)
+{
+    return { formt: "string", s: s };
+}
+
+function lisp_make_symbol_form(name)
+{
+    return { formt: "symbol", name: name };
+}
+
+function lisp_make_compound_form(elts)
+{
+    return { formt: "compound", elts: elts };
+}
+
+var lisp_expression_syntax =
+    function(input) { return lisp_expression_syntax(input); }; // forward decl.
+
+/**** Numbers ****/
 
 var lisp_digits = 
     join_action(repeat1(range("0", "9")), "");
 
-var lisp_number_form =
+var lisp_number_syntax =
     action(sequence(optional(choice("+", "-")),
                     lisp_digits,
                     optional(join_action(sequence(".", lisp_digits), ""))),
-           lisp_number_form_action);
+           lisp_number_syntax_action);
 
-function lisp_number_form_action(ast)
+function lisp_number_syntax_action(ast)
 {    
     var sign = ast[0] || "";
     var decimal_digits = ast[1];
     var dot_digits = ast[2] || "";
-    return { formt: "number", n: sign + decimal_digits + dot_digits };
+    return lisp_make_number_form(sign + decimal_digits + dot_digits);
 }
 
-/**** String forms ****/
+/**** Strings ****/
 
 var lisp_escape_char =
     choice("\"", "\\");
@@ -78,9 +98,9 @@ var lisp_string_char =
     choice(negate(lisp_escape_char), 
            lisp_escape_sequence);
 
-var lisp_string_form =
+var lisp_string_syntax =
     action(sequence("\"", join_action(repeat0(lisp_string_char), ""), "\""),
-           lisp_string_form_action);
+           lisp_string_syntax_action);
 
 function lisp_escape_sequence_action(ast)
 {
@@ -88,91 +108,91 @@ function lisp_escape_sequence_action(ast)
     return escape_char;
 }
 
-function lisp_string_form_action(ast)
+function lisp_string_syntax_action(ast)
 {
-    return { formt: "string", s: ast[1] };
+    return lisp_make_string_form(ast[1]);
 }
 
-/**** Symbol forms ****/
+/**** Symbols ****/
 
 var lisp_symbol_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
     choice("&", ":", ".", "=", ">","-", "<", "%", "+", "/", "*");
 
-var lisp_symbol_form =
+var lisp_symbol_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
                                       range("0", "9"),
                                       lisp_symbol_special_char)),
                        ""),
-           lisp_symbol_form_action);
+           lisp_symbol_syntax_action);
 
-function lisp_symbol_form_action(ast)
+function lisp_symbol_syntax_action(ast)
 {
-    return { formt: "symbol", name: ast };
+    return lisp_make_symbol_form(ast);
 }
 
-/**** Compound forms ****/
+/**** Compounds ****/
 
-var lisp_compound_form =
-    action(wsequence("(", repeat0(lisp_form), ")"),
-           lisp_compound_form_action);
+var lisp_compound_syntax =
+    action(wsequence("(", repeat0(lisp_expression_syntax), ")"),
+           lisp_compound_syntax_action);
 
-function lisp_compound_form_action(ast)
+function lisp_compound_syntax_action(ast)
 {
-    return { formt: "compound", elts: ast[1] };
+    return lisp_make_compound_form(ast[1]);
 }
 
-/**** (Quasi-)quotation forms ****/
+/**** (Quasi-)quotation ****/
 
-var lisp_quote_form =
-    action(sequence("'", lisp_form),
-           lisp_shortcut_action("%%quote"));
+var lisp_quote_syntax =
+    action(sequence("'", lisp_expression_syntax),
+           lisp_shortcut_syntax_action("%%quote"));
 
-var lisp_quasiquote_form =
-    action(sequence("`", lisp_form),
-           lisp_shortcut_action("%%quasiquote"));
+var lisp_quasiquote_syntax =
+    action(sequence("`", lisp_expression_syntax),
+           lisp_shortcut_syntax_action("%%quasiquote"));
 
-var lisp_unquote_form =
-    action(sequence(",", lisp_form),
-           lisp_shortcut_action("%%unquote"));
+var lisp_unquote_syntax =
+    action(sequence(",", lisp_expression_syntax),
+           lisp_shortcut_syntax_action("%%unquote"));
 
-var lisp_unquote_splicing_form =
-    action(sequence(",@", lisp_form),
-           lisp_shortcut_action("%%unquote-splicing"));
+var lisp_unquote_splicing_syntax =
+    action(sequence(",@", lisp_expression_syntax),
+           lisp_shortcut_syntax_action("%%unquote-splicing"));
 
-/**** Misc syntax ****/
+/**** Misc ****/
 
-var lisp_function_form =
-    action(sequence("#'", lisp_symbol_form),
-           lisp_shortcut_action("%%function"));
+var lisp_function_syntax =
+    action(sequence("#'", lisp_symbol_syntax),
+           lisp_shortcut_syntax_action("%%function"));
 
-function lisp_shortcut_action(name)
+function lisp_shortcut_syntax_action(name)
 {
     return function(ast) {
-        return { formt: "compound", 
-                 elts: [ { formt: "symbol", name: name }, ast[1] ] };
+        return lisp_make_compound_form([ lisp_make_symbol_form(name),
+                                         ast[1] ]);
     }
 }
 
-/**** Lisp programs ****/
+/**** Programs ****/
 
-var lisp_form =
-    whitespace(choice(lisp_number_form,
-                      lisp_string_form,
-                      lisp_symbol_form,
-                      lisp_compound_form,
-                      lisp_quote_form,
-                      lisp_quasiquote_form,
-                      lisp_unquote_form,
-                      lisp_unquote_splicing_form,
-                      lisp_function_form));
+var lisp_expression_syntax =
+    whitespace(choice(lisp_number_syntax,
+                      lisp_string_syntax,
+                      lisp_symbol_syntax,
+                      lisp_compound_syntax,
+                      lisp_quote_syntax,
+                      lisp_quasiquote_syntax,
+                      lisp_unquote_syntax,
+                      lisp_unquote_splicing_syntax,
+                      lisp_function_syntax));
 
-var lisp_forms =
-    whitespace(repeat1(lisp_form));
+var lisp_program_syntax =
+    whitespace(repeat1(lisp_expression_syntax));
 
 function lisp_parse(string)
 {
-    return lisp_forms(ps(string)).ast;
+    return lisp_program_syntax(ps(string)).ast;
 }
 
 
@@ -855,7 +875,7 @@ function lisp_compile_qq_compound(x, depth)
 
     function symbol(name)
     {
-        return { formt: "symbol", name: name };
+        return lisp_make_symbol_form(name);
     }
 
     function quote(form)
@@ -1291,7 +1311,7 @@ function lisp_make_compound(_key_)
         lisp_assert(elt && elt.formt, "%%make-compound", elt);
         elts = elts.concat(elt);
     }
-    return { formt: "compound", elts: elts };
+    return lisp_make_compound_form(elts);
 }
 
 /* Creates a compound form by appending all positional arguments,
@@ -1310,7 +1330,7 @@ function lisp_append_compounds(_key_)
             elts = elts.concat(elt);
         }
     }
-    return { formt: "compound", elts: elts };    
+    return lisp_make_compound_form(elts);
 }
 
 function lisp_compound_map(_key_, fun, compound)
@@ -1320,7 +1340,7 @@ function lisp_compound_map(_key_, fun, compound)
     }
     lisp_assert_not_null(fun);
     lisp_assert_compound_form(compound);
-    return { formt: "compound", elts: compound.elts.map(js_fun) };
+    return lisp_make_compound_form(compound.elts.map(js_fun));
 }
 
 function lisp_compound_elt(_key_, compound, i)
@@ -1333,7 +1353,7 @@ function lisp_compound_elt(_key_, compound, i)
 function lisp_compound_slice(_key_, compound, start)
 {
     lisp_assert_compound_form(compound, "%%compound-slice", compound);
-    return { formt: "compound", elts: compound.elts.slice(start) };
+    return lisp_make_compound_form(compound.elts.slice(start));
 }
 
 lisp_set_function("%%compound-apply", "lisp_compound_apply");

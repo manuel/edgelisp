@@ -63,29 +63,29 @@ function lisp_test_all()
         lisp_test(lisp_mangle_function("%%make") == "_f_NNmake");
 
         // Parser
-        assertFullyParsed(lisp_forms, "0");
-        assertFullyParsed(lisp_forms, "-0");
-        assertFullyParsed(lisp_forms, "-1");
-        assertFullyParsed(lisp_forms, "1");
-        assertFullyParsed(lisp_forms, "12");
-        assertFullyParsed(lisp_forms, "12.234");
-        assertFullyParsed(lisp_forms, "-12.234");
-        assertFullyParsed(lisp_forms, "-12.0004");
-        assertFullyParsed(lisp_forms, "\"\"");
-        assertFullyParsed(lisp_forms, "\"a\"");
-        assertFullyParsed(lisp_forms, "\"a string with a doublequote \\\" \"");
-        assertFullyParsed(lisp_forms, "\"a string with a backslash \\\\ \"");
-        assertFullyParsed(lisp_forms, "%");
-        assertFullyParsed(lisp_forms, "a");
-        assertFullyParsed(lisp_forms, "(a)");
-        assertFullyParsed(lisp_forms, "(a b c)");
-        assertFullyParsed(lisp_forms, " (a  b c)");
-        assertFullyParsed(lisp_forms, " (a  b c) \"string\"");
-        assertFullyParsed(lisp_forms, "(+ 1 2)");
-        assertFullyParsed(lisp_forms, "(\"blargh\")");
-        assertFullyParsed(lisp_forms, "(lambda (&key k) k)");
-        assertFullyParsed(lisp_forms, "&rest");
-        assertFullyParsed(lisp_forms, "key:");
+        assertFullyParsed(lisp_program_syntax, "0");
+        assertFullyParsed(lisp_program_syntax, "-0");
+        assertFullyParsed(lisp_program_syntax, "-1");
+        assertFullyParsed(lisp_program_syntax, "1");
+        assertFullyParsed(lisp_program_syntax, "12");
+        assertFullyParsed(lisp_program_syntax, "12.234");
+        assertFullyParsed(lisp_program_syntax, "-12.234");
+        assertFullyParsed(lisp_program_syntax, "-12.0004");
+        assertFullyParsed(lisp_program_syntax, "\"\"");
+        assertFullyParsed(lisp_program_syntax, "\"a\"");
+        assertFullyParsed(lisp_program_syntax, "\"a string with a doublequote \\\" \"");
+        assertFullyParsed(lisp_program_syntax, "\"a string with a backslash \\\\ \"");
+        assertFullyParsed(lisp_program_syntax, "%");
+        assertFullyParsed(lisp_program_syntax, "a");
+        assertFullyParsed(lisp_program_syntax, "(a)");
+        assertFullyParsed(lisp_program_syntax, "(a b c)");
+        assertFullyParsed(lisp_program_syntax, " (a  b c)");
+        assertFullyParsed(lisp_program_syntax, " (a  b c) \"string\"");
+        assertFullyParsed(lisp_program_syntax, "(+ 1 2)");
+        assertFullyParsed(lisp_program_syntax, "(\"blargh\")");
+        assertFullyParsed(lisp_program_syntax, "(lambda (&key k) k)");
+        assertFullyParsed(lisp_program_syntax, "&rest");
+        assertFullyParsed(lisp_program_syntax, "key:");
         if (!(failed.length == 0)) {
             throw Error("Parser tests failed: " + failed);
         }
@@ -253,7 +253,7 @@ function lisp_emit_test(vop, result)
 
 function lisp_parse_form_test(input, result) 
 {
-    var ast = lisp_form(ps(input)).ast;
+    var ast = lisp_expression_syntax(ps(input)).ast;
     if(!(lisp_objects_equal(ast, result))) {
         throw Error("Got: " + lisp_show(ast) + " expected: " + lisp_show(result));
     }
@@ -261,8 +261,8 @@ function lisp_parse_form_test(input, result)
 
 function lisp_parse_2_forms_test(input1, input2) 
 {
-    var ast1 = lisp_form(ps(input1)).ast;
-    var ast2 = lisp_form(ps(input2)).ast;
+    var ast1 = lisp_expression_syntax(ps(input1)).ast;
+    var ast2 = lisp_expression_syntax(ps(input2)).ast;
     if(!(lisp_objects_equal(ast1, ast2))) {
         throw Error("Got: " + lisp_show(ast1) + " expected: " + lisp_show(ast2));
     }
