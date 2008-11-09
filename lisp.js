@@ -1434,6 +1434,18 @@ function lisp_bif_string_dict_get(_key_, dict, key)
     return dict[lisp_mangle_string_dict_key(key)];
 }
 
+/*** Export classes and built-in functions ***/
+
+lisp_set("<boolean>", "Boolean.prototype");
+lisp_set("<compound-form>", "Lisp_compound_form.prototype");
+lisp_set("<list>", "Array.prototype");
+lisp_set("<number-form>", "Lisp_number_form.prototype");
+lisp_set("<number>", "Number.prototype");
+lisp_set("<string-dict>", "Lisp_string_dict.prototype");
+lisp_set("<string-form>", "Lisp_string_form.prototype");
+lisp_set("<string>", "String.prototype");
+lisp_set("<symbol-form>", "Lisp_symbol_form.prototype");
+
 lisp_set_function("%%append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("%%compound-elt", "lisp_bif_compound_elt");
