@@ -569,7 +569,7 @@ function lisp_compile_special_quote(form)
    Parameters are also represented as objects:
 
    { name: <string>,
-     init: <form>,
+     init: <vop>,
      specializer: <string> }
 
    name: name of the parameter;
@@ -621,6 +621,7 @@ function lisp_compile_sig(params)
             var name = param.name;
             if (lisp_is_type_name(name)) {
                 // Typed required parameter shortcut
+                lisp_assert(cur == req, "Bad typed parameter", name);
                 return { name: lisp_clean_type_name(name),
                          specializer: name };
             } else {
@@ -699,11 +700,8 @@ function lisp_mangled_param_name(param)
 
    pos_args: list of VOPs of positional arguments;
 
-   key_args: dictionary that maps mangled keyword argument names
-   (without the trailing ":") to their value VOPs.  Mangling
-   (specifically, prefixing) is necessary, or otherwise the keyword
-   names could conflict with JavaScript's special properties
-   (e.g. prototype). */
+   key_args: Dictionary that maps mangled keyword argument names
+   (without the trailing ":") to their value VOPs. */
 
 function lisp_is_keyword_arg(string)
 {
@@ -730,7 +728,7 @@ function lisp_compile_call_site(args)
             if (lisp_is_keyword_arg(arg.name)) {
                 var name = lisp_clean_keyword_arg(arg.name);
                 var value = lisp_compile(args[++i]);
-                key_args[lisp_mangle_keyword_arg(name)] = value;
+                key_args[lisp_mangle_string_dict_key(name)] = value;
                 continue;
             }
         }
@@ -751,9 +749,9 @@ function lisp_compile_call_site(args)
    All functions get a hidden calling convention parameter as first
    parameter.  This parameter is a dictionary that maps the names of
    keyword arguments to their value VOPs.  The names of the keyword
-   arguments do not contain the trailing ":" and they are mangled.
-   After the keywords dictionary, the positional arguments are passed
-   as normal JavaScript arguments.
+   arguments do not contain the trailing ":".  After the keywords
+   dictionary, the positional arguments are passed as normal
+   JavaScript arguments.
 
    See `lisp_emit_vop_funcall' and `lisp_emit_vop_lambda', below, for
    the implementation of the caller and callee sides of the calling
@@ -950,18 +948,21 @@ function lisp_emit_vop_funcall(vop)
 {
     var fun = lisp_assert_not_null(vop.fun, "Bad function", vop);
     var call_site = lisp_assert_not_null(vop.call_site, "Bad call site", vop);
+    var key_args = call_site.key_args;
 
-    function emit_key_args(key_args)
-    {
-        var s = "{ ";
-        for (var k in key_args) {
-            var v = lisp_assert_not_null(key_args[k]);
-            s += k + ": " + lisp_emit(v);
-        }
-        return s + " }";
+    // Generate dictionary of keyword arguments
+    var s = "";
+    for (var k in key_args) {
+        lisp_assert(lisp_is_string_dict_key(k), "Bad keyword argument", k);
+        var v = lisp_assert_not_null(key_args[k]);
+        s += "\"" + k + "\": " + lisp_emit(v) + ", ";
     }
-
-    var keywords_dict = emit_key_args(call_site.key_args);
+    if (s != "") {
+        var keywords_dict = "lisp_fast_string_dict({ " + s + " })";
+    } else {
+        var keywords_dict = "null";
+    }
+    
     var pos_args = call_site.pos_args.map(lisp_emit);
     var args = [ keywords_dict ].concat(pos_args).join(", ");
 
@@ -994,6 +995,7 @@ function lisp_emit_vop_lambda(vop)
 {
     var req_params = lisp_assert_not_null(vop.sig.req_params);
     var opt_params = lisp_assert_not_null(vop.sig.opt_params);
+    var key_params = lisp_assert_not_null(vop.sig.key_params);
     var rest_param = vop.sig.rest_param;
 
     // Signature (calling convention keywords dict + positional parameters)
@@ -1039,6 +1041,28 @@ function lisp_emit_vop_lambda(vop)
         init_opt_params = s;
     }
 
+    // Keyword parameter init forms
+    var init_key_params = "";
+    if (key_params.length > 0) {
+        var with_key_dict = ""; // branch used when _key_ is supplied
+        var wout_key_dict = ""; // branch used when _key_ is null
+        for (var i in key_params) {
+            var param = key_params[i];
+            var name = lisp_mangled_param_name(param);
+            var key_name = lisp_mangle_string_dict_key(param.name);
+            var init = param.init ? lisp_emit(param.init) : "null";
+            with_key_dict += "if (\"" + key_name + "\" in " + lisp_keywords_dict + ") " +
+                                 name + " = " + lisp_keywords_dict + "[\"" + key_name + "\"]; " +
+                             "else " + name + " = " + init + "; ";
+            wout_key_dict += name + " = " + init + "; ";
+        }
+        init_key_params = "if (" + lisp_keywords_dict + ") { " + 
+                              with_key_dict + 
+                          "} else { " + 
+                              wout_key_dict +
+                          "} ";
+    }
+
     // Rest parameter
     var setup_rest_param = "";
     if (rest_param) {
@@ -1051,6 +1075,7 @@ function lisp_emit_vop_lambda(vop)
         check_arity + 
         check_types + 
         init_opt_params + 
+        init_key_params +
         setup_rest_param;
     var body = lisp_emit(vop.body);
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
@@ -1197,11 +1222,6 @@ function lisp_mangle_method(name)
     return "_m_" + lisp_mangle(name);
 }
 
-function lisp_mangle_keyword_arg(name)
-{
-    return "_k_" + lisp_mangle(name);
-}
-
 
 /*** Utilities ***/
 
@@ -1293,7 +1313,10 @@ function lisp_assert_compound_form(value, message, arg)
     return value;
 }
 
-/**** Built-in form manipulation functions ****/
+/*** Built-in form manipulation functions ***/
+
+/* These are provided so that early, pre-generics macros can inspect
+   and manipulate forms. */
 
 /* Applies a Lisp function to the elements of a compound form, a
    simple form of destructuring.  The form's elements are simply
@@ -1359,6 +1382,40 @@ function lisp_bif_compound_slice(_key_, compound, start)
 {
     lisp_assert_compound_form(compound, "%%compound-slice", compound);
     return new Lisp_compound_form(compound.elts.slice(start));
+}
+
+/*** Built-in string dictionaries ***/
+
+/* This is the type of dictionaries used to hold keyword arguments,
+   i.e. the one a function with an `&all-keys' signature keyword
+   receives.  They're called string dictionaries because their keys
+   can only be strings.
+   
+   By convention, all keys are mangled (prefixed with "%", but not
+   transformed like, say, variables), so we never get in conflict with
+   JS's special names, such as "prototype". */
+
+function lisp_mangle_string_dict_key(name)
+{
+    return "%" + name;
+}
+
+function lisp_is_string_dict_key(k)
+{
+    return k[0] == "%";
+}
+
+function Lisp_string_dict()
+{
+}
+
+/* Turns an ordinary dictionary into a string dictionary.  May only be
+   called if the caller has ensured that all keys are properly
+   mangled. */
+function lisp_fast_string_dict(js_dict)
+{
+    js_dict.__proto__ = Lisp_string_dict.prototype;
+    return js_dict;
 }
 
 lisp_set_function("%%compound-apply", "lisp_bif_compound_apply");

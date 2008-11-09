@@ -150,3 +150,23 @@
 (defmethod mid ((quux <quux>) x) x)
 (assert-eq (mid quux 12) 12)
 (assert-eq (mid sub 12) 12)
+
+;; Keyword arguments
+
+(assert-eq (%%funcall (lambda (&key k) k) k: 1) 1)
+(assert-eq (%%funcall (lambda (&key k) k)) null)
+(assert-eq (%%funcall (lambda (a &key k) k) 10 k: 1) 1)
+(assert-eq (%%funcall (lambda (a &key k) k) 10) null)
+(assert-eq (%%funcall (lambda (a &key k) a) 10 k: 1) 10)
+(assert-eq (%%funcall (lambda (a &key k) a) 10) 10)
+
+(assert-eq (%%funcall (lambda (&key k j) k) k: 1) 1)
+(assert-eq (%%funcall (lambda (&key k j) j) k: 1) null)
+(assert-eq (%%funcall (lambda (&key k j) k)) null)
+(assert-eq (%%funcall (lambda (&key k j) j)) null)
+(assert-eq (%%funcall (lambda (a &key k j) j) 10 k: 1) null)
+(assert-eq (%%funcall (lambda (a &key k j) j) 10 j: 1) 1)
+(assert-eq (%%funcall (lambda (a &key k j) j) 10) null)
+(assert-eq (%%funcall (lambda (a &key k j) a) 10 k: 1) 10)
+(assert-eq (%%funcall (lambda (a &key k j) a) 10 j: 1) 10)
+(assert-eq (%%funcall (lambda (a &key k j) a) 10) 10)
