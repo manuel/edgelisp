@@ -285,9 +285,9 @@ function lisp_special_function(name)
 
 var lisp_specials_table = {
     "boundp": lisp_compile_special_boundp,
-    "%%defmacro": lisp_compile_special_defmacro,
+    "set-expander": lisp_compile_special_set_expander,
     "defparameter": lisp_compile_special_defparameter,
-    "%%defun": lisp_compile_special_defun,
+    "set-function": lisp_compile_special_set_function,
     "fboundp": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "function": lisp_compile_special_function,
@@ -342,8 +342,8 @@ function lisp_compile_special_defparameter(form)
 }
 
 /* Assigns the `value' to the global function named `name'.
-   (%%defun name value) */
-function lisp_compile_special_defun(form)
+   (set-function name value) */
+function lisp_compile_special_set_function(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
@@ -354,8 +354,8 @@ function lisp_compile_special_defun(form)
 
 /* Registers a macro expander function.  An expander function takes a
    form as input and must return a form.
-   (%%defmacro name expander-function) */
-function lisp_compile_special_defmacro(form)
+   (set-expander name expander-function) */
+function lisp_compile_special_set_expander(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);

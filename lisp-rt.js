@@ -24,8 +24,7 @@
    Lisp code that does use `eval' will always need to include the
    compiler, `lisp.js', too. */
 
-/*** Functions ***/
-
+/* Used inside lambdas. */
 function lisp_arity_min(length, min)
 {
     if (length < min)
@@ -52,14 +51,12 @@ function lisp_rest_param(_arguments, max) {
     return args;
 }
 
-/*** Truth ***/
-
-function lisp_is_true(obj)
+/* Used inside lambdas for checking arguments against their types, if any. */
+function lisp_check_type(obj, type)
 {
-    return (obj !== false) && (obj !== null);
+    if (!lisp_subtypep(lisp_type_of(obj), type))
+        lisp_error("Type error", obj);
 }
-
-/*** Exceptions ***/
 
 /* CyberLisp uses the same exception system as Dylan and Goo (which is
    basically Common Lisp's but with exception handlers and restarts
@@ -109,7 +106,7 @@ function lisp_is_true(obj)
 
 var lisp_handler_frame = null; // bottom-most frame or null
 
-function lisp_bif_catch(_key_, handlers, fun)
+function lisp_bif_bind_handlers(_key_, handlers, fun)
 {
     try {
         var orig_frame = lisp_handler_frame;
@@ -159,8 +156,6 @@ function lisp_bif_throw(_key_, exception)
     return do_throw(exception, lisp_handler_frame);
 }
 
-/*** Escape functions ***/
-
 function lisp_bif_call_with_escape_function(_key_, fun) {
     var token = {};
     var escape_function = function(_key_, result) {
@@ -178,8 +173,6 @@ function lisp_bif_call_with_escape_function(_key_, fun) {
     }
 }
 
-/*** Unwind protect ***/
-
 function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
 {
     try {
@@ -188,8 +181,6 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
         cleanup_fun(null);
     }
 }
-
-/*** Other built-ins ***/
 
 function lisp_bif_macroexpand_1(_key_, form)
 {
@@ -206,8 +197,6 @@ function lisp_bif_eq(_key_, a, b)
 {
     return a == b;
 }
-
-/*** Types ***/
 
 function lisp_type_of(obj)
 {
@@ -237,14 +226,6 @@ function lisp_bif_subtypep(_key_, type1, type2)
 {
     return lisp_subtypep(type1, type2);
 }
-
-function lisp_check_type(obj, type)
-{
-    if (!lisp_subtypep(lisp_type_of(obj), type))
-        lisp_error("Type error", obj);
-}
-
-/*** Classes and objects ***/
 
 function lisp_bif_make_class(_key_)
 {
@@ -291,8 +272,6 @@ function lisp_bif_set_method(_key_, obj, name, fun)
     return obj[lisp_mangle_method(name)] = fun;
 }
 
-/*** More form manipulation functions ***/
-
 function lisp_bif_symbol_name(_key_, symbol)
 {
     lisp_assert_symbol_form(symbol);
@@ -308,8 +287,6 @@ function lisp_bif_compoundp(_key_, form)
 {
     return form.formt == "compound";
 }
-
-/*** Lists ***/
 
 function lisp_bif_list(_key_)
 {
@@ -330,8 +307,6 @@ function lisp_bif_list_len(_key_, list, i)
     return list.length;
 }
 
-/*** Strings ***/
-
 function lisp_bif_string_concat(_key_, s1, s2)
 {
     return s1.concat(s2);
@@ -341,8 +316,6 @@ function lisp_bif_string_to_syntax(_key_, string)
 {
     return { formt: "string", s: string };
 }
-
-/*** Misc ***/
 
 function lisp_bif_is_typename(_key_, string)
 {
@@ -354,14 +327,19 @@ function lisp_bif_apply(_key_, fun, args, keys)
     return fun.apply(null, [ keys ].concat(args));
 }
 
+function lisp_is_true(obj) // T
+{
+    return (obj !== false) && (obj !== null);
+}
+
 lisp_set("true", "true");
 lisp_set("false", "false");
 lisp_set("null", "null");
 
+lisp_set_function("apply", "lisp_bif_apply");
+lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
-lisp_set_function("%%catch", "lisp_bif_catch");
-lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("compoundp", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("get-method", "lisp_bif_get_method");

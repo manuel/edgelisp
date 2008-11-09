@@ -21,9 +21,9 @@
 
 ;;; (defmacro name sig &rest body)  [defmacro-form]
 ;;;  0        1    2         3
-(%%defmacro defmacro
+(set-expander defmacro
   (%%lambda (defmacro-form)
-    `(%%defmacro ,(compound-elt defmacro-form 1)
+    `(set-expander ,(compound-elt defmacro-form 1)
        (%%lambda (%%form)
          (compound-apply
            (%%lambda ,(compound-elt defmacro-form 2)
@@ -35,7 +35,7 @@
   `(%%lambda ,sig (progn ,@body)))
 
 (defmacro defun (name sig &rest body)
-  `(%%defun ,name (lambda ,sig ,@body)))
+  `(set-function ,name (lambda ,sig ,@body)))
 
 (defmacro defvar (name value)
   `(unless (boundp ,name)
@@ -88,11 +88,11 @@
                           (lambda () ,@cleanups)))
 
 (defmacro catch (handler-specs &rest body)
-  `(%%catch (list ,@(compound-map (lambda (handler-spec)
-                                    `(list ,(compound-elt handler-spec 0)
-                                           ,(compound-elt handler-spec 1)))
-                                  handler-specs))
-            (lambda () ,@body)))
+  `(bind-handlers (list ,@(compound-map (lambda (handler-spec)
+                                          `(list ,(compound-elt handler-spec 0)
+                                                 ,(compound-elt handler-spec 1)))
+                                        handler-specs))
+                  (lambda () ,@body)))
 
 (defmacro assert (test &opt (msg `"assertion failed"))
   `(let ((result ,test))
