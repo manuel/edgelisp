@@ -321,11 +321,11 @@ var lisp_macros_table = {};
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (boundp name) */
+   (bound? name) */
 function lisp_compile_special_boundp(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "boundp", 
+    return { vopt: "bound?", 
              name: name_form.name };
 }
 
@@ -365,11 +365,11 @@ function lisp_compile_special_set_expander(form)
 
 /* Returns true if `name' is bound in the function namespace (unlike
    Common Lisp's `fboundp', name is not evaluated).  
-   (fboundp name) */
+   (fbound? name) */
 function lisp_compile_special_fboundp(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "fboundp", 
+    return { vopt: "fbound?", 
              name: name_form.name };
 }
 
@@ -909,8 +909,8 @@ function lisp_vop_function(vopt)
 /**** List of VOPs ****/
 
 var lisp_vop_table = {
-    "boundp": lisp_emit_vop_boundp,
-    "fboundp": lisp_emit_vop_fboundp,
+    "bound?": lisp_emit_vop_boundp,
+    "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
     "function": lisp_emit_vop_function,
     "if": lisp_emit_vop_if,
@@ -925,14 +925,14 @@ var lisp_vop_table = {
     "string": lisp_emit_vop_string,
 };
 
-/* { vopt: "boundp", name: <string> } */
+/* { vopt: "bound?", name: <string> } */
 function lisp_emit_vop_boundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
 }
 
-/* { vopt: "fboundp", name: <string> } */
+/* { vopt: "fbound?", name: <string> } */
 function lisp_emit_vop_fboundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
