@@ -1,5 +1,12 @@
 ;; -*- LISP -*-
 
+;; alien
+
+(assert-eq {% 7 * 3 %} 21)
+(defvar lisp-x 2)
+(assert-eq 12 {% ~lisp-x + 10 %})
+(assert-eq 6 {% ~(+ lisp-x {% 2 * ~lisp-x %}) %})
+
 ;; map
 
 (defvar l1 (list 1 2 3))

@@ -148,15 +148,34 @@ function lisp_compound_syntax_action(ast)
 
 /**** Inline JavaScript ****/
 
-var lisp_native_escape =
-    sequence("~", lisp_expression_syntax);
+var lisp_alien_escape =
+    action(sequence("~", lisp_expression_syntax),
+           lisp_alien_escape_action);
 
-var lisp_native_syntax =
-    sequence("{%",
-             repeat1(choice(lisp_native_escape,
-                            negate("%"),
-                            sequence("%", not("}")))),
-             "%}");
+var lisp_alien_syntax =
+    action(sequence("{%",
+                    repeat1(choice(lisp_alien_escape,
+                                   negate("%"),
+                                   sequence("%", not("}")))),
+                    "%}"),
+           lisp_alien_syntax_action);
+
+function lisp_alien_escape_action(ast)
+{
+    return ast[1];
+}
+
+function lisp_alien_syntax_action(ast)
+{
+    var elts = [ new Lisp_symbol_form("alien") ];
+    elts = elts.concat(ast[1]);
+    return new Lisp_compound_form(elts);
+}
+
+/* It would be nicer if the JavaScript strings were joined into
+   contiguous chunks (using `join_action'), and not into single
+   characters as they are now.  OTOH, it doesn't really matter because
+   the `alien' special form concats all JavaScript strings anyhow. */
 
 /**** Misc shortcuts ****/
 
@@ -195,7 +214,7 @@ var lisp_expression_syntax =
                       lisp_string_syntax,
                       lisp_symbol_syntax,
                       lisp_compound_syntax,
-                      lisp_native_syntax,
+                      lisp_alien_syntax,
                       lisp_quote_syntax,
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,
@@ -294,17 +313,18 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "%%if": lisp_compile_special_if,
-    "%%lambda": lisp_compile_special_lambda,
-    "%%set": lisp_compile_special_set,
+    "alien": lisp_compile_special_alien,
     "bound?": lisp_compile_special_boundp,
     "defparameter": lisp_compile_special_defparameter,
     "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "function": lisp_compile_special_function,
+    "%%if": lisp_compile_special_if,
+    "%%lambda": lisp_compile_special_lambda,
     "progn": lisp_compile_special_progn,
     "quasiquote": lisp_compile_special_quasiquote,
     "quote": lisp_compile_special_quote,
+    "%%set": lisp_compile_special_set,
     "set-expander": lisp_compile_special_set_expander,
     "set-function": lisp_compile_special_set_function,
 };
@@ -329,6 +349,22 @@ function lisp_set_macro_function(name, expander)
 var lisp_macros_table = {};
 
 /**** List of special forms ****/
+
+/* (alien &rest js-strings-n-lisp-forms) */
+function lisp_compile_special_alien(form)
+{
+    var stuff = form.elts.slice(1);
+    stuff = stuff.map(function(thing) {
+            if (thing.formt) {
+                return lisp_compile(thing);
+            } else {
+                lisp_assert_string(thing);
+                return thing;
+            }
+        });
+    return { vopt: "alien",
+             stuff: stuff };
+}
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  
@@ -908,6 +944,7 @@ function lisp_vop_function(vopt)
 /**** List of VOPs ****/
 
 var lisp_vop_table = {
+    "alien": lisp_emit_vop_alien,
     "bound?": lisp_emit_vop_boundp,
     "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
@@ -923,6 +960,24 @@ var lisp_vop_table = {
     "set_macro": lisp_emit_vop_set_macro,
     "string": lisp_emit_vop_string,
 };
+
+/* { vopt: "alien", stuff: <stuff> }
+   stuff: list of JavaScript strings and VOPs. */
+function lisp_emit_vop_alien(vop)
+{
+    var s = "";
+    var stuff = vop.stuff;
+    for (var i = 0, len = stuff.length; i < len; i++) {
+        var thing = stuff[i];
+        if (thing.vopt) {
+            s += lisp_emit(thing);
+        } else {
+            lisp_assert_string(thing);
+            s += thing;
+        }
+    }
+    return s;
+}
 
 /* { vopt: "bound?", name: <string> } */
 function lisp_emit_vop_boundp(vop)
