@@ -195,7 +195,7 @@ function lisp_bif_print(_key_, object)
 
 function lisp_bif_eq(_key_, a, b)
 {
-    return a == b;
+    return a === b;
 }
 
 function lisp_type_of(obj)
@@ -247,7 +247,7 @@ function lisp_bif_make(_key_, cls)
 function lisp_bif_slot(_key_, obj, name)
 {
     lisp_assert_string(name);
-    return obj[lisp_mangle_slot(name)] || null;
+    return obj[lisp_mangle_slot(name)] || undefined;
 }
 
 function lisp_bif_set_slot(_key_, obj, name, value)
@@ -334,12 +334,12 @@ function lisp_bif_apply(_key_, fun, args, keys)
 
 function lisp_is_true(obj) // T
 {
-    return (obj !== false) && (obj !== null);
+    return (obj !== false) && (obj !== undefined);
 }
 
 lisp_set("true", "true");
 lisp_set("false", "false");
-lisp_set("null", "null");
+lisp_set("null", "undefined");
 
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");

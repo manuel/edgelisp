@@ -1023,7 +1023,7 @@ function lisp_emit_vop_lambda(vop)
         for (var i = js_min; i < js_max; i++) {
             var param = opt_params[i - js_min];
             var name = lisp_mangled_param_name(param);
-            var value = param.init ? lisp_emit(param.init) : "null";
+            var value = param.init ? lisp_emit(param.init) : "undefined";
             s += "if (arguments.length < " + (i + 1) + ") " + name + " = " + value + "; ";
         }
         init_opt_params = s;
@@ -1038,7 +1038,7 @@ function lisp_emit_vop_lambda(vop)
             var param = key_params[i];
             var name = lisp_mangled_param_name(param);
             var key_name = lisp_mangle_string_dict_key(param.name);
-            var init = param.init ? lisp_emit(param.init) : "null";
+            var init = param.init ? lisp_emit(param.init) : "undefined";
             with_key_dict += "if (\"" + key_name + "\" in " + lisp_keywords_dict + ") " +
                                  "var " + name + " = " + lisp_keywords_dict + "[\"" + key_name + "\"]; " +
                              "else var " + name + " = " + init + "; ";
@@ -1098,7 +1098,7 @@ function lisp_emit_vop_progn(vop)
     if (vop.vops.length > 0)
         return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
     else
-        return "null";
+        return "undefined";
 }
 
 /* Evaluates to the form itself.
