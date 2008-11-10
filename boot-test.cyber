@@ -1,5 +1,17 @@
 ;; -*- LISP -*-
 
+;; map
+
+(defvar list (list 1 2 3))
+(assert-eq (len list) 3)
+(defvar list-ct 0)
+(map (lambda (elt)
+       (print "foo")
+       (print elt)
+       (inc list-ct))
+     list)
+(assert-eq list-ct 3)
+
 (assert-eq (progn 1 2 3) 3)
 (assert-eq (progn 1) 1)
 (assert-eq (progn) null)
@@ -215,3 +227,4 @@
 (defun y (&key foo bar) bar)
 (assert-eq (apply #'x (list) dict) 1)
 (assert-eq (apply #'y (list) dict) 2)
+

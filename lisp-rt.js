@@ -128,7 +128,7 @@ function lisp_bif_throw(_key_, exception)
         if (!handler_frame) return null;
         var handlers = handler_frame.handlers;
         var type = lisp_type_of(exception);
-        for (var i in handlers) {
+        for (var i = 0, len = handlers.length; i < len; i++) {
             var handler = handlers[i];
             if (lisp_subtypep(type, handler_type(handler))) {
                 return [handler, handler_frame];
@@ -247,7 +247,7 @@ function lisp_bif_make(_key_, cls)
 function lisp_bif_slot(_key_, obj, name)
 {
     lisp_assert_string(name);
-    return obj[lisp_mangle_slot(name)] || undefined;
+    return obj[lisp_mangle_slot(name)];
 }
 
 function lisp_bif_set_slot(_key_, obj, name, value)
@@ -337,14 +337,52 @@ function lisp_is_true(obj) // T
     return (obj !== false) && (obj !== undefined);
 }
 
+function lisp_bif_add(_key_, a, b)
+{
+    return a + b;
+}
+
+function lisp_bif_sub(_key_, a, b)
+{
+    return a - b;
+}
+
+function lisp_bif_mult(_key_, a, b)
+{
+    return a * b;
+}
+
+function lisp_bif_div(_key_, a, b)
+{
+    return a / b;
+}
+
+function lisp_bif_lt(_key_, a, b)
+{
+    return a < b;
+}
+
+function lisp_bif_call_while(_key_, test_fun, body_fun)
+{
+    while(test_fun(null)) {
+        body_fun(null);
+    }
+}
+
 lisp_set("true", "true");
 lisp_set("false", "false");
 lisp_set("null", "undefined");
 
+lisp_set_function("*", "lisp_bif_mult");
+lisp_set_function("+", "lisp_bif_add");
+lisp_set_function("-", "lisp_bif_sub");
+lisp_set_function("/", "lisp_bif_div");
+lisp_set_function("<", "lisp_bif_lt");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
+lisp_set_function("call-while", "lisp_bif_call_while");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("get-method", "lisp_bif_get_method");

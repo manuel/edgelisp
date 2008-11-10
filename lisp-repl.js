@@ -31,7 +31,7 @@ function repl_debug_print(obj)
 
 var repl_cont = "";
 
-for(;;) {
+for (;;) {
     try {
         var repl_line = readline();
         

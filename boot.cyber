@@ -71,8 +71,8 @@
                               `null)
                             bindings)))
 
-(defun not (x)
-  (if x false true))
+(defmacro while (test &rest body)
+  `(call-while (lambda () ,test) (lambda () ,@body)))
 
 (defmacro block (name &rest body)
   `(call-with-escape-function (lambda (,name) ,@body)))
@@ -101,6 +101,15 @@
         ,@(compound-slice place 1)
         ,value)))
       
+(defun not (x)
+  (if x false true))
+
+(defmacro inc (place &opt (delta '1))
+  `(set ,place (+ ,place ,delta)))
+
+(defmacro dec (place &opt (delta '1))
+  `(set ,place (- ,place ,delta)))
+
 (defmacro assert (test &opt (msg '"assertion failed"))
   `(let ((result ,test))
      (if result
@@ -193,3 +202,40 @@
 
 (defmethod has-key ((dict <string-dict>) (key <string>))
   (string-dict-has-key dict key))
+
+(defclass <list>)
+
+(defun <list> (&rest args) 
+  (apply #'list args))
+
+(defmethod iter ((list <list>))
+  (<list-iter> list))
+
+(defmethod len ((list <list>))
+  (list-len list))
+
+(defmethod elt ((list <list>) (i <number>))
+  (list-elt list i))
+
+(defclass <list-iter> (list i))
+
+(defun <list-iter> ((list <list>))
+  (let ((iter (make <list-iter>)))
+    (set (.list iter) list)
+    (set (.i iter) 0)
+    iter))
+
+(defmethod has-next ((iter <list-iter>))
+  (< (.i iter) (len (.list iter))))
+
+(defmethod next ((iter <list-iter>))
+  (inc (.i iter)))
+
+(defmethod now ((iter <list-iter>))
+  (elt (.list iter) (.i iter)))
+
+(defun map ((fun <function>) coll)
+  (let ((iter (iter coll)))
+    (while (has-next iter)
+      (funcall fun (now iter))
+      (next iter))))

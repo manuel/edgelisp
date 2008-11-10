@@ -630,11 +630,11 @@ function lisp_compile_sig(params)
             return { name: name_form.name,
                      init: lisp_compile(init_form) };
         } else {
-            lisp_error("Bad parameter", param);
+            lisp_error("Bad parameter: " + uneval(param), params);
         }
     }
 
-    for (var i in params) {
+    for (var i = 0, len = params.length; i < len; i++) {
         var param = params[i];
         lisp_assert_not_null(param, "Bad param", params);
         if (param.formt == "symbol") {
@@ -709,7 +709,7 @@ function lisp_compile_call_site(args)
     var pos_args = [];
     var key_args = {};
     
-    for (var i = 0; i < args.length; i++) {
+    for (var i = 0, len = args.length; i < len; i++) {
         var arg = args[i];
         if (arg.formt == "symbol") {
             if (lisp_is_keyword_arg(arg.name)) {
@@ -796,7 +796,7 @@ function lisp_compile_qq_compound(x, depth)
     function compile_compound(x, depth)
     {
         var compounds = [], compound_elts = [];
-        for (var i in x.elts) {
+        for (var i = 0, len = x.elts.length; i < len; i++) {
             var sub = x.elts[i];
             if ((sub.formt == "compound") && is_unquote_splicing(sub.elts[0])) {
                 compounds.push(make_compound(compound_elts));
@@ -939,11 +939,11 @@ function lisp_emit_vop_funcall(vop)
 
     // Generate dictionary of keyword arguments
     var s = "";
-    for (var k in key_args) {
+    lisp_iter_dict(key_args, function(k) {
         lisp_assert(lisp_is_string_dict_key(k), "Bad keyword argument", k);
         var v = lisp_assert_not_null(key_args[k]);
         s += "\"" + k + "\": " + lisp_emit(v) + ", ";
-    }
+    });
     if (s != "") {
         var keywords_dict = "lisp_fast_string_dict({ " + s + " })";
     } else {
@@ -1007,7 +1007,7 @@ function lisp_emit_vop_lambda(vop)
 
     // Required arguments type checks
     var check_types = "";
-    for (var i in req_params) {
+    for (var i = 0, len = req_params.length; i < len; i++) {
         var param = req_params[i];
         if (param.specializer) {
             var name = lisp_mangle_var(param.name);
@@ -1034,7 +1034,7 @@ function lisp_emit_vop_lambda(vop)
     if (key_params.length > 0) {
         var with_key_dict = ""; // branch used when _key_ is supplied
         var wout_key_dict = ""; // branch used when _key_ is null
-        for (var i in key_params) {
+        for (var i = 0, len = key_params.length; i < len; i++) {
             var param = key_params[i];
             var name = lisp_mangled_param_name(param);
             var key_name = lisp_mangle_string_dict_key(param.name);
@@ -1189,7 +1189,7 @@ var lisp_mangle_table =
 function lisp_mangle(name)
 {
     lisp_assert_nonempty_string(name, "Bad name", name);
-    for (var i in lisp_mangle_table) {
+    for (var i = 0, len = lisp_mangle_table.length; i < len; i++) {
         var pair = lisp_mangle_table[i];
         var pattern = new RegExp("\\" + pair[0], "g");
         name = name.replace(pattern, pair[1]);
@@ -1251,6 +1251,14 @@ function lisp_array_contains(array, elt)
         if (array[i] == elt) return true;
     }
     return false;
+}
+
+function lisp_iter_dict(dict, fun)
+{
+    for (var k in dict) {
+        if (dict.hasOwnProperty(k))
+            fun(k);
+    }
 }
 
 function lisp_error(message, arg)
@@ -1436,6 +1444,7 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 /*** Export classes and built-in functions ***/
 
 lisp_set("<boolean>", "Boolean.prototype");
+lisp_set("<function>", "Function.prototype");
 lisp_set("<compound-form>", "Lisp_compound_form.prototype");
 lisp_set("<list>", "Array.prototype");
 lisp_set("<number-form>", "Lisp_number_form.prototype");
