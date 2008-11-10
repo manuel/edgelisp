@@ -43,7 +43,7 @@ Another one:
 * CyberLisp has optional, keyword and rest parameters. Optionals and
   keywords can have default values.
 * `into` is a keyword parameter, by default bound to a fresh, empty
-  list.  `into` can be used to specify an existing collection:
+  list.  `into` can be used to specify an existing collection.
 
 Another one:
 
@@ -64,7 +64,7 @@ Another one:
 
 And, because it shows how nice Lisp is, a multi-collection `map`:
 
-    (defun map* ((fun <function>) &rest colls &key (into (<list>)))
+    (defun map* ((fun <function>) &rest colls &key (into (list)))
       (let ((iters (map #'iter colls)))
         (while (every #'has-next iters)
           (add into (apply fun (map #'now iters)))
