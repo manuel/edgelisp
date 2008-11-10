@@ -27,19 +27,23 @@ Here, we can see:
 
 Another one:
 
-    (defun map ((fun <function>) coll &key (into (<list>)))
+    (defun map ((fun <function>) coll &key (into (list)))
       (let ((iter (iter coll)))
         (while (has-next iter)
           (add into (funcall fun (now iter)))
           (next iter)))
       into)
-
+    
+    (defvar list (list 5 6 7))
+    (defvar results (map (lambda (x) (* x 2)) list))
+    => [10,12,14]
+    (map (lambda (x) (* x 10)) list into: results)
+    => [10,12,14,50,60,70]
+    
 * CyberLisp has optional, keyword and rest parameters. Optionals and
   keywords can have default values.
-* `(<list>)` creates a new list (The `list` used above is a shortcut,
-  because lists are so common.)  Generally, every type `<t>`'s
-  constructor function is called `<t>`.  Apropos, types (classes) live
-  in the first (variable) namespace, and functions in the second.
+* `into` is a keyword parameter, by default bound to a fresh, empty
+  list.  `into` can be used to specify an existing collection:
 
 Another one:
 
