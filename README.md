@@ -5,8 +5,12 @@ CyberLisp aims to be a well-designed, compact, yet expressive Lisp,
 for in-browser as well as desktop and server-side scripting.
 
 CyberLisp is mostly an amalgamation of Common Lisp, Dylan, Goo, and
-Smalltalk.  My motto is that *Lisp ain't broke*, so I don't try to fix
-it.
+Smalltalk.  *Lisp ain't broke*, so I don't try to fix it.
+
+See <a href="blog/2008-11/hello-world.md">Hello world (and more)</a> on the code-blog.
+
+Features
+--------
 
 The following "plumbing" is implemented, but most of it is still
 missing the right "porcelain" and docs:
@@ -23,6 +27,9 @@ missing the right "porcelain" and docs:
 * Generalized references (places)
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
 
+Futures
+-------
+
 CyberLisp will soon get these additional features:
 
 * Optional dynamic scoping
@@ -37,6 +44,7 @@ CyberLisp probably will get these features in the medium-term:
 * Object-specific methods
 * Stack inspection; programmable debugger
 * `CyberSlime` as well as an in-browser REPL
+* V8-based runtime with POSIX lib
 * Module system (?)
 * Hygienic macro system (?)
 * Coroutines (?)
