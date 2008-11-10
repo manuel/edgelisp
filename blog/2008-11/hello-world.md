@@ -1,5 +1,5 @@
 Hello world (and more)
-----------------------
+---
 
 CyberLisp's Hello world:
 
@@ -74,3 +74,6 @@ And, because it shows how nice Lisp is, a multi-collection `map`:
        (add into (apply fun (map #'now iters)))
        (each #'next iters)))
    into)
+ 
+ (map* #'+ (list 1 2 3) (list 1 2 3 4))
+ [2,4,6]
