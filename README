@@ -1,8 +1,0 @@
-The beginnings of a Lisp that is compiled to JavaScript.
-
-Requires SpiderMonkey at the moment (but only for readline() and
-print(), the rest is "standard" JavaScript).
-
-Use ./cyber to start a REPL.
-
-Manuel Simoni, 2008-11-08
