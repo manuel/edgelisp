@@ -83,7 +83,7 @@ map*
 ----
 
 `map*` applies a function to the elements of multiple collections in
-parallel:
+parallel, and stops as soon as one if them is exhausted:
 
     (defun map* ((fun <function>) &rest colls &key (into (list)))
       (let ((iters (map #'iter colls)))

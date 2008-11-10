@@ -172,10 +172,14 @@ function lisp_alien_syntax_action(ast)
     return new Lisp_compound_form(elts);
 }
 
-/* It would be nicer if the JavaScript strings were joined into
-   contiguous chunks (using `join_action'), and not into single
-   characters as they are now.  OTOH, it doesn't really matter because
-   the `alien' special form concats all JavaScript strings anyhow. */
+/* I don't know how to do this right yet.  The current form has a
+   "layering violation", in that the (native ...) form contains
+   (JavaScript snippet) strings and (~-escaped Lisp) forms.  It should
+   only contain forms; the snippets should probably be turned into
+   their own form like this: (native ... (snippet ...) ...). 
+
+   Then there's the issue that a "~" anywhere in the JavaScript
+   triggers a Lisp escape. */
 
 /**** Misc shortcuts ****/
 
