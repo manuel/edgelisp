@@ -146,7 +146,19 @@ function lisp_compound_syntax_action(ast)
     return new Lisp_compound_form(ast[1]);
 }
 
-/**** (Quasi-)quotation ****/
+/**** Inline JavaScript ****/
+
+var lisp_native_escape =
+    sequence("~", lisp_expression_syntax);
+
+var lisp_native_syntax =
+    sequence("{%",
+             repeat1(choice(lisp_native_escape,
+                            negate("%"),
+                            sequence("%", not("}")))),
+             "%}");
+
+/**** Misc shortcuts ****/
 
 var lisp_quote_syntax =
     action(sequence("'", lisp_expression_syntax),
@@ -163,8 +175,6 @@ var lisp_unquote_syntax =
 var lisp_unquote_splicing_syntax =
     action(sequence(",@", lisp_expression_syntax),
            lisp_shortcut_syntax_action("unquote-splicing"));
-
-/**** Misc ****/
 
 var lisp_function_syntax =
     action(sequence("#'", lisp_symbol_syntax),
@@ -185,6 +195,7 @@ var lisp_expression_syntax =
                       lisp_string_syntax,
                       lisp_symbol_syntax,
                       lisp_compound_syntax,
+                      lisp_native_syntax,
                       lisp_quote_syntax,
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,

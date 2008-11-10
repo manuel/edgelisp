@@ -86,6 +86,15 @@ function lisp_test_all()
         assertFullyParsed(lisp_program_syntax, "(lambda (&key k) k)");
         assertFullyParsed(lisp_program_syntax, "&rest");
         assertFullyParsed(lisp_program_syntax, "key:");
+        assertFullyParsed(lisp_program_syntax, "{% %}");
+        assertFullyParsed(lisp_program_syntax, "{% return 2; %}");
+        assertFullyParsed(lisp_program_syntax, "{% \"%\" %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~x %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~(x {% 1 %}) %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~(x {% \"%\" %}) %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~(x {% \"%~x\" %}) %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~(x {% ~y ~z %}) %}");
+        assertFullyParsed(lisp_program_syntax, "{% ~(x {% ~y ~z %}) %}{% 1 %}");
         if (!(failed.length == 0)) {
             throw Error("Parser tests failed: " + failed);
         }
