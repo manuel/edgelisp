@@ -54,9 +54,9 @@ function lisp_test_all()
         lisp_test(lisp_clean_type_name("<s>") == "s");
 
         // Name Mangling
-        lisp_test(lisp_mangle("foo-bar") == "fooHbar");
+        lisp_test(lisp_mangle("foo-bar") == "foo_bar");
         lisp_test(lisp_mangle("foobar") == "foobar");
-        lisp_test(lisp_mangle("<foo-bar>") == "LfooHbarG");
+        lisp_test(lisp_mangle("<foo-bar>") == "Lfoo_barG");
         lisp_test(lisp_mangle("<") == "L");
         lisp_test(lisp_mangle(">") == "G");
         lisp_test(lisp_mangle("%") == "N");

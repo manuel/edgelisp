@@ -121,7 +121,7 @@ function lisp_string_syntax_action(ast)
 
 var lisp_symbol_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
-    choice("&", ":", ".", "=", ">","-", "<", "%", "+", "?", "/", "*");
+    choice("-", "&", ":", ".", "=", ">","<", "%", "+", "?", "/", "*");
 
 var lisp_symbol_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
@@ -1237,12 +1237,12 @@ function lisp_emit_vop_string(vop)
 // Needs to be in sync with `lisp_symbol_special_char'.
 var lisp_mangle_table = 
     [
+     ["-", "_"],
      ["&", "A"],
      [":", "C"],
      [".", "D"],
      ["=", "E"],
      [">", "G"],
-     ["-", "H"],
      ["<", "L"],
      ["%", "N"],
      ["+", "P"],
