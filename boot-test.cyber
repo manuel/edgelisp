@@ -2,15 +2,20 @@
 
 ;; map
 
+(defvar l1 (list 1 2 3))
+(defvar l2 (list 1 2 3 4))
+(defvar res (map* #'+ l1 l2))
+(assert-eq (elt res 0) 2)
+(assert-eq (elt res 1) 4)
+(assert-eq (elt res 2) 6)
+(assert-eq (len res) 3)
+
 (defvar list (list 1 2 3))
 (assert-eq (len list) 3)
 (defvar list-ct 0)
-(map (lambda (elt)
-       (print "foo")
-       (print elt)
-       (inc list-ct))
-     list)
-(assert-eq list-ct 3)
+(each (lambda (elt) (inc list-ct elt))
+      list)
+(assert-eq list-ct 6)
 
 (assert-eq (progn 1 2 3) 3)
 (assert-eq (progn 1) 1)

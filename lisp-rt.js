@@ -307,6 +307,12 @@ function lisp_bif_list_len(_key_, list, i)
     return list.length;
 }
 
+function lisp_bif_list_add(_key_, list, elt)
+{
+    list.push(elt);
+    return list;
+}
+
 function lisp_bif_string_concat(_key_, s1, s2)
 {
     return s1.concat(s2);
@@ -388,6 +394,7 @@ lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("get-method", "lisp_bif_get_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
 lisp_set_function("list", "lisp_bif_list");
+lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
 lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
