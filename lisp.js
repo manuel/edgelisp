@@ -156,7 +156,7 @@ var lisp_alien_syntax =
     action(sequence("{%",
                     repeat1(choice(lisp_alien_escape,
                                    negate("%"),
-                                   sequence("%", not("}")))),
+                                   join_action(sequence("%", not("}")), ""))),
                     "%}"),
            lisp_alien_syntax_action);
 

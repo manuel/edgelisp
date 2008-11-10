@@ -6,6 +6,7 @@
 (defvar lisp-x 2)
 (assert-eq 12 {% ~lisp-x + 10 %})
 (assert-eq 6 {% ~(+ lisp-x {% 2 * ~lisp-x %}) %})
+(assert-eq "%" {% "%" %})
 
 ;; map
 
