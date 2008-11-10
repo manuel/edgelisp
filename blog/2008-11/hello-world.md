@@ -41,6 +41,10 @@ Another one:
 
 * CyberLisp has optional, keyword and rest parameters. Optionals and
   keywords can have default values.
+* `(<list>)` creates a new list (The `list` used above is a shortcut,
+  because lists are so common.)  Generally, every type `<t>`
+  constructor is called `<t>`.  Apropos, types (classes) live in the
+  first (variable) namespace, and functions in the second.
 
 Another one:
 
