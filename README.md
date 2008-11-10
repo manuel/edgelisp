@@ -1,8 +1,8 @@
 CyberLisp
 =========
 
-**CyberLisp aims to be a well-designed, compact, yet expressive Lisp,
-for in-browser as well as desktop and server-side scripting.*
+CyberLisp aims to be a well-designed, compact, yet expressive Lisp,
+for in-browser as well as desktop and server-side scripting.
 
 CyberLisp is mostly an amalgamation of Common Lisp, Dylan, Goo, and
 Smalltalk.  *Lisp ain't broke*, so I don't try to fix it.
