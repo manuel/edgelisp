@@ -75,15 +75,15 @@ collection:
 
 * `block` binds the name `exit` (or any other name) to the current
   continuation.  `return-from` invokes the continuation with a value,
-  thereby leaving the `while` loop, and returning `false` from the
-  block.  (In contrast to Common Lisp's `block`, CyberLisp's exits are
-  first class objects.)
+  thereby leaving the `while` loop, and returning the value (`false`)
+  from the block.  (In contrast to Common Lisp's `block`, CyberLisp's
+  exits are first class objects.)
 
 map*
 ----
 
 `map*` applies a function to the elements of multiple collections in
-parallel, and stops as soon as one if them is exhausted:
+parallel, and stops as soon as one of them is exhausted:
 
     (defun map* ((fun <function>) &rest colls &key (into (list)))
       (let ((iters (map #'iter colls)))
