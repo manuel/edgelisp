@@ -166,11 +166,17 @@
        (set-method ,class ,name-string (lambda ,params ,@body))
        (defgeneric ,name))))
 
+;; (defmacro defgeneric (name &rest args)
+;;   (let ((name-string (string-to-form (symbol-name name))))
+;;     `(defun ,name (&rest args &all-keys keys)
+;;        (let ((obj (list-elt args 0)))
+;;          (apply (get-method obj ,name-string) args keys)))))
+
 (defmacro defgeneric (name &rest args)
   (let ((name-string (string-to-form (symbol-name name))))
-    `(defun ,name (&rest args &all-keys keys)
-       (let ((obj (list-elt args 0)))
-         (apply (get-method obj ,name-string) args keys)))))
+    `(defun ,name (&fast fast-arguments)
+       (let ((obj (list-elt fast-arguments 1)))
+         (fast-apply (get-method obj ,name-string) fast-arguments)))))
 
 (defclass <object>)
 
@@ -287,3 +293,25 @@ supply a different collection to hold the results."
       (add into (apply fun (map #'now iters)))
       (each #'next iters)))
   into)
+
+;; Number iterators
+
+(defclass <number-iter> (i max))
+
+(defun <number-iter> (max)
+  (let ((iter (make <number-iter>)))
+    (set (.i iter) 0)
+    (set (.max iter) max)
+    iter))
+
+(defmethod iter ((max <number>))
+  (<number-iter> max))
+
+(defmethod has-next ((iter <number-iter>))
+  (< (.i iter) (.max iter)))
+
+(defmethod now ((iter <number-iter>))
+  (.i iter))
+
+(defmethod next ((iter <number-iter>))
+  (inc (.i iter)))

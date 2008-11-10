@@ -603,13 +603,16 @@ function lisp_compile_special_quote(form)
      opt_params: <list>,
      key_params: <list>,
      rest_param: <param>,
-     all_keys_param: <param> }
+     all_keys_param: <param>,
+     fast_param: <param> }
 
    req_params, opt_params, key_params: lists of required, optional,
    and keyword parameters, respectively.
    
    rest_param, all_keys_param: the rest and all-keys parameters, or
    null.
+
+   fast_param: see ``Fast parameter passing''.
 
    Parameters are also represented as objects:
 
@@ -627,15 +630,44 @@ function lisp_compile_special_quote(form)
    required parameters).
  */
 
+/**** Fast parameter passing ****/
+
+/* Generic functions must be able to dispatch to another function (the
+   method) as quickly as possible.  One sub-problem of this is that
+   the generic needs to forward the arguments it received as-is to the
+   method.  So far, the only way to do that has been for the generic
+   to define a rest and an all-keys parameter, and supply these when
+   `apply'ing the method.
+
+   However, the rest parameter processing has a huge cost: because
+   JavaScript's `arguments' object is not an array, it cannot be
+   sliced (to chop off the calling convention argument), and so a
+   subset of the `arguments' has to be copied into a new array for the
+   rest parameter on each call.
+
+   Enter fast parameter passing: a generic function declares a fast
+   parameter in its signature with the `&fast' keyword.  This is bound
+   to the JavaScript `arguments' list, including the calling
+   convention argument.  For ordinary Lisp code, this arguments list
+   is useless.  There's only one thing that can be done with it: it
+   can be used to `fast-apply' the method.  Fast-applying simply
+   `Function.apply's the method with the complete `arguments' list.
+   Furthermore, the presence of a fast parameter is a hint to the
+   compiler to perform no arity or type-checking of the function
+   arguments (which is done by the method anyways), further boosting
+   performance. */
+
 var lisp_optional_sig_keyword = "&opt";
 var lisp_key_sig_keyword = "&key";
 var lisp_rest_sig_keyword = "&rest";
 var lisp_all_keys_sig_keyword = "&all-keys";
+var lisp_fast_sig_keyword = "&fast";
 var lisp_sig_keywords = 
     [lisp_optional_sig_keyword,
      lisp_key_sig_keyword,
      lisp_rest_sig_keyword,
-     lisp_all_keys_sig_keyword];
+     lisp_all_keys_sig_keyword,
+     lisp_fast_sig_keyword];
 
 function lisp_is_sig_keyword(string)
 {
@@ -657,7 +689,7 @@ function lisp_clean_type_name(string)
 /* Given a list of parameter forms, return a signature. */
 function lisp_compile_sig(params)
 {
-    var req = [], opt = [], key = [], rest = [], all_keys = [];
+    var req = [], opt = [], key = [], rest = [], all_keys = [], fast = [];
     var cur = req;
 
     function compile_parameter(param)
@@ -698,6 +730,8 @@ function lisp_compile_sig(params)
                     cur = rest; continue;
                 case lisp_all_keys_sig_keyword: 
                     cur = all_keys; continue;
+                case lisp_fast_sig_keyword:
+                    cur = fast; continue;
                 }
                 lisp_error("Bad signature keyword", param.name);
             }
@@ -709,7 +743,8 @@ function lisp_compile_sig(params)
              opt_params: opt, 
              key_params: key, 
              rest_param: rest[0],
-             all_keys_param: all_keys[0] };
+             all_keys_param: all_keys[0],
+             fast_param: fast[0] };
 }
 
 function lisp_param_name(param)
@@ -1054,6 +1089,7 @@ function lisp_emit_vop_lambda(vop)
     var key_params = lisp_assert_not_null(vop.sig.key_params);
     var rest_param = vop.sig.rest_param;
     var all_keys_param = vop.sig.all_keys_param;
+    var fast_param = vop.sig.fast_param;
 
     // Signature (calling convention keywords dict + positional parameters)
     var param_names = [ lisp_keywords_dict ];
@@ -1135,13 +1171,23 @@ function lisp_emit_vop_lambda(vop)
             lisp_keywords_dict + " ? " + lisp_keywords_dict + " : lisp_fast_string_dict({}); ";
     }
 
+    // Fast parameter
+    var setup_fast_param = "";
+    if (fast_param) {
+        setup_fast_param =
+            "var " + lisp_mangled_param_name(fast_param) + " = arguments; ";
+        check_arity = "";
+        check_types = "";
+    }
+
     var preamble = 
         check_arity + 
         check_types + 
         init_opt_params + 
         init_key_params +
         setup_rest_param +
-        setup_all_keys_param;
+        setup_all_keys_param +
+        setup_fast_param;
 
     var body = lisp_emit(vop.body);
 

@@ -375,6 +375,11 @@ function lisp_bif_call_while(_key_, test_fun, body_fun)
     }
 }
 
+function lisp_bif_fast_apply(_key_, fun, _arguments)
+{
+    return fun.apply(null, _arguments);
+}
+
 lisp_set("true", "true");
 lisp_set("false", "false");
 lisp_set("null", "undefined");
@@ -391,6 +396,7 @@ lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_functi
 lisp_set_function("call-while", "lisp_bif_call_while");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
+lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("get-method", "lisp_bif_get_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
 lisp_set_function("list", "lisp_bif_list");
