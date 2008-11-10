@@ -2,11 +2,11 @@ CyberLisp
 =========
 
 CyberLisp aims to be a well-designed, compact, yet expressive Lisp,
-for in-browser as well as server-side scripting.
+for in-browser as well as desktop and server-side scripting.
 
 CyberLisp is mostly an amalgamation of Common Lisp, Dylan, Goo, and
-Smalltalk.  My motto is that *Lisp ain't broke*, so I don't try to
-"fix" it.
+Smalltalk.  My motto is that *Lisp ain't broke*, so I don't try to fix
+it.
 
 The following "plumbing" is implemented, but most of it is still
 missing the right "porcelain" and docs:
@@ -31,15 +31,15 @@ CyberLisp will soon get these additional features:
 CyberLisp probably will get these features in the medium-term:
 
 * Convenient object literals and destructuring
-* Everything is an object, including null
-* "No applicable method" trap
+* Everything-is-an-object, including null
+* No-applicable-method trap
 * Before-, around-, and after-advice for methods
 * Object-specific methods
-* Stack inspection, programmable debugger
-* CyberSlime
-* Module system
-* Hygienic macro system
-* Coroutines
+* Stack inspection; programmable debugger
+* `CyberSlime` as well as an in-browser REPL
+* Module system (?)
+* Hygienic macro system (?)
+* Coroutines (?)
 
 Run
 ---
@@ -49,4 +49,4 @@ Requires SpiderMonkey at the moment (but only for `readline()` and
 
 Use `./cyber` to start a REPL.
 
-*Manuel Simoni, 2008-11-08*
+*Manuel Simoni, 2008-11-10*
