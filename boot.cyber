@@ -180,6 +180,9 @@
 
 (defclass <object>)
 
+(defmethod elt ((form <compound-form>) i)
+  (compound-elt form i))
+
 (defclass <exception>)
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
@@ -315,3 +318,8 @@ supply a different collection to hold the results."
 
 (defmethod next ((iter <number-iter>))
   (inc (.i iter)))
+
+(defmacro dotimes (var-and-ct &rest body)
+  (let ((var (elt var-and-ct 0))
+        (ct (elt var-and-ct 1)))
+    `(each (lambda (,var) ,@body) ,ct)))

@@ -1,5 +1,12 @@
 ;; -*- LISP -*-
 
+;; number iterators
+
+(defparameter ni-ct 0)
+(each (lambda (num) (inc ni-ct)) 
+      500)
+(assert-eq ni-ct 500)
+
 ;; alien
 
 (assert-eq {% 7 * 3 %} 21)
