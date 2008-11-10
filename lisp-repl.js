@@ -17,8 +17,6 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
    
-print("CyberLisp 0.28");
-
 load("lisp.js");
 load("lisp-rt.js");
 
@@ -31,6 +29,8 @@ function repl_debug_print(obj)
 
 var repl_cont = "";
 
+var repl_print_js = false;
+
 for (;;) {
     try {
         var repl_line = readline();
@@ -39,6 +39,11 @@ for (;;) {
             repl_debug = !repl_debug;
             print("Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
+        } else if (repl_line == "/p") {
+            repl_print_js = !repl_print_js;
+            continue;
+        } else if (repl_line == "/q") {
+            break;
         } else if (repl_line == "/r") {
             load("lisp-repl.js");
         } else if (repl_line[0] == ";") {
@@ -72,7 +77,13 @@ for (;;) {
         var repl_js = lisp_emit({ vopt: "progn", vops: repl_vops });
         repl_debug_print(repl_js);
         var repl_result = eval(repl_js);
-        print(lisp_show(repl_result));
+        if (repl_print_js) {
+            // In print JS mode, we print the resulting JavaScript,
+            // and not the evaluation results.
+            print(repl_js);
+        } else {
+            print(lisp_show(repl_result));
+        }
         
     } catch(e) {
         print(e);

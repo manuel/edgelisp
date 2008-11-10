@@ -17,8 +17,8 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
 
-load("lib/jsparse.js");
 load("lib/json2.js");
+load("lib/jsparse.js");
 
 
 /*** Syntax ***/
@@ -340,7 +340,6 @@ function lisp_set_macro_function(name, expander)
 {
     var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
     var mangled_name = lisp_mangle_function(name);    
-    print("; Defined macro " + name.toUpperCase());
     lisp_macros_table[mangled_name] = expander;
     return expander;
 }
@@ -1205,7 +1204,7 @@ function lisp_emit_vop_set_function(vop)
     var value = lisp_assert_not_null(vop.value, "Bad value", vop);
     var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
     var name_upper = name.toUpperCase();
-    return "(" + assignment + ", print(\"; Defined function " + name_upper + "\"))";
+    return "(" + assignment + ")";
 }
 
 /* { vopt: "set_macro", name: <string>, expander: <vop> }
