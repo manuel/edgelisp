@@ -23,7 +23,7 @@
 (defvar test-counter 0)
 (catch ((<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (make <my-error>)))
+  (throw (<my-error>)))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -31,7 +31,7 @@
                         (set test-counter 2))))
   (catch ((<my-error> (lambda (e next-handler)
                         (set test-counter 1))))
-    (throw (make <your-error>))))
+    (throw (<your-error>))))
 (assert-eq test-counter 2)
 
 (set test-counter 0)
@@ -39,7 +39,7 @@
                         (set test-counter 2)))
         (<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (make <your-error>)))
+  (throw (<your-error>)))
 (assert-eq test-counter 2)
 
 (set test-counter 0)
@@ -47,7 +47,7 @@
                         (set test-counter 2)))
         (<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (make <my-error>)))
+  (throw (<my-error>)))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -57,7 +57,7 @@
                           (set test-counter 2)))
           (<my-error> (lambda (e next-handler)
                         (funcall next-handler))))
-    (throw (make <my-error>))))
+    (throw (<my-error>))))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -68,7 +68,7 @@
           (<my-error> (lambda (e next-handler)
                         (set test-counter 3)
                         (funcall next-handler))))
-    (throw (make <my-error>))))
+    (throw (<my-error>))))
 (assert-eq test-counter 3)
 
 
@@ -98,7 +98,7 @@
 
 (defvar unwind-ct 0)
 (catch ((<another-error> (lambda (e next-handler))))
-  (unwind-protect (throw (make <another-error>))
+  (unwind-protect (throw (<another-error>))
     (set unwind-ct 1)))
 (assert-eq unwind-ct 1)
 
@@ -116,7 +116,7 @@
 ;; Slots
 
 (defclass <foo>)
-(defvar foo (make <foo>))
+(defvar foo (<foo>))
 (assert-eq (slot foo "slot1") null)
 (assert-eq (slot foo "slot2") null)
 (set-slot foo "slot1" 1)
@@ -146,11 +146,11 @@
 (defclass <quux>)
 (set-method <quux> "m33" (lambda ((quux <quux>)) 33))
 (set-method <quux> "m44" (lambda ((quux <quux>)) 44))
-(defvar quux (make <quux>))
+(defvar quux (<quux>))
 (assert-eq (funcall (get-method quux "m33") quux) 33)
 (assert-eq (funcall (get-method quux "m44") quux) 44)
 (defclass (<sub> <quux>))
-(defvar sub (make <sub>))
+(defvar sub (<sub>))
 (assert-eq (funcall (get-method sub "m33") sub) 33)
 (assert-eq (funcall (get-method sub "m44") sub) 44)
 
@@ -158,7 +158,7 @@
 (assert-eq (m55 quux) 55)
 (assert-eq (m55 sub) 55)
 
-(defmethod m66 (<quux>) 66)
+(defmethod m66 ((quux <quux>)) 66)
 (assert-eq (m66 quux) 66)
 (assert-eq (m66 sub) 66)
 
@@ -208,7 +208,7 @@
 
 ;; apply
 
-(defvar dict (make <string-dict>))
+(defvar dict (<string-dict>))
 (put dict "foo" 1)
 (put dict "bar" 2)
 (defun x (&key foo bar) foo)

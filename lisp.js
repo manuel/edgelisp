@@ -531,11 +531,7 @@ function lisp_compile_special_quote(form)
    arguments that are general instances of a given type.  For example,
    the following signature has two typed parameters:
 
-   ((s <string>) (n <number>))
-
-   There is a shortcut syntax:
-
-   (<string> <number>) === ((string <string>) (number <number>)) */
+   ((s <string>) (n <number>)) */
 
 /**** Parameter init forms ****/
 
@@ -617,16 +613,8 @@ function lisp_compile_sig(params)
     function compile_parameter(param)
     {
         if (param.formt == "symbol") {
-            var name = param.name;
-            if (lisp_is_type_name(name)) {
-                // Typed required parameter shortcut
-                lisp_assert(cur == req, "Bad typed parameter", name);
-                return { name: lisp_clean_type_name(name),
-                         specializer: name };
-            } else {
-                // Just a named parameter
-                return { name: param.name };
-            }
+            // Ordinary parameter (positional or keyword)
+            return { name: param.name };
         } else if ((param.formt == "compound") &&
                    (cur == req)) {
             // Typed required parameter

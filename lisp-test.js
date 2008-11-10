@@ -155,7 +155,7 @@ function lisp_test_all()
         lisp_eval("(defparameter quux \"bar\")");
         lisp_test(lisp_eval("quux") == "bar");
 
-        // defun, function
+        // set-function, function
         lisp_eval("(set-function foo 2)");
         lisp_test(lisp_eval("(function foo)") == 2);
         lisp_test(lisp_eval("foo") == "bar");

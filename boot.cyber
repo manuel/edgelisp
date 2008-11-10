@@ -41,7 +41,7 @@
   `(unless (bound? ,name)
      (defparameter ,name ,value)))
 
-(defmacro if (test consequent &opt (alternative `null))
+(defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
 
 (defmacro when (test &rest consequent)
@@ -188,8 +188,8 @@
       (string-dict-get dict key)
       default))
 
-(defmethod put (<string-dict> (key <string>) value)
-  (string-dict-put string-dict key value))
+(defmethod put ((dict <string-dict>) (key <string>) value)
+  (string-dict-put dict key value))
 
-(defmethod has-key (<string-dict> (key <string>))
-  (string-dict-has-key string-dict key))
+(defmethod has-key ((dict <string-dict>) (key <string>))
+  (string-dict-has-key dict key))
