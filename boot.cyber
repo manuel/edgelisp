@@ -180,9 +180,6 @@
 
 (defclass <object>)
 
-(defmethod elt ((form <compound-form>) i)
-  (compound-elt form i))
-
 (defclass <exception>)
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
@@ -245,6 +242,12 @@
 
 (defmethod now ((iter <list-iter>))
   (elt (.list iter) (.i iter)))
+
+(defmethod elt ((form <compound-form>) i)
+  (compound-elt form i))
+
+(defmethod iter ((form <compound-form>))
+  (iter (compound-elts form)))
 
 (defun every ((pred <function>) coll)
   "Returns true iff every element of a collection satisfies the predicate."
@@ -315,3 +318,4 @@ can be used to supply a different collection to hold the results."
   (let ((var (elt var-and-ct 0))
         (ct (elt var-and-ct 1)))
     `(each (lambda (,var) ,@body) ,ct)))
+

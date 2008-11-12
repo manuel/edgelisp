@@ -380,6 +380,14 @@ function lisp_bif_fast_apply(_key_, fun, _arguments)
     return fun.apply(null, _arguments);
 }
 
+var lisp_gensym_counter = 0;
+
+function lisp_bif_gensym(_key_)
+{
+    lisp_gensym_counter++;
+    return new Lisp_symbol_form("%%g-" + lisp_gensym_counter);
+}
+
 lisp_set("true", "true");
 lisp_set("false", "false");
 lisp_set("null", "undefined");
@@ -398,6 +406,7 @@ lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("get-method", "lisp_bif_get_method");
+lisp_set_function("gensym", "lisp_bif_gensym");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
 lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");

@@ -1500,6 +1500,12 @@ function lisp_bif_compound_elt(_key_, compound, i)
     return elt;
 }
 
+function lisp_bif_compound_elts(_key_, compound)
+{
+    lisp_assert_compound_form(compound, "compound-elts", compound);
+    return compound.elts;
+}
+
 function lisp_bif_compound_slice(_key_, compound, start)
 {
     lisp_assert_compound_form(compound, "compound-slice", compound);
@@ -1572,6 +1578,7 @@ lisp_set("<symbol-form>", "Lisp_symbol_form.prototype");
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
+lisp_set_function("compound-elts", "lisp_bif_compound_elts");
 lisp_set_function("compound-map", "lisp_bif_compound_map");
 lisp_set_function("compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("make-compound", "lisp_bif_make_compound");

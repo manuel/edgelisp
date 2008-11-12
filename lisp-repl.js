@@ -29,7 +29,7 @@ function repl_debug_print(obj)
 
 var repl_cont = "";
 
-var repl_print_js = false;
+var repl_compile = false;
 
 for (;;) {
     try {
@@ -39,8 +39,8 @@ for (;;) {
             repl_debug = !repl_debug;
             print("Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
-        } else if (repl_line == "/p") {
-            repl_print_js = !repl_print_js;
+        } else if (repl_line == "/c") {
+            repl_compile = !repl_compile;
             continue;
         } else if (repl_line == "/q") {
             break;
@@ -77,9 +77,9 @@ for (;;) {
         var repl_js = lisp_emit({ vopt: "progn", vops: repl_vops });
         repl_debug_print(repl_js);
         var repl_result = eval(repl_js);
-        if (repl_print_js) {
-            // In print JS mode, we print the resulting JavaScript,
-            // and not the evaluation results.
+        if (repl_compile) {
+            // In compile mode, we print the resulting JavaScript, and
+            // not the evaluation results.
             print(repl_js);
         } else {
             print(lisp_show(repl_result));
