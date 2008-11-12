@@ -1,1 +1,1 @@
-cat boot.cyber - | smjs lisp-repl.js
+cat boot.fasl.js - | smjs lisp-repl.js

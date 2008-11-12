@@ -239,8 +239,8 @@ function lisp_parse(string)
 function lisp_eval(string)
 {
     var forms = lisp_parse(string);
-    var vop = { vopt: "progn", vops: forms.map(lisp_compile) };
-    var js = lisp_emit(vop);
+    var vops = forms.map(lisp_compile);
+    var js = vops.map(lisp_emit).join(", ");
     return eval(js);
 }
 

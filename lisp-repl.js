@@ -43,7 +43,7 @@ for (;;) {
         
         if (repl_line == "/d") {
             repl_debug = !repl_debug;
-            print("; Debugging " + (repl_debug ? "ON" : "OFF"));
+            repl_print("; Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
         } else if (repl_line == "/c") {
             repl_compile = !repl_compile;
@@ -62,16 +62,16 @@ for (;;) {
             continue;
         } else if (repl_beginfasl_re.test(repl_line)) {
             repl_fasl = true;
-            //print("; Loading FASL...");
+            repl_print("; Loading FASL...");
             continue;
         } else if (repl_endfasl_re.test(repl_line)) {
             repl_fasl = false;
-            //print("; done");
+            repl_print("; done");
             continue;
         }
 
         if (repl_fasl) {
-            print(lisp_show(eval(repl_line)));
+            repl_print(lisp_show(eval(repl_line)));
             continue;
         }
 
@@ -124,14 +124,18 @@ function repl_process_vop(repl_vop)
                 print(repl_js);
         } else {
             var repl_result = eval(repl_js);
-            if (!repl_silent)
-                print(lisp_show(repl_result));
+            repl_print(lisp_show(repl_result));
         }
     }
 }
 
+function repl_print(obj)
+{
+    if (!repl_silent) print(obj);
+}
+
 function repl_debug_print(obj)
 {
-    if (repl_debug) print("; " + lisp_show(obj));
+    if (!repl_silent && repl_debug) print("; " + lisp_show(obj));
 }
 
