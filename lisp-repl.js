@@ -43,7 +43,7 @@ for (;;) {
         
         if (repl_line == "/d") {
             repl_debug = !repl_debug;
-            print("Debugging " + (repl_debug ? "ON" : "OFF"));
+            print("; Debugging " + (repl_debug ? "ON" : "OFF"));
             continue;
         } else if (repl_line == "/c") {
             repl_compile = !repl_compile;
@@ -62,16 +62,16 @@ for (;;) {
             continue;
         } else if (repl_beginfasl_re.test(repl_line)) {
             repl_fasl = true;
-            print("Loading FASL...");
+            //print("; Loading FASL...");
             continue;
         } else if (repl_endfasl_re.test(repl_line)) {
             repl_fasl = false;
-            print("done");
+            //print("; done");
             continue;
         }
 
         if (repl_fasl) {
-            eval(repl_line);
+            print(lisp_show(eval(repl_line)));
             continue;
         }
 

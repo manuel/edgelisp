@@ -27,6 +27,7 @@ missing the right "porcelain" and docs:
 * Slot access through (overridable) generic functions
 * Generalized references (places)
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
+* File compilation to fast-load files; `eval-when`
 
 Futures
 -------
