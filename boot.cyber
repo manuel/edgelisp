@@ -77,7 +77,7 @@
 (defmacro block (name &rest body)
   `(call-with-escape-function (lambda (,name) ,@body)))
 
-(defmacro return-from (name value)
+(defmacro return-from (name &opt (value 'null))
   `(funcall ,name ,value))
 
 (defmacro unwind-protect (protected &rest cleanups)
@@ -246,24 +246,6 @@
 (defmethod now ((iter <list-iter>))
   (elt (.list iter) (.i iter)))
 
-(defun each ((fun <function>) coll)
-  "Applies a function to each element of a collection for effect."
-  (let ((iter (iter coll)))
-    (while (has-next iter)
-      (funcall fun (now iter))
-      (next iter))))
-
-(defun map ((fun <function>) coll &key (into (<list>)))
-  "Applies a function to each element of a collection and returns a
-collection with the results of each application.  The `into' keyword
-argument can be used to supply a different collection to hold the
-results."
-  (let ((iter (iter coll)))
-    (while (has-next iter)
-      (add into (funcall fun (now iter)))
-      (next iter)))
-  into)
-
 (defun every ((pred <function>) coll)
   "Returns true iff every element of a collection satisfies the predicate."
   (block exit
@@ -274,27 +256,37 @@ results."
         (next iter)))
     true))
 
-(defun each* ((fun <function>) &rest colls)
-  "Applies a function to the elements of N collections for effect.
-The function is called with N positional arguments, each taken from
-the collections from left to right.  The shortest collection
-determines how many times the function is called."
-  (let ((iters (map #'iter colls)))
-    (while (every #'has-next iters)
-      (apply fun (map #'now iters))
-      (each #'next iters))))
+(defun each ((fun <function>) &rest colls)
+  "Applies a function to the elements of one or more collections for
+effect.  The function is called with N positional arguments, each
+taken from the collections from left to right.  The shortest
+collection determines how many times the function is called."
+  (if (eq 1 (len colls))
+      (let ((iter (iter (elt colls 0))))
+        (while (has-next iter)
+          (funcall fun (now iter))
+          (next iter)))
+      (let ((iters (map #'iter colls)))
+        (while (every #'has-next iters)
+          (apply fun (map #'now iters))
+          (each #'next iters)))))
 
-(defun map* ((fun <function>) &rest colls &key (into (<list>)))
-  "Applies a function to the elements of N collections and returns a
-collection with the results of each application.  The function is
-called with N positional arguments, each taken from the collections
-from left to right.  The shortest collection determines how many times
-the function is called.  The `into' keyword argument can be used to
-supply a different collection to hold the results."
-  (let ((iters (map #'iter colls)))
-    (while (every #'has-next iters)
-      (add into (apply fun (map #'now iters)))
-      (each #'next iters)))
+(defun map ((fun <function>) &rest colls &key (into (<list>)))
+  "Applies a function to the elements of one or more collections and
+returns a collection with the results of each application.  The
+function is called with N positional arguments, each taken from the
+collections from left to right.  The shortest collection determines
+how many times the function is called.  The `into' keyword argument
+can be used to supply a different collection to hold the results."
+  (if (eq 1 (len colls))
+      (let ((iter (iter (elt colls 0))))
+        (while (has-next iter)
+          (add into (funcall fun (now iter)))
+          (next iter)))
+      (let ((iters (map #'iter colls)))
+        (while (every #'has-next iters)
+          (add into (apply fun (map #'now iters)))
+          (each #'next iters))))
   into)
 
 ;; Number iterators

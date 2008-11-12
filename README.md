@@ -8,7 +8,7 @@ CyberLisp is mostly an amalgamation of Common Lisp, Dylan, Goo, and
 Smalltalk.  *Lisp ain't broke*, so I don't try to fix it.
 
 See <a href="/manuel/cyberlisp/tree/master/blog/2008-11/hello-world.md">Hello
-world (and more)</a> on the code-blog.
+world (and more)</a>.
 
 Features
 --------
