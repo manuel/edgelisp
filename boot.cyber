@@ -91,8 +91,12 @@
                                         handler-specs))
                   (lambda () ,@body)))
 
-(defun setter-name (getter-name)
-  (string-concat getter-name "-setter"))
+(defun not (x)
+  (if x false true))
+
+(eval-and-compile
+  (defun setter-name (getter-name)
+    (string-concat getter-name "-setter")))
 
 (defmacro set (place value)
   (if (symbol? place)
@@ -100,9 +104,6 @@
       `(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
         ,@(compound-slice place 1)
         ,value)))
-      
-(defun not (x)
-  (if x false true))
 
 (defmacro inc (place &opt (delta '1))
   `(set ,place (+ ,place ,delta)))
@@ -120,6 +121,18 @@
 
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
+
+(eval-and-compile
+  (defun defclass-do-slot (class-name slot)
+    (let* ((slot-name (symbol-name slot))
+           (slot-name-form (string-to-form slot-name))
+           (getter-name (string-concat "." slot-name))
+           (setter-name (setter-name getter-name)))
+      `(progn
+         (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
+           (slot obj ,slot-name-form))
+         (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
+           (set-slot obj ,slot-name-form value))))))
 
 (defmacro defclass (name-and-super &opt (slots '()))
   (let ((class-name null)
@@ -141,27 +154,14 @@
          (make ,class-name))
        ,class-name)))
 
-(defun defclass-do-slot (class-name slot)
-  (let* ((slot-name (symbol-name slot))
-         (slot-name-form (string-to-form slot-name))
-         (getter-name (string-concat "." slot-name))
-         (setter-name (setter-name getter-name)))
-    `(progn
-       (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
-         (slot obj ,slot-name-form))
-       (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
-         (set-slot obj ,slot-name-form value)))))
-
-(defun %%defmethod-param-type (param)
-  (if (compound? param)
-      (compound-elt param 1)
-      (if (symbol? param)
-          param
-          (assert false))))
-
 (defmacro defmethod (name params &rest body)
-  (let ((class (%%defmethod-param-type (compound-elt params 0)))
-        (name-string (string-to-form (symbol-name name))))
+  (let* ((param (compound-elt params 0))
+         (class (if (compound? param)
+                    (compound-elt param 1)
+                    (if (symbol? param)
+                        param
+                        (assert false))))
+         (name-string (string-to-form (symbol-name name))))
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))
        (defgeneric ,name))))
@@ -178,15 +178,15 @@
        (let ((obj (list-elt fast-arguments 1)))
          (fast-apply (get-method obj ,name-string) fast-arguments)))))
 
+(defmacro deferror (name &rest slots)
+  `(defclass (,name <error>) ,@slots))
+
 (defclass <object>)
 
 (defclass <exception>)
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
 (defclass (<restart> <exception>))
-
-(defmacro deferror (name &rest slots)
-  `(defclass (,name <error>) ,@slots))
 
 (deferror <failed-assertion>)
 
@@ -318,4 +318,3 @@ can be used to supply a different collection to hold the results."
   (let ((var (elt var-and-ct 0))
         (ct (elt var-and-ct 1)))
     `(each (lambda (,var) ,@body) ,ct)))
-

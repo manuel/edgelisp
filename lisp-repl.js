@@ -16,20 +16,26 @@
    along with GNU Emacs; see the file COPYING.  If not, write to the
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
+
+/* The REPL serves two purposes:
+   1) Command interpreter;
+   2) Tool that reads in Lisp and emits fast-load JavaScript.
    
+   Using switches, the REPL can be switched into the compiler tool
+   mode, thereby enabling its use in Unix pipelines. */
+
 load("lisp.js");
 load("lisp-rt.js");
 
 var repl_debug = false;
-
-function repl_debug_print(obj)
-{
-    if (repl_debug) print("; " + lisp_show(obj));
-}
+var repl_compile = false;
+var repl_silent = false;
+var repl_fasl = false;
 
 var repl_cont = "";
 
-var repl_compile = false;
+var repl_beginfasl_re = new RegExp("^//beginfasl");
+var repl_endfasl_re = new RegExp("^//endfasl");
 
 for (;;) {
     try {
@@ -41,6 +47,10 @@ for (;;) {
             continue;
         } else if (repl_line == "/c") {
             repl_compile = !repl_compile;
+            print(repl_compile ? "//beginfasl" : "//endfasl");
+            continue;
+        } else if (repl_line == "/s") {
+            repl_silent = !repl_silent;
             continue;
         } else if (repl_line == "/q") {
             break;
@@ -49,6 +59,19 @@ for (;;) {
         } else if (repl_line[0] == ";") {
             continue;
         } else if ((repl_line == "") && (repl_cont == "")) {
+            continue;
+        } else if (repl_beginfasl_re.test(repl_line)) {
+            repl_fasl = true;
+            print("Loading FASL...");
+            continue;
+        } else if (repl_endfasl_re.test(repl_line)) {
+            repl_fasl = false;
+            print("done");
+            continue;
+        }
+
+        if (repl_fasl) {
+            eval(repl_line);
             continue;
         }
 
@@ -72,21 +95,43 @@ for (;;) {
         }
         
         repl_debug_print(repl_forms);
-        var repl_vops = repl_forms.map(lisp_compile);
-        repl_debug_print(repl_vops);
-        var repl_js = lisp_emit({ vopt: "progn", vops: repl_vops });
-        repl_debug_print(repl_js);
-        var repl_result = eval(repl_js);
-        if (repl_compile) {
-            // In compile mode, we print the resulting JavaScript, and
-            // not the evaluation results.
-            print(repl_js);
-        } else {
-            print(lisp_show(repl_result));
-        }
+        repl_forms.map(repl_process_form);
         
     } catch(e) {
         print(e);
         print(e.stack);
     }
 }
+
+function repl_process_form(repl_form)
+{
+    var repl_vop = lisp_compile(repl_form);
+    repl_debug_print(repl_vop);
+    repl_process_vop(repl_vop);
+}
+
+function repl_process_vop(repl_vop)
+{
+    if (repl_vop.vopt == "progn") {
+        repl_vop.vops.map(repl_process_vop);
+    } else {
+        var repl_js = lisp_emit(repl_vop);
+        repl_debug_print(repl_js);
+        if (repl_compile) {
+            if (lisp_should_eval_at_compile_time(repl_vop))
+                eval(repl_js);
+            if (lisp_should_eval_at_load_time(repl_vop))
+                print(repl_js);
+        } else {
+            var repl_result = eval(repl_js);
+            if (!repl_silent)
+                print(lisp_show(repl_result));
+        }
+    }
+}
+
+function repl_debug_print(obj)
+{
+    if (repl_debug) print("; " + lisp_show(obj));
+}
+

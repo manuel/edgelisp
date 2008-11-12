@@ -113,6 +113,7 @@
 
 ;; Escape functions
 
+(assert-eq null (block x 13 (return-from x) 12))
 (assert-eq 1 (block x (return-from x 1)))
 (assert-eq 1 (block x (block y (return-from x 1))))
 (assert-eq 2 (block x (block y 2)))
