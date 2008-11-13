@@ -27,7 +27,7 @@ Here, we can see:
 
 * Types use the `<type-name>` convention.
 * Function parameters can be typed; types are checked at runtime.
-* All collection utilities use a generic iteration protocol): `iter`
+* All collection utilities use a generic iteration protocol: `iter`
   returns an iterator for a collection; `has-next` checks whether
   there's still an element available (misnomer); `now` returns that
   element; and `next` steps the iterator to the next element.
