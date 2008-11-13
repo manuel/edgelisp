@@ -1,1 +1,1 @@
-cat boot.fasl.js - | smjs lisp-repl.js
+cat fasl/boot.fasl.js - | smjs lisp-repl.js

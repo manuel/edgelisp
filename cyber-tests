@@ -1,1 +1,1 @@
-cat boot.cyber boot-test.cyber - | smjs lisp-repl.js
+cat fasl/boot.fasl.js fasl/boot-test.fasl.js - | smjs lisp-repl.js
