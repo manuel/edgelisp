@@ -337,7 +337,7 @@ function lisp_compile_function_application(form)
 {
     var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "function", name: name };
+    var fun = { vopt: "ref", name: name, namespace: "f" };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -366,7 +366,7 @@ var lisp_specials_table = {
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
-    "function": lisp_compile_special_function,
+    "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "progn": lisp_compile_special_progn,
@@ -482,13 +482,14 @@ function lisp_compile_special_funcall(form)
              call_site: lisp_compile_call_site(call_site) };
 }
 
-/* Accesses the functional value of a name.
-   (function name) => function */
-function lisp_compile_special_function(form)
-{
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "function", 
-             name: name_form.name };
+/* Name and namespace are not evaluated.
+   (%%identifier name namespace) */
+function lisp_compile_special_identifier(form) {
+    var name = lisp_assert_symbol_form(form.elts[1]);
+    var namespace = lisp_assert_symbol_form(form.elts[2]);
+    return { vopt: "ref",
+	     name: name.name,
+	     namespace: namespace.name };
 }
 
 /* In CyberLisp `false' and `null' are considered false, all other
@@ -982,14 +983,14 @@ function lisp_compile_qq_compound(x, depth)
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function", name: "make-compound" },
+		 fun: { vopt: "ref", name: "make-compound", namespace:"f" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-                 fun: { vopt: "function", name: "append-compounds" },
+		 fun: { vopt: "ref", name: "append-compounds", namespace:"f" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -1033,7 +1034,6 @@ var lisp_vop_table = {
     "bound?": lisp_emit_vop_boundp,
     "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
-    "function": lisp_emit_vop_function,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
     "number": lisp_emit_vop_number,
@@ -1097,15 +1097,6 @@ function lisp_emit_vop_funcall(vop)
     var args = [ keywords_dict ].concat(pos_args).join(", ");
 
     return "(" + lisp_emit(fun) + "(" + args + "))";
-}
-
-/* Function reference. 
-   { vopt: "function", name: <string> }
-   name: the name of the function. */
-function lisp_emit_vop_function(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
-    return lisp_mangle_function(name);
 }
 
 /* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
@@ -1262,12 +1253,12 @@ function lisp_emit_vop_quote(vop)
 }
 
 /* Variable reference.
-   { vopt: "ref", name: <string> }
+   { vopt: "ref", name: <string> [, namespace: <string> ] }
    name: the name of the variable. */
 function lisp_emit_vop_ref(vop)
 {
     lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
-    return lisp_mangle_var(vop.name);
+    return lisp_mangle(vop.name, vop.namespace ? vop.namespace : "v");
 }
 
 /* Assigns a value to a variable.
@@ -1328,15 +1319,16 @@ var lisp_mangle_table =
      ["*", "T"],
      ];
 
-function lisp_mangle(name)
+function lisp_mangle(name, namespace)
 {
     lisp_assert_nonempty_string(name, "Bad name", name);
+    lisp_assert_nonempty_string(namespace, "Bad namespace", namespace);
     for (var i = 0, len = lisp_mangle_table.length; i < len; i++) {
         var pair = lisp_mangle_table[i];
         var pattern = new RegExp("\\" + pair[0], "g");
         name = name.replace(pattern, pair[1]);
     }
-    return name;
+    return "_lisp_" + namespace + "_" + name;
 }
 
 /* Additionally, the different namespaces (variable, function, slot,
@@ -1345,22 +1337,22 @@ function lisp_mangle(name)
 
 function lisp_mangle_var(name)
 {
-    return "_v_" + lisp_mangle(name);
+    return lisp_mangle(name, "v");
 }
 
 function lisp_mangle_function(name)
 {
-    return "_f_" + lisp_mangle(name);
+    return lisp_mangle(name, "f");
 }
 
 function lisp_mangle_slot(name)
 {
-    return "_s_" + lisp_mangle(name);
+    return lisp_mangle(name, "s");
 }
 
 function lisp_mangle_method(name)
 {
-    return "_m_" + lisp_mangle(name);
+    return lisp_mangle(name, "m");
 }
 
 

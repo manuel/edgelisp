@@ -13,6 +13,9 @@
 (defmacro lambda (sig &rest body)
   `(%%lambda ,sig (progn ,@body)))
 
+(defmacro function (name)
+  `(%%identifier ,name f))
+
 (defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
 
