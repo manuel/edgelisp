@@ -1,6 +1,6 @@
 /* CyberLisp: A Lisp that compiles to JavaScript 1.5.
    
-   Copyright (C) 2008 by Manuel Simoni.
+   Copyright (C) 2008, 2011 by Manuel Simoni.
    
    CyberLisp is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published

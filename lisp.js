@@ -81,8 +81,6 @@ var lisp_expression_syntax =
 
 /**** Comments ****/
 
-// SILLY?
-
 var lisp_line_terminator = choice(ch("\r"), ch("\n"));
 
 var lisp_line_comment_syntax =
@@ -170,7 +168,8 @@ var lisp_compound_syntax =
 
 function lisp_compound_syntax_action(ast)
 {
-    return new Lisp_compound_form(ast[1]);
+    var forms = ast[1];
+    return new Lisp_compound_form(lisp_remove_comment_forms(forms));
 }
 
 /**** Inline JavaScript ****/
@@ -254,8 +253,20 @@ var lisp_program_syntax =
 function lisp_read(string)
 {
     var result = lisp_program_syntax(ps(string));
-    if (result.ast) return result.ast;
+    if (result.ast) return lisp_remove_comment_forms(result.ast);
     else lisp_error("Reader error", string);
+}
+
+function lisp_remove_comment_forms(forms)
+{
+    var res = [];
+    for (var i = 0, len = forms.length; i < len; i++) {
+        var form = forms[i];
+	if (form.formt != "comment")
+	    res.push(form);
+    }
+    return res;
+
 }
 
 
@@ -299,8 +310,6 @@ function lisp_compile(form)
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(form);
-    case "comment": 
-        return lisp_compile_comment_form(form);
     }
     lisp_error("Bad form", form);
 }
@@ -333,12 +342,6 @@ function lisp_compile_function_application(form)
     return { vopt: "funcall", 
              fun: fun, 
              call_site: call_site };
-}
-
-function lisp_compile_comment_form(form)
-{
-    return { vopt: "comment",
-             contents: form.contents };
 }
 
 
@@ -897,8 +900,6 @@ function lisp_compile_qq(x, depth)
         return { vopt: "quote", form: x };
     case "compound":
         return lisp_compile_qq_compound(x, depth);
-    case "comment": // fixme: silly
-	return { vopt: "comment", contents: x.contents };
     }
 
     lisp_error("Bad quasiquoted form", x);
@@ -1030,7 +1031,6 @@ var lisp_vop_table = {
     "alien": lisp_emit_vop_alien,
     "alien-snippet": lisp_emit_vop_alien_snippet,
     "bound?": lisp_emit_vop_boundp,
-    "comment": lisp_emit_vop_comment,
     "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
     "function": lisp_emit_vop_function,
@@ -1061,12 +1061,6 @@ function lisp_emit_vop_boundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
-}
-
-/* { vopt: "comment", contents: <string> } */
-function lisp_emit_vop_comment(vop)
-{
-    return "null";
 }
 
 /* { vopt: "fbound?", name: <string> } */
