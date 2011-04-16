@@ -13,7 +13,7 @@
 (defvar lisp-x 2)
 (assert-eql 12 {% ~lisp-x + 10 %})
 (assert-eql 6 {% ~(+ lisp-x {% 2 * ~lisp-x %}) %})
-(assert-eql "%" {% "%" %})
+;(assert-eql "%" {% "%" %})
 
 ;; map
 
@@ -108,12 +108,12 @@
 
 (defun foo () 12)
 (assert #'foo)
-(assert-eql #'foo (function foo))
+(assert-eq #'foo (function foo))
 (assert-eql (funcall #'foo) 12)
 
 ;; Escape functions
 
-(assert-eql null (block x 13 (return-from x) 12))
+(assert-eq null (block x 13 (return-from x) 12))
 (assert-eql 1 (block x (return-from x 1)))
 (assert-eql 1 (block x (block y (return-from x 1))))
 (assert-eql 2 (block x (block y 2)))
@@ -150,23 +150,23 @@
 
 (defclass <foo>)
 (defvar foo (<foo>))
-(assert-eql (slot foo "slot1") null)
-(assert-eql (slot foo "slot2") null)
+(assert-eq (slot foo "slot1") null)
+(assert-eq (slot foo "slot2") null)
 (set-slot foo "slot1" 1)
 (assert-eql (slot foo "slot1") 1)
-(assert-eql (slot foo "slot2") null)
+(assert-eq (slot foo "slot2") null)
 (set-slot foo "slot1" null)
-(assert-eql (slot foo "slot1") null)
-(assert-eql (slot foo "slot2") null)
+(assert-eq (slot foo "slot1") null)
+(assert-eq (slot foo "slot2") null)
 
 (assert (has-slot foo "slot1"))
 (assert (not (has-slot foo "slot2")))
 
 (defclass <z> (a b c))
 (defvar z (<z>))
-(assert-eql (.a z) null)
-(assert-eql (.b z) null)
-(assert-eql (.c z) null)
+(assert-eq (.a z) null)
+(assert-eq (.b z) null)
+(assert-eq (.c z) null)
 (set (.a z) 1)
 (set (.b z) 2)
 (set (.c z) 3)
@@ -201,20 +201,20 @@
 
 ;; Keyword arguments
 
-(assert-eqll (funcall (lambda (&key k) k) k: 1) 1)
-(assert-eql (funcall (lambda (&key k) k)) null)
+(assert-eql (funcall (lambda (&key k) k) k: 1) 1)
+(assert-eq (funcall (lambda (&key k) k)) null)
 (assert-eql (funcall (lambda (a &key k) k) 10 k: 1) 1)
-(assert-eql (funcall (lambda (a &key k) k) 10) null)
+(assert-eq (funcall (lambda (a &key k) k) 10) null)
 (assert-eql (funcall (lambda (a &key k) a) 10 k: 1) 10)
 (assert-eql (funcall (lambda (a &key k) a) 10) 10)
 
 (assert-eql (funcall (lambda (&key k j) k) k: 1) 1)
-(assert-eql (funcall (lambda (&key k j) j) k: 1) null)
-(assert-eql (funcall (lambda (&key k j) k)) null)
-(assert-eql (funcall (lambda (&key k j) j)) null)
-(assert-eql (funcall (lambda (a &key k j) j) 10 k: 1) null)
+(assert-eq (funcall (lambda (&key k j) j) k: 1) null)
+(assert-eq (funcall (lambda (&key k j) k)) null)
+(assert-eq (funcall (lambda (&key k j) j)) null)
+(assert-eq (funcall (lambda (a &key k j) j) 10 k: 1) null)
 (assert-eql (funcall (lambda (a &key k j) j) 10 j: 1) 1)
-(assert-eql (funcall (lambda (a &key k j) j) 10) null)
+(assert-eq (funcall (lambda (a &key k j) j) 10) null)
 (assert-eql (funcall (lambda (a &key k j) a) 10 k: 1) 10)
 (assert-eql (funcall (lambda (a &key k j) a) 10 j: 1) 10)
 (assert-eql (funcall (lambda (a &key k j) a) 10) 10)
