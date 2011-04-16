@@ -88,7 +88,7 @@ var lisp_line_terminator = choice(ch("\r"), ch("\n"));
 var lisp_line_comment_syntax =
     action(join_action(sequence(";",
 				repeat0(negate(lisp_line_terminator)),
-				lisp_line_terminator),
+				optional(lisp_line_terminator)),
 		       ""),
 	   lisp_line_comment_action);
 
