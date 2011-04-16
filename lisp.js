@@ -353,14 +353,14 @@ function lisp_compile_function_application(form)
    (e.g. `if' with an optional alternative). */
 
 var lisp_specials_table = {
+    "%%defined?": lisp_compile_special_definedp,
+    "%%defparameter": lisp_compile_special_defparameter,
+    "%%defsyntax": lisp_compile_special_defsyntax,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%set": lisp_compile_special_set,
-    "%%defined?": lisp_compile_special_definedp,
-    "%%defparameter": lisp_compile_special_defparameter,
-    "%%defsyntax": lisp_compile_special_defsyntax,
     "funcall": lisp_compile_special_funcall,
     "native": lisp_compile_special_native,
     "native-snippet": lisp_compile_special_native_snippet,
@@ -368,6 +368,8 @@ var lisp_specials_table = {
     "quasiquote": lisp_compile_special_quasiquote,
     "quote": lisp_compile_special_quote
 };
+
+/* VOPs (virtual operations) correspond roughly to special forms. */
 
 var lisp_vop_table = {
     "defined?": lisp_emit_vop_definedp,
