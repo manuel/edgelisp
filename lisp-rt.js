@@ -62,9 +62,9 @@ function lisp_check_type(obj, type)
    basically Common Lisp's but with exception handlers and restarts
    unified into a single concept).
    
-   What's noteworthy about this system is that throwing an exception
+   What's noteworthy about this system is that signaling an exception
    does not unwind the stack -- an exception handler runs as a
-   subroutine of the thrower, and thus may advise the thrower on
+   subroutine of the signaler, and thus may advise the signaler on
    different ways to handle an exceptional situation.  Unwinding the
    stack, if desired, has to be done manually through the use of a
    non-local exit.
@@ -98,9 +98,9 @@ function lisp_check_type(obj, type)
 
    A handler function is called with two arguments: an exception and a
    next-handler function.  It has three possibilities: (1) return a
-   value -- this will be the result of the `throw' that invoked the
+   value -- this will be the result of the `signal' that invoked the
    handler; (2) take a non-local exit, aborting execution of the
-   thrower; (3) decline handling the exception by calling the
+   signaler; (3) decline handling the exception by calling the
    next-handler function (without arguments), which will continue the
    search for an applicable handler stack-upwards. */
 
@@ -118,7 +118,7 @@ function lisp_bif_bind_handlers(_key_, handlers, fun)
     }
 }
 
-function lisp_bif_throw(_key_, exception)
+function lisp_bif_signal(_key_, exception)
 {
     function handler_type(handler) { return handler[0]; }
     function handler_fun(handler) { return handler[1]; }
@@ -137,7 +137,7 @@ function lisp_bif_throw(_key_, exception)
         return find_handler(exception, handler_frame.parent_frame);
     }
     
-    function do_throw(exception, handler_frame)
+    function do_signal(exception, handler_frame)
     {
         var handler_and_frame = find_handler(exception, handler_frame);
         if (handler_and_frame) {
@@ -145,7 +145,7 @@ function lisp_bif_throw(_key_, exception)
             var frame = handler_and_frame[1];
             function next_handler(_key_)
             {
-                return do_throw(exception, frame.parent_frame);
+                return do_signal(exception, frame.parent_frame);
             }
             return (handler_fun(handler))(null, exception, next_handler);
         } else {
@@ -153,7 +153,7 @@ function lisp_bif_throw(_key_, exception)
         }
     }
 
-    return do_throw(exception, lisp_handler_frame);
+    return do_signal(exception, lisp_handler_frame);
 }
 
 function lisp_bif_call_with_escape_function(_key_, fun) {
@@ -432,5 +432,5 @@ lisp_set_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");
-lisp_set_function("throw", "lisp_bif_throw");
+lisp_set_function("signal", "lisp_bif_signal");
 lisp_set_function("type-of", "lisp_bif_type_of");
