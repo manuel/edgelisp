@@ -19,6 +19,9 @@
 (defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
 
+(defmacro set-function (name function)
+  `(%%set (%%identifier ,name f) ,function))
+
 (defmacro defun (name sig &rest body)
   `(set-function ,name (lambda ,sig ,@body)))
 

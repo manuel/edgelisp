@@ -36,7 +36,7 @@
    There are multiple types of forms; number forms, string forms,
    symbol forms, and compound forms:
    
-   1     --> { formt: "number", sign: "+", integral_digits: "1", fractional_digits: "" }
+   1.2   --> { formt: "number", sign: "+", integral_digits: "1", fractional_digits: ".2" }
    "foo" --> { formt: "string", s: "foo" }
    foo   --> { formt: "symbol", name: "foo" }
    (foo) --> { formt: "compound", 
@@ -306,7 +306,7 @@ function lisp_compile(form)
         return { vopt: "string", s: form.s };
     case "symbol":
         lisp_assert_symbol_form(form, "Bad symbol form", form);
-        return { vopt: "ref", name: form.name };
+        return { vopt: "ref", name: form.name, namespace: "v" };
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(form);
@@ -373,8 +373,7 @@ var lisp_specials_table = {
     "quasiquote": lisp_compile_special_quasiquote,
     "quote": lisp_compile_special_quote,
     "%%set": lisp_compile_special_set,
-    "set-expander": lisp_compile_special_set_expander,
-    "set-function": lisp_compile_special_set_function,
+    "set-expander": lisp_compile_special_set_expander
 };
 
 function lisp_macro_function(name)
@@ -426,7 +425,7 @@ function lisp_compile_special_defparameter(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set", 
-             name: name_form.name, 
+	     name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
 
@@ -436,18 +435,7 @@ function lisp_compile_special_eval_when_compile(form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     eval(lisp_emit(lisp_compile(body_form)));
-    return { vopt: "ref", name: "false" };
-}
-
-/* Assigns the `value' to the global function named `name'.
-   (set-function name value) */
-function lisp_compile_special_set_function(form)
-{
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "set_function", 
-             name: name_form.name, 
-             value: lisp_compile(value_form) };
+    return { vopt: "ref", name: "false", namespace: "v" };
 }
 
 /* Registers a macro expander function.  An expander function takes a
@@ -458,7 +446,7 @@ function lisp_compile_special_set_expander(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
-    return { vopt: "ref", name: "false" };
+    return { vopt: "ref", name: "false", namespace: "v" };
 }
 
 /* Returns true if `name' is bound in the function namespace (unlike
@@ -530,10 +518,10 @@ function lisp_compile_special_progn(form)
 /* (%%set name value) */
 function lisp_compile_special_set(form)
 {
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set",
-             name: name_form.name,
+	     name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
 
@@ -1041,7 +1029,6 @@ var lisp_vop_table = {
     "quote": lisp_emit_vop_quote,
     "ref": lisp_emit_vop_ref,
     "set": lisp_emit_vop_set,
-    "set_function": lisp_emit_vop_set_function,
     "string": lisp_emit_vop_string,
 };
 /* { vopt: "alien", stuff: <vops> } */
@@ -1262,27 +1249,13 @@ function lisp_emit_vop_ref(vop)
 }
 
 /* Assigns a value to a variable.
-   { vopt: "set", name: <string>, value: <vop> }
-   name: the name of the variable;
+   { vopt: "set", name: <vop>, value: <vop> }
+   name: the "ref" VOP of the variable;
    value: VOP for the value. */
 function lisp_emit_vop_set(vop)
 {
-    var name = lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
     var value = lisp_emit(vop.value);
-    return "(" + lisp_mangle_var(name) + " = " + value + ")";
-}
-
-/* Assigns a value to a function.
-   { vopt: "set_function", name: <string>, value: <vop> }
-   name: the name of the function;
-   value: VOP for the value. */
-function lisp_emit_vop_set_function(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name, "Bad function", vop);
-    var value = lisp_assert_not_null(vop.value, "Bad value", vop);
-    var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
-    var name_upper = name.toUpperCase();
-    return "(" + assignment + ")";
+    return "(" + lisp_mangle(vop.name.name, vop.name.namespace) + " = " + value + ")";
 }
 
 /* String literal.
