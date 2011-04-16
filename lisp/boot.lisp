@@ -11,15 +11,14 @@
 (defmacro lambda (sig &rest body)
   `(%%lambda ,sig (progn ,@body)))
 
+(defmacro if (test consequent &opt (alternative 'null))
+  `(%%if ,test ,consequent ,alternative))
+
 (defmacro defun (name sig &rest body)
   `(set-function ,name (lambda ,sig ,@body)))
 
 (defmacro defvar (name value)
-  `(unless (bound? ,name)
-     (defparameter ,name ,value)))
-
-(defmacro if (test consequent &opt (alternative 'null))
-  `(%%if ,test ,consequent ,alternative))
+  `(defparameter ,name (if (bound? ,name) ,name ,value)))
 
 (defmacro when (test &rest consequent)
   `(if ,test (progn ,@consequent) null))
