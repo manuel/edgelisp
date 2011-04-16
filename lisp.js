@@ -364,7 +364,6 @@ var lisp_specials_table = {
     "bound?": lisp_compile_special_boundp,
     "defparameter": lisp_compile_special_defparameter,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
-    "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
@@ -410,12 +409,12 @@ function lisp_compile_special_alien_snippet(form) {
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (bound? name) */
+   (bound? identifier) */
 function lisp_compile_special_boundp(form)
 {
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "bound?", 
-             name: name_form.name };
+    var name_form = lisp_assert_not_null(form.elts[1]);
+    return { vopt: "bound?",
+	     name: lisp_compile(name_form) };
 }
 
 /* Assigns the `value' to the global variable named `name'.
@@ -447,16 +446,6 @@ function lisp_compile_special_set_expander(form)
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
     return { vopt: "ref", name: "false", namespace: "v" };
-}
-
-/* Returns true if `name' is bound in the function namespace (unlike
-   Common Lisp's `fboundp', name is not evaluated).  
-   (fbound? name) */
-function lisp_compile_special_fboundp(form)
-{
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    return { vopt: "fbound?", 
-             name: name_form.name };
 }
 
 /* Calls a function passed as argument.
@@ -1020,7 +1009,6 @@ var lisp_vop_table = {
     "alien": lisp_emit_vop_alien,
     "alien-snippet": lisp_emit_vop_alien_snippet,
     "bound?": lisp_emit_vop_boundp,
-    "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
@@ -1043,18 +1031,10 @@ function lisp_emit_vop_alien_snippet(vop)
     return vop.text;
 }
 
-/* { vopt: "bound?", name: <string> } */
+/* { vopt: "bound?", name: <vop> } */
 function lisp_emit_vop_boundp(vop)
 {
-    var name = lisp_assert_nonempty_string(vop.name);
-    return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
-}
-
-/* { vopt: "fbound?", name: <string> } */
-function lisp_emit_vop_fboundp(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name);
-    return "(typeof " + lisp_mangle_function(name) + " != \"undefined\")";
+    return "(typeof " + lisp_mangle(vop.name.name, vop.name.namespace) + " != \"undefined\")";
 }
 
 /* Calls a function.

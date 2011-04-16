@@ -16,6 +16,9 @@
 (defmacro function (name)
   `(%%identifier ,name f))
 
+(defmacro fbound? (name)
+  `(bound? (%%identifier ,name f)))
+
 (defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
 
