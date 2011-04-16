@@ -174,32 +174,32 @@ function lisp_compound_syntax_action(ast)
 
 /**** Inline JavaScript ****/
 
-var lisp_alien_escape =
+var lisp_native_escape =
     action(sequence("~", lisp_expression_syntax),
-           lisp_alien_escape_action);
+           lisp_native_escape_action);
 
-var lisp_alien_syntax =
+var lisp_native_syntax =
     action(sequence("{%",
-		    repeat1(choice(lisp_alien_escape,
+		    repeat1(choice(lisp_native_escape,
 				   action(choice(negate("%"),
 						 join_action(sequence("%", not("}")), "")),
-					  lisp_alien_snippet_action))),
+					  lisp_native_snippet_action))),
 		    "%}"),
-	   lisp_alien_action);
+	   lisp_native_action);
 
-function lisp_alien_escape_action(ast)
+function lisp_native_escape_action(ast)
 {
     return ast[1];
 }
 
-function lisp_alien_snippet_action(ast)
+function lisp_native_snippet_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("alien-snippet"), new Lisp_string_form(ast) ]);
+    return new Lisp_compound_form([ new Lisp_symbol_form("native-snippet"), new Lisp_string_form(ast) ]);
 }
 
-function lisp_alien_action(ast)
+function lisp_native_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("alien") ].concat(ast[1]));
+    return new Lisp_compound_form([ new Lisp_symbol_form("native") ].concat(ast[1]));
 }
 
 /**** Misc shortcuts ****/
@@ -240,7 +240,7 @@ var lisp_expression_syntax =
                       lisp_string_syntax,
                       lisp_symbol_syntax,
                       lisp_compound_syntax,
-                      lisp_alien_syntax,
+                      lisp_native_syntax,
                       lisp_quote_syntax,
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,
@@ -359,8 +359,8 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "alien": lisp_compile_special_alien,
-    "alien-snippet": lisp_compile_special_alien_snippet,
+    "native": lisp_compile_special_native,
+    "native-snippet": lisp_compile_special_native_snippet,
     "bound?": lisp_compile_special_boundp,
     "defparameter": lisp_compile_special_defparameter,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
@@ -395,15 +395,15 @@ var lisp_macros_table = {};
 
 /**** List of special forms ****/
 
-/* (alien &rest forms) */
-function lisp_compile_special_alien(form) {
-    return { vopt: "alien",
+/* (native &rest forms) */
+function lisp_compile_special_native(form) {
+    return { vopt: "native",
 	     stuff: form.elts.slice(1).map(lisp_compile) };
 }
 
-/* (alien-snippet text) */
-function lisp_compile_special_alien_snippet(form) {
-    return{ vopt: "alien-snippet",
+/* (native-snippet text) */
+function lisp_compile_special_native_snippet(form) {
+    return{ vopt: "native-snippet",
             text: form.elts[1].s };
 }
 
@@ -1006,8 +1006,8 @@ function lisp_vop_function(vopt)
 /**** List of VOPs ****/
 
 var lisp_vop_table = {
-    "alien": lisp_emit_vop_alien,
-    "alien-snippet": lisp_emit_vop_alien_snippet,
+    "native": lisp_emit_vop_native,
+    "native-snippet": lisp_emit_vop_native_snippet,
     "bound?": lisp_emit_vop_boundp,
     "funcall": lisp_emit_vop_funcall,
     "if": lisp_emit_vop_if,
@@ -1019,14 +1019,14 @@ var lisp_vop_table = {
     "set": lisp_emit_vop_set,
     "string": lisp_emit_vop_string,
 };
-/* { vopt: "alien", stuff: <vops> } */
-function lisp_emit_vop_alien(vop)
+/* { vopt: "native", stuff: <vops> } */
+function lisp_emit_vop_native(vop)
 {
     return vop.stuff.map(lisp_emit).join("");
 }
 
-/* { vopt: "alien-snippet", text: <vops> } */
-function lisp_emit_vop_alien_snippet(vop)
+/* { vopt: "native-snippet", text: <vops> } */
+function lisp_emit_vop_native_snippet(vop)
 {
     return vop.text;
 }
