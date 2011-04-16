@@ -16,8 +16,8 @@
 (defmacro function (name)
   `(%%identifier ,name f))
 
-(defmacro fbound? (name)
-  `(bound? (%%identifier ,name f)))
+(defmacro fdefined? (name)
+  `(defined? (%%identifier ,name f)))
 
 (defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
@@ -26,7 +26,7 @@
   `(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro defvar (name value)
-  `(defparameter ,name (if (bound? ,name) ,name ,value)))
+  `(defparameter ,name (if (defined? ,name) ,name ,value)))
 
 (defmacro when (test &rest consequent)
   `(if ,test (progn ,@consequent) null))
@@ -131,7 +131,7 @@
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
     `(progn
-       (when (not (bound? ,class-name)) 
+       (when (not (defined? ,class-name)) 
          (set ,class-name (make-class)))
        ,(if superclass 
             `(set-superclass ,class-name ,superclass) 

@@ -361,7 +361,7 @@ function lisp_special_function(name)
 var lisp_specials_table = {
     "native": lisp_compile_special_native,
     "native-snippet": lisp_compile_special_native_snippet,
-    "bound?": lisp_compile_special_boundp,
+    "defined?": lisp_compile_special_definedp,
     "defparameter": lisp_compile_special_defparameter,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "funcall": lisp_compile_special_funcall,
@@ -407,13 +407,13 @@ function lisp_compile_special_native_snippet(form) {
             text: form.elts[1].s };
 }
 
-/* Returns true if `name' is bound (unlike Common Lisp's `boundp',
+/* Returns true if `name' is defined (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (bound? identifier) */
-function lisp_compile_special_boundp(form)
+   (defined? identifier) */
+function lisp_compile_special_definedp(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
-    return { vopt: "bound?",
+    return { vopt: "defined?",
 	     name: lisp_compile(name_form) };
 }
 
@@ -1008,7 +1008,7 @@ function lisp_vop_function(vopt)
 var lisp_vop_table = {
     "native": lisp_emit_vop_native,
     "native-snippet": lisp_emit_vop_native_snippet,
-    "bound?": lisp_emit_vop_boundp,
+    "defined?": lisp_emit_vop_definedp,
     "funcall": lisp_emit_vop_funcall,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
@@ -1031,8 +1031,8 @@ function lisp_emit_vop_native_snippet(vop)
     return vop.text;
 }
 
-/* { vopt: "bound?", name: <vop> } */
-function lisp_emit_vop_boundp(vop)
+/* { vopt: "defined?", name: <vop> } */
+function lisp_emit_vop_definedp(vop)
 {
     return "(typeof " + lisp_mangle(vop.name.name, vop.name.namespace) + " != \"undefined\")";
 }
