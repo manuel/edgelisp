@@ -352,28 +352,43 @@ function lisp_compile_function_application(form)
    "%%", so more comfortable wrappers around them can be defined later
    (e.g. `if' with an optional alternative). */
 
-function lisp_special_function(name)
-{
-    lisp_assert_nonempty_string(name, "Bad special form name", name);
-    return lisp_specials_table[name];
-}
-
 var lisp_specials_table = {
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%set": lisp_compile_special_set,
-    "defined?": lisp_compile_special_definedp,
-    "defparameter": lisp_compile_special_defparameter,
-    "defsyntax": lisp_compile_special_defsyntax
+    "%%defined?": lisp_compile_special_definedp,
+    "%%defparameter": lisp_compile_special_defparameter,
+    "%%defsyntax": lisp_compile_special_defsyntax,
     "funcall": lisp_compile_special_funcall,
     "native": lisp_compile_special_native,
     "native-snippet": lisp_compile_special_native_snippet,
     "progn": lisp_compile_special_progn,
     "quasiquote": lisp_compile_special_quasiquote,
-    "quote": lisp_compile_special_quote,
+    "quote": lisp_compile_special_quote
 };
+
+var lisp_vop_table = {
+    "defined?": lisp_emit_vop_definedp,
+    "funcall": lisp_emit_vop_funcall,
+    "identifier": lisp_emit_vop_identifier,
+    "if": lisp_emit_vop_if,
+    "lambda": lisp_emit_vop_lambda,
+    "native": lisp_emit_vop_native,
+    "native-snippet": lisp_emit_vop_native_snippet,
+    "number": lisp_emit_vop_number,
+    "progn": lisp_emit_vop_progn,
+    "quote": lisp_emit_vop_quote,
+    "set": lisp_emit_vop_set,
+    "string": lisp_emit_vop_string
+};
+
+function lisp_special_function(name)
+{
+    lisp_assert_nonempty_string(name, "Bad special form name", name);
+    return lisp_specials_table[name];
+}
 
 function lisp_macro_function(name)
 {
@@ -1005,20 +1020,6 @@ function lisp_vop_function(vopt)
 
 /**** List of VOPs ****/
 
-var lisp_vop_table = {
-    "defined?": lisp_emit_vop_definedp,
-    "funcall": lisp_emit_vop_funcall,
-    "identifier": lisp_emit_vop_identifier,
-    "if": lisp_emit_vop_if,
-    "lambda": lisp_emit_vop_lambda,
-    "native": lisp_emit_vop_native,
-    "native-snippet": lisp_emit_vop_native_snippet,
-    "number": lisp_emit_vop_number,
-    "progn": lisp_emit_vop_progn,
-    "quote": lisp_emit_vop_quote,
-    "set": lisp_emit_vop_set,
-    "string": lisp_emit_vop_string,
-};
 /* { vopt: "native", stuff: <vops> } */
 function lisp_emit_vop_native(vop)
 {
