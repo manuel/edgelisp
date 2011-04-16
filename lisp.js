@@ -230,7 +230,9 @@ var lisp_program_syntax =
 
 function lisp_parse(string)
 {
-    return lisp_program_syntax(ps(string)).ast;
+    var result = lisp_program_syntax(ps(string));
+    if (result.ast) return result.ast;
+    else lisp_error("Parse error", string);
 }
 
 
