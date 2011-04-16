@@ -37,8 +37,9 @@
                             bindings)))
 
 (defmacro let* (vs &rest forms)
-  (if vs `(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
-    `(let () ,@forms)))
+  (if (> (compound-len vs) 0)
+      `(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
+      `(let () ,@forms)))
 
 (defmacro while (test &rest body)
   `(call-while (lambda () ,test) (lambda () ,@body)))
@@ -61,7 +62,7 @@
                   (lambda () ,@body)))
 
 (defmacro eval-when-compile (&rest forms)
-  (%%eval-when-compile (progn ,@forms)))
+  `(%%eval-when-compile (progn ,@forms)))
 
 (defmacro eval-and-compile (&rest forms)
   `(progn

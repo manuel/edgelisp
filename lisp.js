@@ -1,6 +1,6 @@
 /* CyberLisp: A Lisp that compiles to JavaScript 1.5.
    
-   Copyright (C) 2008 by Manuel Simoni.
+   Copyright (C) 2008, 2011 by Manuel Simoni.
    
    CyberLisp is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published
@@ -241,8 +241,13 @@ function lisp_read(string)
 function lisp_eval(forms)
 {
     var vops = forms.map(lisp_compile);
-    var js = vops.map(lisp_emit).join(", \n");
+    var js = vops.map(lisp_emit).join(", ");
     return eval(js);
+}
+
+function lisp_eval_string(string)
+{
+    return lisp_eval(lisp_read(string));
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
@@ -392,11 +397,13 @@ function lisp_compile_special_defparameter(form)
              value: lisp_compile(value_form) };
 }
 
-/* Executes form during compilation, not during evaluation.
-   (%%eval-when-compile form) */
+/* Executes body-form during compilation, not during evaluation.
+   (%%eval-when-compile body-form) */
 function lisp_compile_special_eval_when_compile(form)
 {
-    eval(lisp_emit(lisp_compile(form)));
+    var body_form = lisp_assert_not_null(form.elts[1]);
+    eval(lisp_emit(lisp_compile(body_form)));
+    return { vopt: "ref", name: "false" };
 }
 
 /* Assigns the `value' to the global function named `name'.
@@ -418,6 +425,7 @@ function lisp_compile_special_set_expander(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
+    return { vopt: "ref", name: "false" };
 }
 
 /* Returns true if `name' is bound in the function namespace (unlike
@@ -506,9 +514,7 @@ function lisp_compile_special_quasiquote(form)
 /* (quote form) */
 function lisp_compile_special_quote(form)
 {
-    var quoted = lisp_assert_not_null(form.elts[1]);
-    return { vopt: "quote", 
-             form: quoted };
+    return lisp_compile_special_quasiquote(form);
 }
 
 
@@ -1002,19 +1008,8 @@ var lisp_vop_table = {
     "ref": lisp_emit_vop_ref,
     "set": lisp_emit_vop_set,
     "set_function": lisp_emit_vop_set_function,
-    "set_macro": lisp_emit_vop_set_macro,
     "string": lisp_emit_vop_string,
 };
-
-function lisp_should_eval_at_compile_time(vop)
-{
-    return ((vop.vopt == "set_macro") || (vop.vopt == "eval_when_compile"));
-}
-
-function lisp_should_eval_at_load_time(vop)
-{
-    return !lisp_should_eval_at_compile_time(vop);
-}
 
 /* { vopt: "alien", stuff: <stuff> }
    stuff: list of JavaScript strings and VOPs. */
@@ -1228,7 +1223,7 @@ function lisp_emit_vop_progn(vop)
 {
     lisp_assert_not_null(vop.vops, "Bad PROGN", vop);
     if (vop.vops.length > 0)
-        return "(" + vop.vops.map(lisp_emit).join(", \n") + ")";
+        return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
     else
         return "undefined";
 }
@@ -1272,16 +1267,6 @@ function lisp_emit_vop_set_function(vop)
     var assignment = lisp_mangle_function(name) + " = " + lisp_emit(value);
     var name_upper = name.toUpperCase();
     return "(" + assignment + ")";
-}
-
-/* { vopt: "set_macro", name: <string>, expander: <vop> }
-   name: macro's name;
-   expander: VOP for expander function. */
-function lisp_emit_vop_set_macro(vop)
-{
-    var name = lisp_assert_nonempty_string(vop.name);
-    var expander = lisp_assert_not_null(vop.expander);
-    return "(lisp_set_macro_function(\"" + name + "\", " + lisp_emit(expander) + "))";
 }
 
 /* String literal.
@@ -1474,9 +1459,9 @@ function lisp_bif_make_compound(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
-        var elt = arguments[i];
-        lisp_assert(elt && elt.formt, "make-compound", elt);
-        elts = elts.concat(elt);
+	var elt = arguments[i];
+	lisp_assert(elt && elt.formt, "make-compound", elt);
+	elts = elts.concat(elt);
     }
     return new Lisp_compound_form(elts);
 }
@@ -1515,6 +1500,12 @@ function lisp_bif_compound_elt(_key_, compound, i)
     lisp_assert_compound_form(compound, "compound-elt", compound);
     var elt = compound.elts[i];
     return elt;
+}
+
+function lisp_bif_compound_len(_key_, compound)
+{
+    lisp_assert_compound_form(compound, "compound-len", compound);
+    return compound.elts.length;
 }
 
 function lisp_bif_compound_elts(_key_, compound)
@@ -1595,6 +1586,7 @@ lisp_set("<symbol-form>", "Lisp_symbol_form.prototype");
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
+lisp_set_function("compound-len", "lisp_bif_compound_len");
 lisp_set_function("compound-elts", "lisp_bif_compound_elts");
 lisp_set_function("compound-map", "lisp_bif_compound_map");
 lisp_set_function("compound-slice", "lisp_bif_compound_slice");

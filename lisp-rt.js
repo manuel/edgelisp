@@ -368,6 +368,11 @@ function lisp_bif_lt(_key_, a, b)
     return a < b;
 }
 
+function lisp_bif_gt(_key_, a, b)
+{
+    return a > b;
+}
+
 function lisp_bif_call_while(_key_, test_fun, body_fun)
 {
     while(test_fun(null)) {
@@ -397,6 +402,7 @@ lisp_set_function("+", "lisp_bif_add");
 lisp_set_function("-", "lisp_bif_sub");
 lisp_set_function("/", "lisp_bif_div");
 lisp_set_function("<", "lisp_bif_lt");
+lisp_set_function(">", "lisp_bif_gt");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
