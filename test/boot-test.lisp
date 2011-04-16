@@ -55,7 +55,7 @@
 (defvar test-counter 0)
 (catch ((<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (<my-error>)))
+  (signal (<my-error>)))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -63,7 +63,7 @@
                         (set test-counter 2))))
   (catch ((<my-error> (lambda (e next-handler)
                         (set test-counter 1))))
-    (throw (<your-error>))))
+    (signal (<your-error>))))
 (assert-eq test-counter 2)
 
 (set test-counter 0)
@@ -71,7 +71,7 @@
                         (set test-counter 2)))
         (<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (<your-error>)))
+  (signal (<your-error>)))
 (assert-eq test-counter 2)
 
 (set test-counter 0)
@@ -79,7 +79,7 @@
                         (set test-counter 2)))
         (<my-error> (lambda (e next-handler)
                       (set test-counter 1))))
-  (throw (<my-error>)))
+  (signal (<my-error>)))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -89,7 +89,7 @@
                           (set test-counter 2)))
           (<my-error> (lambda (e next-handler)
                         (funcall next-handler))))
-    (throw (<my-error>))))
+    (signal (<my-error>))))
 (assert-eq test-counter 1)
 
 (set test-counter 0)
@@ -100,7 +100,7 @@
           (<my-error> (lambda (e next-handler)
                         (set test-counter 3)
                         (funcall next-handler))))
-    (throw (<my-error>))))
+    (signal (<my-error>))))
 (assert-eq test-counter 3)
 
 
@@ -131,7 +131,7 @@
 
 (defvar unwind-ct 0)
 (catch ((<another-error> (lambda (e next-handler))))
-  (unwind-protect (throw (<another-error>))
+  (unwind-protect (signal (<another-error>))
     (set unwind-ct 1)))
 (assert-eq unwind-ct 1)
 

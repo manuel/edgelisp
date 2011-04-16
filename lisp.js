@@ -41,6 +41,7 @@
    foo   --> { formt: "symbol", name: "foo" }
    (foo) --> { formt: "compound", 
                elts: [ { formt: "symbol", name: "foo" } ] } 
+   ; line comments are ignored
 */
 
 function Lisp_number_form(n)
@@ -67,8 +68,30 @@ function Lisp_compound_form(elts)
     this.elts = elts;
 }
 
+function Lisp_comment_form(contents)
+{
+    this.formt = "comment";
+    this.contents = contents;
+}
+
 var lisp_expression_syntax =
     function(input) { return lisp_expression_syntax(input); }; // forward decl.
+
+/**** Comments ****/
+
+var lisp_line_terminator = choice(ch("\r"), ch("\n"));
+
+var lisp_line_comment_syntax =
+    action(join_action(sequence(";",
+				repeat0(negate(lisp_line_terminator)),
+				lisp_line_terminator),
+		       ""),
+	   lisp_line_comment_action);
+
+function lisp_line_comment_action(ast)
+{
+    return new Lisp_comment_form(ast);
+}
 
 /**** Numbers ****/
 
@@ -154,32 +177,27 @@ var lisp_alien_escape =
 
 var lisp_alien_syntax =
     action(sequence("{%",
-                    repeat1(choice(lisp_alien_escape,
-                                   negate("%"),
-                                   join_action(sequence("%", not("}")), ""))),
-                    "%}"),
-           lisp_alien_syntax_action);
+		    repeat1(choice(lisp_alien_escape,
+				   action(choice(negate("%"),
+						 join_action(sequence("%", not("}")), "")),
+					  lisp_alien_snippet_action))),
+		    "%}"),
+	   lisp_alien_action);
 
 function lisp_alien_escape_action(ast)
 {
     return ast[1];
 }
 
-function lisp_alien_syntax_action(ast)
+function lisp_alien_snippet_action(ast)
 {
-    var elts = [ new Lisp_symbol_form("alien") ];
-    elts = elts.concat(ast[1]);
-    return new Lisp_compound_form(elts);
+    return new Lisp_compound_form([ new Lisp_symbol_form("alien-snippet"), new Lisp_string_form(ast) ]);
 }
 
-/* I don't know how to do this right yet.  The current form has a
-   "layering violation", in that the (native ...) form contains
-   (JavaScript snippet) strings and (~-escaped Lisp) forms.  It should
-   only contain forms; the snippets should probably be turned into
-   their own form like this: (native ... (snippet ...) ...). 
-
-   Then there's the issue that a "~" anywhere in the JavaScript
-   triggers a Lisp escape. */
+function lisp_alien_action(ast)
+{
+    return new Lisp_compound_form([ new Lisp_symbol_form("alien") ].concat(ast[1]));
+}
 
 /**** Misc shortcuts ****/
 
@@ -214,7 +232,8 @@ function lisp_shortcut_syntax_action(name)
 /**** Programs ****/
 
 var lisp_expression_syntax =
-    whitespace(choice(lisp_number_syntax,
+    whitespace(choice(lisp_line_comment_syntax,
+		      lisp_number_syntax,
                       lisp_string_syntax,
                       lisp_symbol_syntax,
                       lisp_compound_syntax,
@@ -271,9 +290,11 @@ function lisp_compile(form)
     case "symbol":
         lisp_assert_symbol_form(form, "Bad symbol form", form);
         return { vopt: "ref", name: form.name };
-    case "compound": 
+    case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(form);
+    case "comment": 
+        return lisp_compile_comment_form(form);
     }
     lisp_error("Bad form", form);
 }
@@ -308,6 +329,12 @@ function lisp_compile_function_application(form)
              call_site: call_site };
 }
 
+function lisp_compile_comment_form(form)
+{
+    return { vopt: "comment",
+             contents: form.contents };
+}
+
 
 /*** Special forms ***/
 
@@ -324,6 +351,7 @@ function lisp_special_function(name)
 
 var lisp_specials_table = {
     "alien": lisp_compile_special_alien,
+    "alien-snippet": lisp_compile_special_alien_snippet,
     "bound?": lisp_compile_special_boundp,
     "defparameter": lisp_compile_special_defparameter,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
@@ -360,20 +388,16 @@ var lisp_macros_table = {};
 
 /**** List of special forms ****/
 
-/* (alien &rest js-strings-n-lisp-forms) */
-function lisp_compile_special_alien(form)
-{
-    var stuff = form.elts.slice(1);
-    stuff = stuff.map(function(thing) {
-            if (thing.formt) {
-                return lisp_compile(thing);
-            } else {
-                lisp_assert_string(thing);
-                return thing;
-            }
-        });
+/* (alien &rest forms) */
+function lisp_compile_special_alien(form) {
     return { vopt: "alien",
-             stuff: stuff };
+	     stuff: form.elts.slice(1).map(lisp_compile) };
+}
+
+/* (alien-snippet text) */
+function lisp_compile_special_alien_snippet(form) {
+    return{ vopt: "alien-snippet",
+            text: form.elts[1].s };
 }
 
 /* Returns true if `name' is bound (unlike Common Lisp's `boundp',
@@ -867,6 +891,8 @@ function lisp_compile_qq(x, depth)
         return { vopt: "quote", form: x };
     case "compound":
         return lisp_compile_qq_compound(x, depth);
+    case "comment": // fixme: silly
+	return { vopt: "comment", contents: x.contents };
     }
 
     lisp_error("Bad quasiquoted form", x);
@@ -996,7 +1022,9 @@ function lisp_vop_function(vopt)
 
 var lisp_vop_table = {
     "alien": lisp_emit_vop_alien,
+    "alien-snippet": lisp_emit_vop_alien_snippet,
     "bound?": lisp_emit_vop_boundp,
+    "comment": lisp_emit_vop_comment,
     "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
     "function": lisp_emit_vop_function,
@@ -1010,23 +1038,16 @@ var lisp_vop_table = {
     "set_function": lisp_emit_vop_set_function,
     "string": lisp_emit_vop_string,
 };
-
-/* { vopt: "alien", stuff: <stuff> }
-   stuff: list of JavaScript strings and VOPs. */
+/* { vopt: "alien", stuff: <vops> } */
 function lisp_emit_vop_alien(vop)
 {
-    var s = "";
-    var stuff = vop.stuff;
-    for (var i = 0, len = stuff.length; i < len; i++) {
-        var thing = stuff[i];
-        if (thing.vopt) {
-            s += lisp_emit(thing);
-        } else {
-            lisp_assert_string(thing);
-            s += thing;
-        }
-    }
-    return s;
+    return vop.stuff.map(lisp_emit).join("");
+}
+
+/* { vopt: "alien-snippet", text: <vops> } */
+function lisp_emit_vop_alien_snippet(vop)
+{
+    return vop.text;
 }
 
 /* { vopt: "bound?", name: <string> } */
@@ -1034,6 +1055,12 @@ function lisp_emit_vop_boundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
+}
+
+/* { vopt: "comment", contents: <string> } */
+function lisp_emit_vop_comment(vop)
+{
+    return "null";
 }
 
 /* { vopt: "fbound?", name: <string> } */

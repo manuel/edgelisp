@@ -165,7 +165,7 @@ function lisp_bif_call_with_escape_function(_key_, fun) {
     try {
         return fun(null, escape_function);
     } catch(obj) {
-        if (obj == token) {
+        if (obj === token) {
             return token.result;
         } else {
             throw obj;
@@ -190,7 +190,7 @@ function lisp_bif_macroexpand_1(_key_, form)
 
 function lisp_bif_print(_key_, object)
 {
-    print(lisp_show(object));
+    lisp_print(object); // defined in REPL
 }
 
 function lisp_bif_eq(_key_, a, b)

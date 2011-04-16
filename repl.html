@@ -5,32 +5,38 @@
 <script type="text/javascript" src="lisp.js"></script>
 <script type="text/javascript" src="lisp-rt.js"></script>
 <script type="text/javascript">
-function lisp_repl_print(output)
+function lisp_print(output)
 {
     var element = document.createElement("div");
-    element.innerHTML = output;
+    element.innerHTML = lisp_show(output);
     document.getElementById("output").appendChild(element);
 }
 
 function lisp_repl()
 {
     var input = document.getElementById("input").value
-    lisp_repl_print(lisp_eval(lisp_read(input)));
+    lisp_print(lisp_eval(lisp_read(input)));
+}
+
+function lisp_load_file(path)
+{
+    lisp_print("Fetching " + path);
+    var req = new XMLHttpRequest();
+    req.open("GET", path, false);
+    req.send(null);
+    lisp_print("Loading " + path);
+    if(req.status == 200) {
+       lisp_eval(lisp_read(req.responseText));
+    } else {
+        lisp_error("XHR error", req.status);
+    }
 }
 
 function lisp_repl_onload()
 {
-    lisp_repl_print("Fetching boot.lisp...");
-    var req = new XMLHttpRequest();
-    req.open("GET", "lisp/boot.lisp", false);
-    req.send(null);
-    lisp_repl_print("Evaluating boot.lisp...");
-    if(req.status == 200) {
-        lisp_eval(lisp_read(req.responseText));
-    } else {
-        lisp_error("XHR error", req.status);
-    }
-    lisp_repl_print("Lisp ready");
+    lisp_load_file("lisp/boot.lisp");
+    lisp_load_file("test/boot-test.lisp");
+    lisp_print("Lisp ready");
 }
 </script>
 </head>
