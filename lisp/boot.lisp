@@ -1,8 +1,8 @@
 ;; 
 
-(set-expander defmacro
+(%%defsyntax defmacro
   (%%lambda (defmacro-form)
-    `(set-expander ,(compound-elt defmacro-form 1)
+    `(%%defsyntax ,(compound-elt defmacro-form 1)
        (%%lambda (%%form)
          (compound-apply
            (%%lambda ,(compound-elt defmacro-form 2)
@@ -10,14 +10,12 @@
                ,@(compound-slice defmacro-form 3)))
            (compound-slice %%form 1))))))
 
-(defmacro lambda (sig &rest body)
-  `(%%lambda ,sig (progn ,@body)))
-
-(defmacro function (name)
-  `(%%identifier ,name f))
-
-(defmacro fdefined? (name)
-  `(defined? (%%identifier ,name f)))
+(defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
+(defmacro defined? (name) `(%%defined? ,name))
+(defmacro fdefined? (name) `(defined? (%%identifier ,name f)))
+(defmacro lambda (sig &rest body) `(%%lambda ,sig (progn ,@body)))
+(defmacro function (name) `(%%identifier ,name f))
+(defmacro defparameter (name value) `(%%defparameter ,name ,value))
 
 (defmacro if (test consequent &opt (alternative 'null))
   `(%%if ,test ,consequent ,alternative))
@@ -61,7 +59,7 @@
   `(call-unwind-protected (lambda () ,protected)
                           (lambda () ,@cleanups)))
 
-(defmacro catch (handler-specs &rest body)
+(defmacro handle (handler-specs &rest body)
   `(bind-handlers (list ,@(compound-map (lambda (handler-spec)
                                           `(list ,(compound-elt handler-spec 0)
                                                  ,(compound-elt handler-spec 1)))
