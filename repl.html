@@ -8,7 +8,7 @@
 function lisp_print(output)
 {
     var element = document.createElement("div");
-    element.innerHTML = lisp_show(output);
+    element.innerText = lisp_show(output);
     document.getElementById("output").appendChild(element);
 }
 
@@ -36,6 +36,7 @@ function lisp_repl_onload()
 {
     lisp_load_file("lisp/boot.lisp");
     lisp_load_file("test/boot-test.lisp");
+    lisp_load_file("lisp/http-client.lisp");
     lisp_print("Lisp ready");
 }
 </script>
