@@ -228,21 +228,20 @@ var lisp_expression_syntax =
 var lisp_program_syntax =
     whitespace(repeat1(lisp_expression_syntax));
 
-function lisp_parse(string)
+function lisp_read(string)
 {
     var result = lisp_program_syntax(ps(string));
     if (result.ast) return result.ast;
-    else lisp_error("Parse error", string);
+    else lisp_error("Reader error", string);
 }
 
 
 /*** Compilation and Evaluation ***/
 
-function lisp_eval(string)
+function lisp_eval(forms)
 {
-    var forms = lisp_parse(string);
     var vops = forms.map(lisp_compile);
-    var js = vops.map(lisp_emit).join(", ");
+    var js = vops.map(lisp_emit).join(", \n");
     return eval(js);
 }
 
@@ -322,8 +321,7 @@ var lisp_specials_table = {
     "alien": lisp_compile_special_alien,
     "bound?": lisp_compile_special_boundp,
     "defparameter": lisp_compile_special_defparameter,
-    "eval-and-compile": lisp_compile_special_eval_and_compile,
-    "eval-when-compile": lisp_compile_special_eval_when_compile,
+    "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "fbound?": lisp_compile_special_fboundp,
     "funcall": lisp_compile_special_funcall,
     "function": lisp_compile_special_function,
@@ -394,24 +392,11 @@ function lisp_compile_special_defparameter(form)
              value: lisp_compile(value_form) };
 }
 
-/* Executes forms during both compilation and evaluation.
-   (eval-and-compile &rest forms) */
-function lisp_compile_special_eval_and_compile(form)
-{
-    var forms = form.elts.slice(1);
-    return { vopt: "eval_when",
-             vop: { vopt: "progn", vops: forms.map(lisp_compile) },
-             when: [ "eval", "compile" ] };
-}
-
-/* Executes forms only during compilation, not during evaluation.
-   (eval-when-compile &rest forms) */
+/* Executes form during compilation, not during evaluation.
+   (%%eval-when-compile form) */
 function lisp_compile_special_eval_when_compile(form)
 {
-    var forms = form.elts.slice(1);
-    return { vopt: "eval_when",
-             vop: { vopt: "progn", vops: forms.map(lisp_compile) },
-             when: [ "compile" ] };
+    eval(lisp_emit(lisp_compile(form)));
 }
 
 /* Assigns the `value' to the global function named `name'.
@@ -432,9 +417,7 @@ function lisp_compile_special_set_expander(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "set_macro", 
-             name: name_form.name, 
-             expander: lisp_compile(expander_form) };
+    lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
 }
 
 /* Returns true if `name' is bound in the function namespace (unlike
@@ -1008,7 +991,6 @@ function lisp_vop_function(vopt)
 var lisp_vop_table = {
     "alien": lisp_emit_vop_alien,
     "bound?": lisp_emit_vop_boundp,
-    "eval_when": lisp_emit_vop_eval_when,
     "fbound?": lisp_emit_vop_fboundp,
     "funcall": lisp_emit_vop_funcall,
     "function": lisp_emit_vop_function,
@@ -1026,15 +1008,12 @@ var lisp_vop_table = {
 
 function lisp_should_eval_at_compile_time(vop)
 {
-    return ((vop.vopt == "set_macro") ||
-            ((vop.vopt == "eval_when") &&
-             lisp_array_contains(vop.when, "compile")));
+    return ((vop.vopt == "set_macro") || (vop.vopt == "eval_when_compile"));
 }
 
 function lisp_should_eval_at_load_time(vop)
 {
-    return (!(vop.vopt == "eval_when") ||
-            lisp_array_contains(vop.when, "eval"));
+    return !lisp_should_eval_at_compile_time(vop);
 }
 
 /* { vopt: "alien", stuff: <stuff> }
@@ -1060,18 +1039,6 @@ function lisp_emit_vop_boundp(vop)
 {
     var name = lisp_assert_nonempty_string(vop.name);
     return "(typeof " + lisp_mangle_var(name) + " != \"undefined\")";
-}
-
-/* { vopt: "eval_when", when: <situations>, vop: <vop> }
-   situations: list of "eval", "compile". */
-function lisp_emit_vop_eval_when(vop)
-{
-    if (lisp_array_contains(vop.when), "eval") {
-        return lisp_emit(vop.vop);
-    } else {
-        return "undefined";
-    }
-    // when = "compile" needs to be handled by the compiler
 }
 
 /* { vopt: "fbound?", name: <string> } */
@@ -1261,7 +1228,7 @@ function lisp_emit_vop_progn(vop)
 {
     lisp_assert_not_null(vop.vops, "Bad PROGN", vop);
     if (vop.vops.length > 0)
-        return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
+        return "(" + vop.vops.map(lisp_emit).join(", \n") + ")";
     else
         return "undefined";
 }

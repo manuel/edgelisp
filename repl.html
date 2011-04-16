@@ -5,17 +5,35 @@
 <script type="text/javascript" src="lisp.js"></script>
 <script type="text/javascript" src="lisp-rt.js"></script>
 <script type="text/javascript">
-function lisp_repl()
+function lisp_repl_print(output)
 {
-    var input = document.getElementById("input").value
-    var output = lisp_eval(input);
     var element = document.createElement("div");
     element.innerHTML = output;
     document.getElementById("output").appendChild(element);
 }
+
+function lisp_repl()
+{
+    var input = document.getElementById("input").value
+    lisp_repl_print(lisp_eval(lisp_read(input)));
+}
+
+function lisp_repl_onload()
+{
+    lisp_repl_print("Fetching boot.lisp...");
+    var req = new XMLHttpRequest();
+    req.open("GET", "lisp/boot.lisp", false);
+    req.send(null);
+    lisp_repl_print("Evaluating boot.lisp...");
+    if(req.status == 200)
+        lisp_eval(lisp_read(req.responseText));
+    else
+        lisp_error("XHR error", req.status);
+    lisp_repl_print("Lisp Ready");
+}
 </script>
 </head>
-<body>
+<body onload="lisp_repl_onload()">
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
 <input type="text" id="input" value="(+ 1 2)" style="width: 23em">

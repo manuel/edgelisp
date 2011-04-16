@@ -1,24 +1,3 @@
-;;; CyberLisp: A Lisp that compiles to JavaScript 1.5.
-;;;   
-;;; Copyright (C) 2008 by Manuel Simoni.
-;;;   
-;;; CyberLisp is free software; you can redistribute it and/or modify
-;;; it under the terms of the GNU General Public License as published
-;;; by the Free Software Foundation; either version 2, or (at your
-;;; option) any later version.
-;;;   
-;;; CyberLisp is distributed in the hope that it will be useful, but
-;;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;;; General Public License for more details.
-;;; 
-;;; You should have received a copy of the GNU General Public License
-;;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;;; Boston, MA 02110-1301, USA.
-
-;;; (defmacro name sig &rest body)  [defmacro-form]
-;;;  0        1    2         3
 (set-expander defmacro
   (%%lambda (defmacro-form)
     `(set-expander ,(compound-elt defmacro-form 1)
@@ -57,17 +36,9 @@
                               (compound-elt b 1)) 
                             bindings)))
 
-(defmacro let* (bindings &rest body)
-  `(funcall (lambda ,(compound-map (lambda (b) 
-                                     (compound-elt b 0))
-                                   bindings)
-              ,@(compound-map (lambda (b) 
-                                `(set ,(compound-elt b 0) ,(compound-elt b 1)))
-                              bindings)
-              ,@body)
-            ,@(compound-map (lambda (b) 
-                              `null)
-                            bindings)))
+(defmacro let* (vs &rest forms)
+  (if vs `(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
+    `(let () ,@forms)))
 
 (defmacro while (test &rest body)
   `(call-while (lambda () ,test) (lambda () ,@body)))
@@ -89,10 +60,18 @@
                                         handler-specs))
                   (lambda () ,@body)))
 
+(defmacro eval-when-compile (&rest forms)
+  (%%eval-when-compile (progn ,@forms)))
+
+(defmacro eval-and-compile (&rest forms)
+  `(progn
+     (eval-when-compile ,@forms)
+     ,@forms))
+
 (defun not (x)
   (if x false true))
 
-(eval-and-compile
+(eval-when-compile
   (defun setter-name (getter-name)
     (string-concat getter-name "-setter")))
 
@@ -120,7 +99,7 @@
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
 
-(eval-and-compile
+(eval-when-compile
   (defun defclass-do-slot (class-name slot)
     (let* ((slot-name (symbol-name slot))
            (slot-name-form (string-to-form slot-name))
@@ -163,12 +142,6 @@
     `(progn
        (set-method ,class ,name-string (lambda ,params ,@body))
        (defgeneric ,name))))
-
-;; (defmacro defgeneric (name &rest args)
-;;   (let ((name-string (string-to-form (symbol-name name))))
-;;     `(defun ,name (&rest args &all-keys keys)
-;;        (let ((obj (list-elt args 0)))
-;;          (apply (get-method obj ,name-string) args keys)))))
 
 (defmacro defgeneric (name &rest args)
   (let ((name-string (string-to-form (symbol-name name))))
@@ -289,8 +262,6 @@ can be used to supply a different collection to hold the results."
           (add into (apply fun (map #'now iters)))
           (each #'next iters))))
   into)
-
-;; Number iterators
 
 (defclass <number-iter> (i max))
 
