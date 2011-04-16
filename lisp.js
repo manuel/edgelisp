@@ -422,7 +422,7 @@ function lisp_compile_special_boundp(form)
    (defparameter name value) */
 function lisp_compile_special_defparameter(form)
 {
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
+    var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set", 
 	     name: lisp_compile(name_form),
