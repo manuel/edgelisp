@@ -7,6 +7,3 @@
        req.send(null);
        return req.responseText;
       })() %})
-
-(defmacro alien-body (expr)
-  `{% function(){ ~,expr } %})

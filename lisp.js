@@ -36,7 +36,7 @@
    There are multiple types of forms; number forms, string forms,
    symbol forms, and compound forms:
    
-   1     --> { formt: "number", n: "1" }
+   1     --> { formt: "number", sign: "+", integral_digits: "1", fractional_digits: "" }
    "foo" --> { formt: "string", s: "foo" }
    foo   --> { formt: "symbol", name: "foo" }
    (foo) --> { formt: "compound", 
@@ -44,10 +44,12 @@
    ; line comments are ignored
 */
 
-function Lisp_number_form(n)
+function Lisp_number_form(sign, integral_digits, fractional_digits)
 {
     this.formt = "number";
-    this.n = n;
+    this.sign = sign;
+    this.integral_digits = integral_digits;
+    this.fractional_digits = fractional_digits;
 }
 
 function Lisp_string_form(s)
@@ -79,6 +81,8 @@ var lisp_expression_syntax =
 
 /**** Comments ****/
 
+// SILLY?
+
 var lisp_line_terminator = choice(ch("\r"), ch("\n"));
 
 var lisp_line_comment_syntax =
@@ -106,10 +110,10 @@ var lisp_number_syntax =
 
 function lisp_number_syntax_action(ast)
 {    
-    var sign = ast[0] || "";
-    var decimal_digits = ast[1];
-    var dot_digits = ast[2] || "";
-    return new Lisp_number_form(sign + decimal_digits + dot_digits);
+    var sign = ast[0] ? ast[0] : "+";
+    var integral_digits = ast[1];
+    var fractional_digits = ast[2] || "";
+    return new Lisp_number_form(sign, integral_digits, fractional_digits);
 }
 
 /**** Strings ****/
@@ -282,8 +286,10 @@ function lisp_compile(form)
 {
     switch(form.formt) {
     case "number":
-        lisp_assert_nonempty_string(form.n, "Bad .n", form);
-        return { vopt: "number", n: form.n };
+        return { vopt: "number",
+		 sign: form.sign,
+		 integral_digits: form.integral_digits,
+		 fractional_digits: form.fractional_digits };
     case "string":
         lisp_assert_string(form.s, "Bad .s", form);
         return { vopt: "string", s: form.s };
@@ -1234,13 +1240,12 @@ function lisp_emit_vop_lambda(vop)
 }
 
 /* Number literal.
-   { vopt: "number", n: <string> }
-   n: the number in JavaScript syntax. */
+   { vopt: "number", sign: <string>, integral_digits: <string>, fractional_digits: <string> } */
 function lisp_emit_vop_number(vop)
 {
-    lisp_assert_nonempty_string(vop.n, "Bad .n", vop);
-    lisp_assert_number(eval(vop.n), "Bad number", vop);
-    return vop.n;
+    var frac_repr = vop.fractional_digits ? ("." + vop.fractional_digits) : "";
+    var num_repr = vop.sign + vop.integral_digits + frac_repr;
+    return "(SchemeNumber(\"" + num_repr + "\"))";
 }
 
 /* Evaluates a number of VOPs in sequence and returns the value of the last.
@@ -1424,6 +1429,7 @@ function lisp_assert_not_null(value, message, arg)
 
 function lisp_assert_number(value, message, arg)
 {
+    // fixme
     lisp_assert(typeof value == "number", message, arg);
     return value;
 }

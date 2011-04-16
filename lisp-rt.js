@@ -345,32 +345,37 @@ function lisp_is_true(obj) // T
 
 function lisp_bif_add(_key_, a, b)
 {
-    return a + b;
+    return SchemeNumber.fn["+"](a, b);
 }
 
 function lisp_bif_sub(_key_, a, b)
 {
-    return a - b;
+    return SchemeNumber.fn["-"](a, b);
 }
 
 function lisp_bif_mult(_key_, a, b)
 {
-    return a * b;
+    return SchemeNumber.fn["*"](a, b);
 }
 
 function lisp_bif_div(_key_, a, b)
 {
-    return a / b;
+    return SchemeNumber.fn["/"](a, b);
+}
+
+function lisp_bif_eql(_key_, a, b)
+{
+    return SchemeNumber.fn["="](a, b);
 }
 
 function lisp_bif_lt(_key_, a, b)
 {
-    return a < b;
+    return SchemeNumber.fn["<"](a, b);
 }
 
 function lisp_bif_gt(_key_, a, b)
 {
-    return a > b;
+    return SchemeNumber.fn[">"](a, b);
 }
 
 function lisp_bif_call_while(_key_, test_fun, body_fun)
@@ -401,6 +406,7 @@ lisp_set_function("*", "lisp_bif_mult");
 lisp_set_function("+", "lisp_bif_add");
 lisp_set_function("-", "lisp_bif_sub");
 lisp_set_function("/", "lisp_bif_div");
+lisp_set_function("=", "lisp_bif_eql");
 lisp_set_function("<", "lisp_bif_lt");
 lisp_set_function(">", "lisp_bif_gt");
 lisp_set_function("apply", "lisp_bif_apply");
@@ -410,6 +416,7 @@ lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_functi
 lisp_set_function("call-while", "lisp_bif_call_while");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
+lisp_set_function("eql", "lisp_bif_eql");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("get-method", "lisp_bif_get_method");
 lisp_set_function("gensym", "lisp_bif_gensym");

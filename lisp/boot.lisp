@@ -101,6 +101,9 @@
 (defmacro assert-eq (a b)
   `(assert (eq ,a ,b)))
 
+(defmacro assert-eql (a b)
+  `(assert (eql ,a ,b)))
+
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
     (let* ((slot-name (symbol-name slot))
@@ -237,7 +240,7 @@
 effect.  The function is called with N positional arguments, each
 taken from the collections from left to right.  The shortest
 collection determines how many times the function is called."
-  (if (eq 1 (len colls))
+  (if (= 1 (len colls))
       (let ((iter (iter (elt colls 0))))
         (while (has-next iter)
           (funcall fun (now iter))
@@ -254,7 +257,7 @@ function is called with N positional arguments, each taken from the
 collections from left to right.  The shortest collection determines
 how many times the function is called.  The `into' keyword argument
 can be used to supply a different collection to hold the results."
-  (if (eq 1 (len colls))
+  (if (= 1 (len colls))
       (let ((iter (iter (elt colls 0))))
         (while (has-next iter)
           (add into (funcall fun (now iter)))
