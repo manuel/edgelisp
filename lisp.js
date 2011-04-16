@@ -359,20 +359,20 @@ function lisp_special_function(name)
 }
 
 var lisp_specials_table = {
-    "native": lisp_compile_special_native,
-    "native-snippet": lisp_compile_special_native_snippet,
-    "defined?": lisp_compile_special_definedp,
-    "defparameter": lisp_compile_special_defparameter,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
-    "funcall": lisp_compile_special_funcall,
     "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
+    "%%set": lisp_compile_special_set,
+    "defined?": lisp_compile_special_definedp,
+    "defparameter": lisp_compile_special_defparameter,
+    "defsyntax": lisp_compile_special_defsyntax
+    "funcall": lisp_compile_special_funcall,
+    "native": lisp_compile_special_native,
+    "native-snippet": lisp_compile_special_native_snippet,
     "progn": lisp_compile_special_progn,
     "quasiquote": lisp_compile_special_quasiquote,
     "quote": lisp_compile_special_quote,
-    "%%set": lisp_compile_special_set,
-    "set-expander": lisp_compile_special_set_expander
 };
 
 function lisp_macro_function(name)
@@ -439,8 +439,8 @@ function lisp_compile_special_eval_when_compile(form)
 
 /* Registers a macro expander function.  An expander function takes a
    form as input and must return a form.
-   (set-expander name expander-function) */
-function lisp_compile_special_set_expander(form)
+   (defsyntax name expander-function) */
+function lisp_compile_special_defsyntax(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
@@ -1006,16 +1006,16 @@ function lisp_vop_function(vopt)
 /**** List of VOPs ****/
 
 var lisp_vop_table = {
-    "native": lisp_emit_vop_native,
-    "native-snippet": lisp_emit_vop_native_snippet,
     "defined?": lisp_emit_vop_definedp,
     "funcall": lisp_emit_vop_funcall,
+    "identifier": lisp_emit_vop_identifier,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
+    "native": lisp_emit_vop_native,
+    "native-snippet": lisp_emit_vop_native_snippet,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
     "quote": lisp_emit_vop_quote,
-    "identifier": lisp_emit_vop_identifier,
     "set": lisp_emit_vop_set,
     "string": lisp_emit_vop_string,
 };
