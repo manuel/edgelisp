@@ -378,6 +378,11 @@ function lisp_bif_gt(_key_, a, b)
     return SchemeNumber.fn[">"](a, b);
 }
 
+function lisp_bif_number_to_string(_key_, a)
+{
+    return SchemeNumber.fn["number->string"](a);
+}
+
 function lisp_bif_call_while(_key_, test_fun, body_fun)
 {
     while(test_fun(null)) {
@@ -428,6 +433,7 @@ lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_set_function("make", "lisp_bif_make");
 lisp_set_function("make-class", "lisp_bif_make_class");
+lisp_set_function("number->string", "lisp_bif_number_to_string");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("set-method", "lisp_bif_set_method");
 lisp_set_function("set-slot", "lisp_bif_set_slot");
