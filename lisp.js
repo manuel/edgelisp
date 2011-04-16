@@ -1237,8 +1237,7 @@ function lisp_emit_vop_lambda(vop)
    { vopt: "number", sign: <string>, integral_digits: <string>, fractional_digits: <string> } */
 function lisp_emit_vop_number(vop)
 {
-    var frac_repr = vop.fractional_digits ? ("." + vop.fractional_digits) : "";
-    var num_repr = vop.sign + vop.integral_digits + frac_repr;
+    var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
     return "(SchemeNumber(\"" + num_repr + "\"))";
 }
 
