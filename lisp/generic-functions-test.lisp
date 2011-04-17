@@ -4,8 +4,8 @@
 
 (defgeneric wins? (thing1 thing2))
 
-(defmethod wins? ((a object) (b object)) false)
+(defmethod wins? ((a object) (b object)) #f)
 
-(defmethod wins? ((r rock) (s scissors)) true)
-(defmethod wins? ((s scissors) (p paper)) true)
-(defmethod wins? ((p paper) (r rock)) true)
+(defmethod wins? ((r rock) (s scissors)) #t)
+(defmethod wins? ((s scissors) (p paper)) #t)
+(defmethod wins? ((p paper) (r rock)) #t)

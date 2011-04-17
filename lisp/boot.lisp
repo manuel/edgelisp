@@ -18,7 +18,7 @@
   `(%%funcall ,function ,@arguments))
 (defmacro function (name) `(%%identifier ,name function))
 (defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
-(defmacro if (test consequent &opt (alternative 'null))
+(defmacro if (test consequent &opt (alternative 'nil))
   `(%%if ,test ,consequent ,alternative))
 (defmacro lambda (sig &rest body) `(%%lambda ,sig (%%progn ,@body)))
 (defmacro native (&rest body) `(%%native ,@body))
@@ -34,10 +34,10 @@
   `(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro when (test &rest consequent)
-  `(if ,test (progn ,@consequent) null))
+  `(if ,test (progn ,@consequent) nil))
 
 (defmacro unless (test &rest alternative)
-  `(if ,test null (progn ,@alternative)))
+  `(if ,test nil (progn ,@alternative)))
 
 (defmacro let (bindings &rest body)
   `(funcall (lambda ,(compound-map (lambda (b) 
@@ -59,7 +59,7 @@
 (defmacro block (name &rest body)
   `(call-with-escape-function (lambda (,name) ,@body)))
 
-(defmacro return-from (name &opt (value 'null))
+(defmacro return-from (name &opt (value 'nil))
   `(funcall ,name ,value))
 
 (defmacro unwind-protect (protected &rest cleanups)
@@ -74,7 +74,7 @@
                   (lambda () ,@body)))
 
 (defun not (x)
-  (if x false true))
+  (if x #f true))
 
 (eval-when-compile
   (defun setter-name (getter-name)
@@ -135,18 +135,18 @@
   `(make-instance (class ,class-name)))
 
 (defmacro defclass (name-and-super &opt (slots '()))
-  (let ((class-name null)
-        (superclass null))
+  (let ((class-name nil)
+        (superclass nil))
     (if (symbol? name-and-super)
         (progn (set class-name name-and-super)
-               (set superclass null))
+               (set superclass nil))
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
     `(progn
        (defvar (class ,class-name) (make-class))
        ,(if superclass 
             `(set-superclass (class ,class-name) (class ,superclass))
-            `null)
+            `nil)
        ,@(compound-map (lambda (slot)
 			 (defclass-do-slot class-name slot))
                        slots)
@@ -242,14 +242,14 @@
   (iter (compound-elts form)))
 
 (defun every ((pred <function>) coll)
-  "Returns true iff every element of a collection satisfies the predicate."
+  "Returns #t iff every element of a collection satisfies the predicate."
   (block exit
     (let ((iter (iter coll)))
       (while (has-next iter)
         (unless (funcall pred (now iter))
-          (return-from exit false))
+          (return-from exit #f))
         (next iter)))
-    true))
+    #t))
 
 (defun each ((fun <function>) &rest colls)
   "Applies a function to the elements of one or more collections for

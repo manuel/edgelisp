@@ -546,9 +546,9 @@ function lisp_bif_gensym(_key_)
     return new Lisp_symbol_form("%%g-" + lisp_gensym_counter);
 }
 
-lisp_set("true", "true");
-lisp_set("false", "false");
-lisp_set("null", "null");
+lisp_set("#t", "true");
+lisp_set("#f", "false");
+lisp_set("nil", "null");
 
 lisp_set_function("*", "lisp_bif_mult");
 lisp_set_function("+", "lisp_bif_add");

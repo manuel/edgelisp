@@ -146,7 +146,7 @@ function lisp_string_syntax_action(ast)
 
 var lisp_symbol_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
-    choice("-", "&", ":", ".", "=", ">","<", "%", "+", "?", "/", "*");
+    choice("-", "&", ":", ".", "=", ">","<", "%", "+", "?", "/", "*", "#");
 
 var lisp_symbol_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
@@ -451,7 +451,7 @@ function lisp_compile_special_eval_when_compile(form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     eval(lisp_emit(lisp_compile(body_form)));
-    return { vopt: "identifier", name: "false", namespace: "variable" };
+    return { vopt: "identifier", name: "#f", namespace: "variable" };
 }
 
 /* Registers a macro expander function.  An expander function takes a
@@ -462,7 +462,7 @@ function lisp_compile_special_defsyntax(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
-    return { vopt: "identifier", name: "false", namespace: "variable" };
+    return { vopt: "identifier", name: "#f", namespace: "variable" };
 }
 
 /* Calls a function passed as argument.
@@ -1276,6 +1276,7 @@ var lisp_mangle_table =
      ["?", "Q"],
      ["/", "S"],
      ["*", "T"],
+     ["#", "O"],
      ];
 
 function lisp_mangle(name, namespace)
