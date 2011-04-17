@@ -1304,6 +1304,11 @@ function lisp_mangle_function(name)
     return lisp_mangle(name, "function");
 }
 
+function lisp_mangle_class(name)
+{
+    return lisp_mangle(name, "class");
+}
+
 function lisp_mangle_slot(name)
 {
     return lisp_mangle(name, "slot");
@@ -1322,14 +1327,19 @@ function lisp_undefined_identifier(name, namespace)
     return lisp_error("Undefined " + namespace, name);
 }
 
+function lisp_set(lisp_name, js_object)
+{
+    eval(lisp_mangle_var(lisp_name) + " = " + js_object);
+}
+
 function lisp_set_function(lisp_name, js_function)
 {
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
 }
 
-function lisp_set(lisp_name, js_object)
+function lisp_set_class(lisp_name, js_class)
 {
-    eval(lisp_mangle_var(lisp_name) + " = " + js_object);
+    eval(lisp_mangle_class(lisp_name) + " = " + js_class);
 }
 
 function lisp_show(obj)
@@ -1554,16 +1564,16 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 
 /*** Export classes and built-in functions ***/
 
-lisp_set("<boolean>", "Boolean.prototype");
-lisp_set("<function>", "Function.prototype");
-lisp_set("<compound-form>", "Lisp_compound_form.prototype");
-lisp_set("<list>", "Array.prototype");
-lisp_set("<number-form>", "Lisp_number_form.prototype");
-lisp_set("<number>", "Number.prototype");
-lisp_set("<string-dict>", "Lisp_string_dict.prototype");
-lisp_set("<string-form>", "Lisp_string_form.prototype");
-lisp_set("<string>", "String.prototype");
-lisp_set("<symbol-form>", "Lisp_symbol_form.prototype");
+lisp_set_class("<boolean>", "Boolean.prototype");
+lisp_set_class("<function>", "Function.prototype");
+lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
+lisp_set_class("<list>", "Array.prototype");
+lisp_set_class("<number-form>", "Lisp_number_form.prototype");
+lisp_set_class("<number>", "Number.prototype");
+lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
+lisp_set_class("<string-form>", "Lisp_string_form.prototype");
+lisp_set_class("<string>", "String.prototype");
+lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
 
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");

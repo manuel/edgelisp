@@ -1,5 +1,3 @@
-;; 
-
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
     `(%%defsyntax ,(compound-elt defmacro-form 1)
@@ -111,6 +109,7 @@
      (eval-when-compile ,@forms)
      ,@forms))
 
+
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
     (let* ((slot-name (symbol-name slot))
@@ -123,6 +122,9 @@
          (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
            (set-slot obj ,slot-name-form value))))))
 
+(defmacro class (name)
+  `(identifier ,name class))
+
 (defmacro defclass (name-and-super &opt (slots '()))
   (let ((class-name null)
         (superclass null))
@@ -132,39 +134,37 @@
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
     `(progn
-       (when (not (defined? ,class-name)) 
-         (set ,class-name (make-class)))
+       (defvar (class ,class-name) (make-class))
        ,(if superclass 
-            `(set-superclass ,class-name ,superclass) 
+            `(set-superclass (class ,class-name) (class ,superclass))
             `null)
-       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot)) 
+       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot))
                        slots)
        (defun ,class-name ()
-         (make ,class-name))
+         (make (class ,class-name)))
        ,class-name)))
 
-(defmacro defmethod (name params &rest body)
-  (let* ((param (compound-elt params 0))
-         (class (if (compound? param)
-                    (compound-elt param 1)
-                    (if (symbol? param)
-                        param
-                        (assert false))))
-         (name-string (string-to-form (symbol-name name))))
-    `(progn
-       (set-method ,class ,name-string (lambda ,params ,@body))
-       (defgeneric ,name))))
+(defmacro generic (name)
+  `(identifier ,name generic))
 
 (defmacro defgeneric (name &rest args)
-  (let ((name-string (string-to-form (symbol-name name))))
-    `(defun ,name (&fast fast-arguments)
-       (let ((obj (list-elt fast-arguments 1)))
-         (fast-apply (get-method obj ,name-string) fast-arguments)))))
+  `(progn
+     (defvar (generic ,name) (make-generic))
+     (defun ,name (&fast fast-arguments)
+       (let ((method (find-method (generic ,name) fast-arguments)))
+	 (fast-apply method fast-arguments)))))
+
+(defmacro defmethod (name params &rest body)
+  `(progn
+     (defgeneric ,name)
+     (put-method (generic ,name)
+		 ,(method-specializers params)
+		 (lambda ,params ,@body))))
+
 
 (defmacro deferror (name &rest slots)
   `(defclass (,name <error>) ,@slots))
 
-(defclass <object>)
 
 (defclass <exception>)
 (defclass (<error> <exception>))
@@ -172,6 +172,7 @@
 (defclass (<restart> <exception>))
 
 (deferror <failed-assertion>)
+
 
 (defclass <dict>)
 

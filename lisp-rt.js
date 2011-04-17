@@ -58,6 +58,8 @@ function lisp_check_type(obj, type)
         lisp_error("Type error", obj);
 }
 
+/*** Control Flow and Conditions ***/
+
 /* CyberLisp uses the same exception system as Dylan and Goo (which is
    basically Common Lisp's but with exception handlers and restarts
    unified into a single concept).
@@ -181,6 +183,25 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
         cleanup_fun(null);
     }
 }
+
+/*** Multiple Dispatch ***/
+
+function Lisp_generic()
+{
+    this.method_entries = [];
+}
+
+function lisp_bif_make_generic(_key_)
+{
+    return new Lisp_generic();
+}
+
+function lisp_bif_method_specializers(_key_, params)
+{
+    return new Lisp_compound_form([new Lisp_symbol_form("list")]);
+}
+
+/*** Utilities ***/
 
 function lisp_bif_macroexpand_1(_key_, form)
 {
@@ -433,6 +454,8 @@ lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_set_function("make", "lisp_bif_make");
 lisp_set_function("make-class", "lisp_bif_make_class");
+lisp_set_function("make-generic", "lisp_bif_make_generic");
+lisp_set_function("method-specializers", "lisp_bif_method_specializers");
 lisp_set_function("number->string", "lisp_bif_number_to_string");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("set-method", "lisp_bif_set_method");
