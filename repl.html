@@ -5,11 +5,12 @@
 <style type="text/css">
 html, input { font-family: mono; font-size: medium; }
 a { text-decoration: none; }
-.lisp-banner { font-family: "Orbitron", serif; font-style: italic; font-weight: bold; }
-.lisp-version { color: gray; }
-.lisp-source { color: gray; }
+a:hover { text-decoration: underline; }
+.lisp-banner { font-family: "Orbitron", serif; 
+               font-weight: bold; }
+.lisp-version { color: gray; font-size: x-small; }
 .lisp-repl-input { font-weight: bold; }
-.lisp-repl-error { color: orange; }
+.lisp-repl-error { color: orange; font-weight: bold; }
 .lisp-repl-log { font-style: italic; }
 .lisp-repl-output { }
 </style>
@@ -17,8 +18,8 @@ a { text-decoration: none; }
 <script type="text/javascript" src="lib/jsparse.js"></script>
 <script type="text/javascript" src="lib/biginteger.js"></script>
 <script type="text/javascript" src="lib/schemeNumber.js"></script>
-<script type="text/javascript" src="lisp.js"></script>
-<script type="text/javascript" src="lisp-rt.js"></script>
+<script type="text/javascript" src="compiler.js"></script>
+<script type="text/javascript" src="runtime.js"></script>
 <script type="text/javascript">
 function lisp_print(output)
 {
@@ -97,10 +98,7 @@ function lisp_repl_onload()
 <body onload="lisp_repl_onload()">
 <div class="lisp-banner">
   <a href="http://github.com/manuel/cyberlisp">EdgeLisp</a>
-  <span class="lisp-version">(0.1.1, 2010-04-17)</span>
-  <span class="lisp-source">
-  source: <a href="lisp.js">compiler</a>, <a href="lisp-rt.js">runtime</a>
-  </span>
+  <span class="lisp-version">0.1.1 2010-04-17</span>
 </div>
 <div id="output"></div>
 <form action="javascript:lisp_repl()">

@@ -215,6 +215,11 @@ function lisp_bif_put_method(_key_, generic, specializers, fun)
     
 }
 
+function lisp_bif_find_method(_key_, generic, arguments)
+{
+    
+}
+
 /*** Utilities ***/
 
 function lisp_bif_macroexpand_1(_key_, form)
@@ -458,6 +463,7 @@ lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("eql", "lisp_bif_eql");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
+lisp_set_function("find-method", "lisp_bif_find_method");
 lisp_set_function("get-method", "lisp_bif_get_method");
 lisp_set_function("gensym", "lisp_bif_gensym");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
