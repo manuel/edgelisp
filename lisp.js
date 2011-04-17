@@ -206,19 +206,19 @@ function lisp_native_action(ast)
 
 var lisp_quote_syntax =
     action(sequence("'", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("quote"));
+           lisp_shortcut_syntax_action("%%quote"));
 
 var lisp_quasiquote_syntax =
     action(sequence("`", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("quasiquote"));
+           lisp_shortcut_syntax_action("%%quasiquote"));
 
 var lisp_unquote_syntax =
     action(sequence(",", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("unquote"));
+           lisp_shortcut_syntax_action("%%unquote"));
 
 var lisp_unquote_splicing_syntax =
     action(sequence(",@", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("unquote-splicing"));
+           lisp_shortcut_syntax_action("%%unquote-splicing"));
 
 var lisp_function_syntax =
     action(sequence("#'", lisp_symbol_syntax),
@@ -366,8 +366,8 @@ function lisp_set_macro_function(name, expander)
 /*** Special forms ***/
 
 /* Special forms are built-in forms with special evaluation rules
-   (e.g. `%%if').  The names of some special forms are prefixed with
-   "%%", so more comfortable wrappers around them can be defined later
+   (e.g. `%%if').  The names of special forms are prefixed with "%%",
+   so more comfortable wrappers around them can be defined later
    (e.g. `if' with an optional alternative). */
 
 var lisp_specials_table = {
@@ -375,16 +375,16 @@ var lisp_specials_table = {
     "%%defparameter": lisp_compile_special_defparameter,
     "%%defsyntax": lisp_compile_special_defsyntax,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
+    "%%funcall": lisp_compile_special_funcall,
     "%%identifier": lisp_compile_special_identifier,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
-    "%%set": lisp_compile_special_set,
-    "funcall": lisp_compile_special_funcall,
-    "native": lisp_compile_special_native,
-    "native-snippet": lisp_compile_special_native_snippet,
-    "progn": lisp_compile_special_progn,
-    "quasiquote": lisp_compile_special_quasiquote,
-    "quote": lisp_compile_special_quote
+    "%%native": lisp_compile_special_native,
+    "%%native-snippet": lisp_compile_special_native_snippet,
+    "%%progn": lisp_compile_special_progn,
+    "%%quasiquote": lisp_compile_special_quasiquote,
+    "%%quote": lisp_compile_special_quote,
+    "%%set": lisp_compile_special_set
 };
 
 /* VOPs (virtual operations) correspond roughly to special forms. */
@@ -943,34 +943,34 @@ function lisp_compile_qq_compound(x, depth)
 
     function is_quasiquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "quasiquote");
+        return op && (op.formt == "symbol") && (op.name == "%%quasiquote");
     }
 
     function is_unquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "unquote");
+        return op && (op.formt == "symbol") && (op.name == "%%unquote");
     }
 
     function is_unquote_splicing(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "unquote-splicing");
+        return op && (op.formt == "symbol") && (op.name == "%%unquote-splicing");
     }
 
     function quasiquote(x, depth)
     {
-        return make_compound([quote(symbol("quasiquote")), 
+        return make_compound([quote(symbol("%%quasiquote")),
                               lisp_compile_qq(x, depth)]);
     }
 
     function unquote(x, depth)
     {
-        return make_compound([quote(symbol("unquote")), 
+        return make_compound([quote(symbol("%%unquote")),
                               lisp_compile_qq(x, depth)]);
     }
 
     function unquote_splicing(x, depth)
     {
-        return make_compound([quote(symbol("unquote-splicing")), 
+        return make_compound([quote(symbol("%%unquote-splicing")),
                               lisp_compile_qq(x, depth)]);
     }
 

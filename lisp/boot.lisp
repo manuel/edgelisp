@@ -6,25 +6,31 @@
        (%%lambda (%%form)
          (compound-apply
            (%%lambda ,(compound-elt defmacro-form 2)
-             (progn
+             (%%progn
                ,@(compound-slice defmacro-form 3)))
            (compound-slice %%form 1))))))
 
-(defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
 (defmacro defined? (name) `(%%defined? ,name))
-(defmacro fdefined? (name) `(defined? (%%identifier ,name f)))
-(defmacro lambda (sig &rest body) `(%%lambda ,sig (progn ,@body)))
-(defmacro function (name) `(%%identifier ,name f))
 (defmacro defparameter (name value) `(%%defparameter ,name ,value))
-
-(defmacro if (test consequent &opt (alternative 'null))
-  `(%%if ,test ,consequent ,alternative))
-
-(defmacro defun (name sig &rest body)
-  `(defparameter (function ,name) (lambda ,sig ,@body)))
+(defmacro defsyntax (name transformer) `(%%defsyntax ,name ,transformer))
+(defmacro eval-when-compile (&rest forms) `(%%eval-when-compile (%%progn ,@forms)))
+(defmacro fdefined? (name) `(defined? (%%identifier ,name f)))
+(defmacro funcall (function &rest arguments) `(%%funcall ,function ,@arguments))
+(defmacro function (name) `(%%identifier ,name f))
+(defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
+(defmacro if (test consequent &opt (alternative 'null)) `(%%if ,test ,consequent ,alternative))
+(defmacro lambda (sig &rest body) `(%%lambda ,sig (%%progn ,@body)))
+(defmacro native (&rest body) `(%%native ,@body))
+(defmacro native-snippet (string) `(%%native-snippet ,string))
+(defmacro progn (&rest body) `(%%progn ,@body))
+(defmacro quasiquote (form) `(%%quasiquote ,form))
+(defmacro quote (form) `(%%quote ,form))
 
 (defmacro defvar (name value)
   `(defparameter ,name (if (defined? ,name) ,name ,value)))
+
+(defmacro defun (name sig &rest body)
+  `(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro when (test &rest consequent)
   `(if ,test (progn ,@consequent) null))
@@ -66,14 +72,6 @@
                                         handler-specs))
                   (lambda () ,@body)))
 
-(defmacro eval-when-compile (&rest forms)
-  `(%%eval-when-compile (progn ,@forms)))
-
-(defmacro eval-and-compile (&rest forms)
-  `(progn
-     (eval-when-compile ,@forms)
-     ,@forms))
-
 (defun not (x)
   (if x false true))
 
@@ -107,6 +105,11 @@
 
 (defmacro assert-eql (a b)
   `(assert (eql ,a ,b)))
+
+(defmacro eval-and-compile (&rest forms)
+  `(progn
+     (eval-when-compile ,@forms)
+     ,@forms))
 
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
