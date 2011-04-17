@@ -109,6 +109,9 @@
      (eval-when-compile ,@forms)
      ,@forms))
 
+(defmacro native-body (&rest stuff)
+  `{% (function(){ ~,@stuff })() %})
+
 
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
@@ -159,7 +162,7 @@
   `(progn
      (defgeneric ,name)
      (put-method (generic ,name)
-		 ,(method-specializers params)
+		 (list ,@(params-specializers params))
 		 (lambda ,params ,@body))))
 
 
