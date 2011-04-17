@@ -191,36 +191,149 @@ function Lisp_generic()
     this.method_entries = [];
 }
 
+function Lisp_method_entry(method, specializers)
+{
+    this.method = method;
+    this.specializers = specializers;
+}
+
 function lisp_bif_make_generic(_key_)
 {
     return new Lisp_generic();
 }
 
+function lisp_make_method_entry(method, specializers)
+{
+    return new Lisp_method_entry(method, specializers);
+}
+
+function lisp_bif_put_method(_key_, generic, specializers, method)
+{
+    for (var i = 0, len = generic.method_entries; i < len; i++) {
+	var me = generic.method_entries[i];
+	if (lisp_lists_equal(me.specializers, specializers)) {
+	    me.method = method;
+	    return;
+	}
+    }
+    generic.method_entries.push(lisp_make_method_entry(method, specializers));
+}
+
 function lisp_bif_params_specializers(_key_, params)
 {
     var specializers = [];
-    var sig = lisp_compile_sig(params);
+    var sig = lisp_compile_sig(params.elts);
     for (var i = 0, len = sig.req_params.length; i < len; i++) {
 	var param = sig.req_params[i];
+	var specializer = param.specializer ? param.specializer : "object";
 	var specs = [ new Lisp_symbol_form("%%identifier"),
-		      new Lisp_symbol_form(param.name),
+		      new Lisp_symbol_form(specializer),
 		      new Lisp_symbol_form("class") ];
 	specializers.push(new Lisp_compound_form(specs));
     }
     return new Lisp_compound_form(specializers);
 }
 
-function lisp_bif_put_method(_key_, generic, specializers, fun)
-{
-    
-}
-
 function lisp_bif_find_method(_key_, generic, arguments)
 {
-    
+    var applicable_mes = lisp_find_applicable_method_entries(generic, arguments);
+    if (applicable_mes.length == 0)
+	return lisp_no_applicable_method(generic, arguments);
+    var me = lisp_most_specific_method_entry(generic, applicable_mes);
+    if (me)
+	return me.method;
+    else
+	return lisp_no_most_specific_method(generic, arguments, applicable_mes);
+}
+
+function lisp_find_applicable_method_entries(generic, arguments)
+{
+    var actual_specializers = [];
+    // start at 1 to skip over calling convention argument
+    for (var i = 1, len = arguments.length; i < len; i++)
+	actual_specializers.push(lisp_type_of(arguments[i]));
+    var applicable_mes = [];
+    var mes = generic.method_entries;
+    for (var i = 0, len = mes.length; i < len; i++)
+	if (lisp_specializers_lists_agree(actual_specializers, mes[i].specializers))
+	    applicable_mes.push(mes[i]);
+    return applicable_mes;
+}
+
+function lisp_specializers_lists_agree(actuals, formals)
+{
+    if (actuals.length != formals.length) return false;
+    for (var i = 0, len = actuals.length; i < len; i++)
+	if (!lisp_specializers_agree(actuals[i], formals[i]))
+	    return false;
+    return true;
+}
+
+function lisp_specializers_agree(actual, formal)
+{
+    return lisp_subtypep(actual,formal);
+}
+
+function lisp_most_specific_method_entry(generic, applicable_mes)
+{
+    if (applicable_mes.length == 1)
+	return applicable_mes[0];
+    for (var i = 0, len = applicable_mes.length; i < len; i++) 
+	if (lisp_least_method_entry(applicable_mes[i], applicable_mes))
+	    return applicable_mes[i];
+    return null;
+}
+
+function lisp_least_method_entry(me, mes)
+{
+    for (var i = 0, len = mes.length; i < len; i++) {
+	if (me === mes[i])
+	    continue;
+	if (!lisp_smaller_method_entry(me, mes[i]))
+	    return false;
+    }
+    return true;
+}
+
+function lisp_smaller_method_entry(me1, me2)
+{
+    if (me1.specializers.length != me2.specializers.length)
+	return false;
+    for (var i = 0, len = me1.specializers.length; i < len; i++)
+	if ((!lisp_classes_comparable(me1.specializers[i],
+				      me2.specializers[i])) ||
+	    (!lisp_subtypep(me1.specializers[i],
+			    me2.specializers[i])))
+	    return false;
+    return true;
+}
+
+function lisp_classes_comparable(class1, class2)
+{
+    return ((lisp_subtypep(class1, class2)) ||
+	    (lisp_subtypep(class2, class1)))
+}
+
+function lisp_no_applicable_method(generic, arguments)
+{
+    lisp_error("No applicable method.", generic);
+}
+
+function lisp_no_most_specific_method(generic, arguments, applicable_mes)
+{
+    lisp_error("No most specific method.", generic);
 }
 
 /*** Utilities ***/
+
+function lisp_lists_equal(list1, list2)
+{
+    if (list1.length != list2.length) return false;
+    for (var i = 0, len = list1.length; i < len; i++) {
+	if (list1[i] !== list2[i]) return false;
+    }
+    return true;
+}
 
 function lisp_bif_macroexpand_1(_key_, form)
 {
@@ -300,16 +413,6 @@ function lisp_bif_has_slot(_key_, obj, name)
 {
     lisp_assert_string(name);
     return obj.hasOwnProperty(lisp_mangle_slot(name));
-}
-
-function lisp_bif_get_method(_key_, obj, name)
-{
-    return obj[lisp_mangle_method(name)];
-}
-
-function lisp_bif_set_method(_key_, obj, name, fun)
-{
-    return obj[lisp_mangle_method(name)] = fun;
 }
 
 function lisp_bif_symbol_name(_key_, symbol)
@@ -464,7 +567,6 @@ lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("eql", "lisp_bif_eql");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
-lisp_set_function("get-method", "lisp_bif_get_method");
 lisp_set_function("gensym", "lisp_bif_gensym");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
 lisp_set_function("list", "lisp_bif_list");
@@ -479,7 +581,6 @@ lisp_set_function("number->string", "lisp_bif_number_to_string");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
 lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("print", "lisp_bif_print");
-lisp_set_function("set-method", "lisp_bif_set_method");
 lisp_set_function("set-slot", "lisp_bif_set_slot");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("slot", "lisp_bif_slot");

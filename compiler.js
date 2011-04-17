@@ -479,8 +479,8 @@ function lisp_compile_special_funcall(form)
 /* Name and namespace are not evaluated.
    (%%identifier name namespace) */
 function lisp_compile_special_identifier(form) {
-    var name = lisp_assert_symbol_form(form.elts[1]);
-    var namespace = lisp_assert_symbol_form(form.elts[2]);
+    var name = lisp_assert_symbol_form(form.elts[1], "Bad identifier name", form);
+    var namespace = lisp_assert_symbol_form(form.elts[2], "Bad identifier namespace", form);
     return { vopt: "identifier",
 	     name: name.name,
 	     namespace: namespace.name };
@@ -1564,6 +1564,7 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 
 /*** Export classes and built-in functions ***/
 
+lisp_set_class("object", "Object.prototype");
 lisp_set_class("<boolean>", "Boolean.prototype");
 lisp_set_class("<function>", "Function.prototype");
 lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
