@@ -2,7 +2,10 @@
 <head>
 <style type="text/css">
 html, input { font-family: mono; font-size: medium; }
-.lisp-user-input { font-weight: bold; }
+.lisp-repl-input { font-weight: bold; }
+.lisp-repl-error { color: red; }
+.lisp-repl-log { font-style: italic; }
+.lisp-repl-output {  }
 </style>
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
@@ -13,15 +16,28 @@ html, input { font-family: mono; font-size: medium; }
 <script type="text/javascript">
 function lisp_print(output)
 {
-    var element = document.createElement("div");
-    element.innerText = lisp_show(output);
-    document.getElementById("output").appendChild(element);
+    lisp_repl_insert(output, "lisp-repl-output");
 }
 
-function lisp_repl_userinput(input)
+function lisp_repl_input(input)
+{
+    lisp_repl_insert(input, "lisp-repl-input");
+}
+
+function lisp_repl_error(msg)
+{
+    lisp_repl_insert(msg, "lisp-repl-error");
+}
+
+function lisp_repl_log(input)
+{
+    lisp_repl_insert(input, "lisp-repl-log");
+}
+
+function lisp_repl_insert(input, className)
 {
     var element = document.createElement("div");
-    element.className = "lisp-user-input";
+    element.className = className;
     element.innerText = input;
     document.getElementById("output").appendChild(element);
 }
@@ -29,18 +45,23 @@ function lisp_repl_userinput(input)
 function lisp_repl()
 {
     var input = document.getElementById("input").value
-    lisp_repl_userinput(input);
-    document.getElementById("input").value = "";
-    lisp_print(lisp_eval(lisp_read(input)));
+    lisp_repl_input(input);
+    try {
+      lisp_print(lisp_eval(lisp_read(input)));
+      document.getElementById("input").value = "";
+    } catch(error) {
+      lisp_repl_error(error.message);
+    }
+    window.scrollTo(0, document.body.scrollHeight);
 }
 
 function lisp_load_file(path)
 {
-    lisp_print("Fetching " + path);
+    lisp_repl_log("Fetching " + path);
     var req = new XMLHttpRequest();
     req.open("GET", path, false);
     req.send(null);
-    lisp_print("Loading " + path);
+    lisp_repl_log("Loading " + path);
     if(req.status == 200) {
        lisp_eval(lisp_read(req.responseText));
     } else {
@@ -53,7 +74,7 @@ function lisp_repl_onload()
     lisp_load_file("lisp/boot.lisp");
 //    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
-    lisp_print("Lisp ready");
+    lisp_repl_log("Lisp ready");
     document.getElementById("input").focus();
 }
 </script>
@@ -61,7 +82,7 @@ function lisp_repl_onload()
 <body onload="lisp_repl_onload()">
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
-<input type="text" id="input" value="" style="width: 100%">
+<input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
 </form>
 </body>
 </html>
