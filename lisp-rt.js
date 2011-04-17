@@ -196,9 +196,23 @@ function lisp_bif_make_generic(_key_)
     return new Lisp_generic();
 }
 
-function lisp_bif_method_specializers(_key_, params)
+function lisp_bif_params_specializers(_key_, params)
 {
-    return new Lisp_compound_form([new Lisp_symbol_form("list")]);
+    var specializers = [];
+    var sig = lisp_compile_sig(params);
+    for (var i = 0, len = sig.req_params.length; i < len; i++) {
+	var param = sig.req_params[i];
+	var specs = [ new Lisp_symbol_form("%%identifier"),
+		      new Lisp_symbol_form(param.name),
+		      new Lisp_symbol_form("class") ];
+	specializers.push(new Lisp_compound_form(specs));
+    }
+    return new Lisp_compound_form(specializers);
+}
+
+function lisp_bif_put_method(_key_, generic, specializers, fun)
+{
+    
 }
 
 /*** Utilities ***/
@@ -455,8 +469,9 @@ lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_set_function("make", "lisp_bif_make");
 lisp_set_function("make-class", "lisp_bif_make_class");
 lisp_set_function("make-generic", "lisp_bif_make_generic");
-lisp_set_function("method-specializers", "lisp_bif_method_specializers");
 lisp_set_function("number->string", "lisp_bif_number_to_string");
+lisp_set_function("params-specializers", "lisp_bif_params_specializers");
+lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("set-method", "lisp_bif_set_method");
 lisp_set_function("set-slot", "lisp_bif_set_slot");

@@ -1116,7 +1116,7 @@ function lisp_emit_vop_lambda(vop)
         var param = req_params[i];
         if (param.specializer) {
             var name = lisp_mangle_var(param.name);
-            var type_name = lisp_mangle_var(param.specializer);
+            var type_name = lisp_mangle_class(param.specializer);
             check_types += "lisp_check_type(" + name + ", " + type_name + "); ";
         }
     }
@@ -1516,7 +1516,7 @@ function lisp_bif_compound_slice(_key_, compound, start)
 
 /* This is the type of dictionaries used to hold keyword arguments,
    i.e. the one a function with an `&all-keys' signature keyword
-   receives.  They're called string dictionaries because their keys
+   receives.  They're ed string dictionaries because their keys
    can only be strings.
    
    By convention, all keys are mangled (prefixed with "%", but not

@@ -7,6 +7,7 @@ html, input { font-family: mono; font-size: medium; }
 a { text-decoration: none; }
 .lisp-banner { font-family: "Orbitron", serif; font-style: italic; font-weight: bold; }
 .lisp-version { color: gray; }
+.lisp-source { color: gray; }
 .lisp-repl-input { font-weight: bold; }
 .lisp-repl-error { color: orange; }
 .lisp-repl-log { font-style: italic; }
@@ -94,7 +95,13 @@ function lisp_repl_onload()
 </script>
 </head>
 <body onload="lisp_repl_onload()">
-<div class="lisp-banner"><a href="http://github.com/manuel/cyberlisp">EdgeLisp </a> <span class="lisp-version">(0.1.1, 2010-04-17)</span></div>
+<div class="lisp-banner">
+  <a href="http://github.com/manuel/cyberlisp">EdgeLisp</a>
+  <span class="lisp-version">(0.1.1, 2010-04-17)</span>
+  <span class="lisp-source">
+  source: <a href="lisp.js">compiler</a>, <a href="lisp-rt.js">runtime</a>
+  </span>
+</div>
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
 <input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
