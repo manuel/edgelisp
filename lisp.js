@@ -306,7 +306,7 @@ function lisp_compile(form)
         return { vopt: "string", s: form.s };
     case "symbol":
         lisp_assert_symbol_form(form, "Bad symbol form", form);
-        return { vopt: "identifier", name: form.name, namespace: "v" };
+        return { vopt: "identifier", name: form.name, namespace: "variable" };
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(form);
@@ -337,7 +337,7 @@ function lisp_compile_function_application(form)
 {
     var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "identifier", name: name, namespace: "f" };
+    var fun = { vopt: "identifier", name: name, namespace: "function" };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -451,7 +451,7 @@ function lisp_compile_special_eval_when_compile(form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     eval(lisp_emit(lisp_compile(body_form)));
-    return { vopt: "identifier", name: "false", namespace: "v" };
+    return { vopt: "identifier", name: "false", namespace: "variable" };
 }
 
 /* Registers a macro expander function.  An expander function takes a
@@ -462,7 +462,7 @@ function lisp_compile_special_defsyntax(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
-    return { vopt: "identifier", name: "false", namespace: "v" };
+    return { vopt: "identifier", name: "false", namespace: "variable" };
 }
 
 /* Calls a function passed as argument.
@@ -977,14 +977,14 @@ function lisp_compile_qq_compound(x, depth)
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-		 fun: { vopt: "identifier", name: "make-compound", namespace:"f" },
+		 fun: { vopt: "identifier", name: "make-compound", namespace:"function" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-		 fun: { vopt: "identifier", name: "append-compounds", namespace:"f" },
+		 fun: { vopt: "identifier", name: "append-compounds", namespace:"function" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -1223,12 +1223,15 @@ function lisp_emit_vop_quote(vop)
 }
 
 /* Variable reference.
-   { vopt: "identifier", name: <string> [, namespace: <string> ] }
+   { vopt: "identifier", name: <string>, namespace: <string> }
    name: the name of the variable. */
 function lisp_emit_vop_identifier(vop)
 {
     lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
-    return lisp_mangle(vop.name, vop.namespace ? vop.namespace : "v");
+    lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
+    var mname = lisp_mangle(vop.name, vop.namespace);
+    var args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
+    return "(typeof " + mname + " != \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
 }
 
 /* Assigns a value to a variable.
@@ -1293,26 +1296,31 @@ function lisp_mangle(name, namespace)
 
 function lisp_mangle_var(name)
 {
-    return lisp_mangle(name, "v");
+    return lisp_mangle(name, "variable");
 }
 
 function lisp_mangle_function(name)
 {
-    return lisp_mangle(name, "f");
+    return lisp_mangle(name, "function");
 }
 
 function lisp_mangle_slot(name)
 {
-    return lisp_mangle(name, "s");
+    return lisp_mangle(name, "slot");
 }
 
 function lisp_mangle_method(name)
 {
-    return lisp_mangle(name, "m");
+    return lisp_mangle(name, "method");
 }
 
 
 /*** Utilities ***/
+
+function lisp_undefined_identifier(name, namespace)
+{
+    return lisp_error("Undefined " + namespace, name);
+}
 
 function lisp_set_function(lisp_name, js_function)
 {

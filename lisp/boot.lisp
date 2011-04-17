@@ -16,7 +16,7 @@
 (defmacro eval-when-compile (&rest forms) `(%%eval-when-compile (%%progn ,@forms)))
 (defmacro fdefined? (name) `(defined? (%%identifier ,name f)))
 (defmacro funcall (function &rest arguments) `(%%funcall ,function ,@arguments))
-(defmacro function (name) `(%%identifier ,name f))
+(defmacro function (name) `(%%identifier ,name function))
 (defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
 (defmacro if (test consequent &opt (alternative 'null)) `(%%if ,test ,consequent ,alternative))
 (defmacro lambda (sig &rest body) `(%%lambda ,sig (%%progn ,@body)))

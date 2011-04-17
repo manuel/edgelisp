@@ -340,7 +340,7 @@ function lisp_bif_apply(_key_, fun, args, keys)
 
 function lisp_is_true(obj) // T
 {
-    return (obj !== false) && (obj !== undefined);
+    return (obj !== false) && (obj !== null);
 }
 
 function lisp_bif_add(_key_, a, b)
@@ -405,7 +405,7 @@ function lisp_bif_gensym(_key_)
 
 lisp_set("true", "true");
 lisp_set("false", "false");
-lisp_set("null", "undefined");
+lisp_set("null", "null");
 
 lisp_set_function("*", "lisp_bif_mult");
 lisp_set_function("+", "lisp_bif_add");
