@@ -344,6 +344,24 @@ function lisp_compile_function_application(form)
              call_site: call_site };
 }
 
+/* Maps the mangled names of macros to their expander functions. */
+var lisp_macros_table = {};
+
+function lisp_macro_function(name)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);
+    return lisp_macros_table[mangled_name];
+}
+
+function lisp_set_macro_function(name, expander)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);    
+    lisp_macros_table[mangled_name] = expander;
+    return expander;
+}
+
 
 /*** Special forms ***/
 
@@ -391,24 +409,6 @@ function lisp_special_function(name)
     lisp_assert_nonempty_string(name, "Bad special form name", name);
     return lisp_specials_table[name];
 }
-
-function lisp_macro_function(name)
-{
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);
-    return lisp_macros_table[mangled_name];
-}
-
-function lisp_set_macro_function(name, expander)
-{
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);    
-    lisp_macros_table[mangled_name] = expander;
-    return expander;
-}
-
-/* Maps the mangled names of macros to their expander functions. */
-var lisp_macros_table = {};
 
 /**** List of special forms ****/
 
