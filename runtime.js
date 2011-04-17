@@ -390,7 +390,7 @@ function lisp_bif_set_superclass(_key_, clsA, clsB)
     clsA.__proto__ = clsB;
 }
 
-function lisp_bif_make(_key_, cls)
+function lisp_bif_make_instance(_key_, cls)
 {
     var obj = {};
     obj.__proto__ = cls;
@@ -574,7 +574,7 @@ lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
 lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_set_function("make", "lisp_bif_make");
+lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("make-class", "lisp_bif_make_class");
 lisp_set_function("make-generic", "lisp_bif_make_generic");
 lisp_set_function("number->string", "lisp_bif_number_to_string");

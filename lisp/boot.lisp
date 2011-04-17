@@ -131,6 +131,9 @@
 (defmacro class (name)
   `(identifier ,name class))
 
+(defmacro make (class-name)
+  `(make-instance (class ,class-name)))
+
 (defmacro defclass (name-and-super &opt (slots '()))
   (let ((class-name null)
         (superclass null))
@@ -148,7 +151,7 @@
 			 (defclass-do-slot class-name slot))
                        slots)
        (defun ,class-name ()
-         (make (class ,class-name)))
+         (make ,class-name))
        ',class-name)))
 
 (defmacro generic (name)
