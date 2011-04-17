@@ -33,16 +33,23 @@ function lisp_repl_error(msg)
     lisp_repl_insert(msg, "lisp-repl-error");
 }
 
-function lisp_repl_log(input)
+function lisp_repl_log(input, url)
 {
-    lisp_repl_insert(input, "lisp-repl-log");
+    lisp_repl_insert(input, "lisp-repl-log", url);
 }
 
-function lisp_repl_insert(input, className)
+function lisp_repl_insert(input, className, optionalUrl)
 {
     var element = document.createElement("div");
     element.className = className;
-    element.innerText = input;
+    var textElement = element;
+    if (optionalUrl) {
+      var link = document.createElement("a");
+      link.setAttribute("href", optionalUrl);
+      element.appendChild(link);
+      textElement = link;
+    }
+    textElement.innerText = input;
     document.getElementById("output").appendChild(element);
 }
 
@@ -61,15 +68,18 @@ function lisp_repl()
 
 function lisp_load_file(path)
 {
-    lisp_repl_log("Fetching " + path);
-    var req = new XMLHttpRequest();
-    req.open("GET", path, false);
-    req.send(null);
-    lisp_repl_log("Loading " + path);
-    if(req.status == 200) {
-       lisp_eval(lisp_read(req.responseText));
-    } else {
+    try {
+      lisp_repl_log("Loading " + path, path);
+      var req = new XMLHttpRequest();
+      req.open("GET", path, false);
+      req.send(null);
+      if(req.status == 200) {
+        lisp_eval(lisp_read(req.responseText));
+      } else {
         lisp_error("XHR error", req.status);
+      }
+    } catch(error) {
+      lisp_repl_error(error.message);
     }
 }
 
@@ -78,13 +88,12 @@ function lisp_repl_onload()
     lisp_load_file("lisp/boot.lisp");
 //    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
-    lisp_repl_log("Ready");
     document.getElementById("input").focus();
 }
 </script>
 </head>
 <body onload="lisp_repl_onload()">
-<div class="lisp-banner"><a href="http://github.com/manuel/cyberlisp">EdgeLisp </a> <span class="lisp-version">(0.1.0, 2010-04-17)</span></div>
+<div class="lisp-banner"><a href="http://github.com/manuel/cyberlisp">EdgeLisp </a> <span class="lisp-version">(0.1.1, 2010-04-17)</span></div>
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
 <input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
