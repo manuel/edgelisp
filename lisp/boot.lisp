@@ -138,11 +138,12 @@
        ,(if superclass 
             `(set-superclass (class ,class-name) (class ,superclass))
             `null)
-       ,@(compound-map (lambda (slot) (defclass-do-slot class-name slot))
+       ,@(compound-map (lambda (slot)
+			 (defclass-do-slot class-name slot))
                        slots)
        (defun ,class-name ()
          (make (class ,class-name)))
-       ,class-name)))
+       ',class-name)))
 
 (defmacro generic (name)
   `(identifier ,name generic))
@@ -170,8 +171,6 @@
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
 (defclass (<restart> <exception>))
-
-(deferror <failed-assertion>)
 
 
 (defclass <dict>)
