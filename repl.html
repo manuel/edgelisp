@@ -1,12 +1,15 @@
 <html>
 <head>
+<link  href="http://fonts.googleapis.com/css?family=Orbitron:400,500,700,900" rel="stylesheet" type="text/css" >
 <style type="text/css">
 html, input { font-family: mono; font-size: medium; }
-.lisp-banner { color: blue; }
+a { text-decoration: none; }
+.lisp-banner { font-family: "Orbitron", serif; font-style: italic; font-weight: bold; }
+.lisp-version { color: gray; }
 .lisp-repl-input { font-weight: bold; }
-.lisp-repl-error { color: red; }
+.lisp-repl-error { color: orange; }
 .lisp-repl-log { font-style: italic; }
-.lisp-repl-output {  }
+.lisp-repl-output { }
 </style>
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
@@ -17,7 +20,7 @@ html, input { font-family: mono; font-size: medium; }
 <script type="text/javascript">
 function lisp_print(output)
 {
-    lisp_repl_insert(output, "lisp-repl-output");
+    lisp_repl_insert(lisp_show(output), "lisp-repl-output");
 }
 
 function lisp_repl_input(input)
@@ -75,13 +78,13 @@ function lisp_repl_onload()
     lisp_load_file("lisp/boot.lisp");
 //    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
-    lisp_repl_log("Lisp ready");
+    lisp_repl_log("Ready");
     document.getElementById("input").focus();
 }
 </script>
 </head>
 <body onload="lisp_repl_onload()">
-<div class="lisp-banner">EdgeLisp (0.1)</div>
+<div class="lisp-banner"><a href="http://github.com/manuel/cyberlisp">EdgeLisp </a> <span class="lisp-version">(0.1.0, 2010-04-17)</span></div>
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
 <input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
