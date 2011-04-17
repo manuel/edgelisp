@@ -2,6 +2,7 @@
 <head>
 <style type="text/css">
 html, input { font-family: mono; font-size: medium; }
+.lisp-banner { color: blue; }
 .lisp-repl-input { font-weight: bold; }
 .lisp-repl-error { color: red; }
 .lisp-repl-log { font-style: italic; }
@@ -80,6 +81,7 @@ function lisp_repl_onload()
 </script>
 </head>
 <body onload="lisp_repl_onload()">
+<div class="lisp-banner">EdgeLisp (0.1)</div>
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
 <input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
