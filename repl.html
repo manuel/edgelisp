@@ -1,5 +1,9 @@
 <html>
 <head>
+<style type="text/css">
+html, input { font-family: mono; }
+.lisp-user-input { font-weight: bold; }
+</style>
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
 <script type="text/javascript" src="lib/biginteger.js"></script>
@@ -14,9 +18,18 @@ function lisp_print(output)
     document.getElementById("output").appendChild(element);
 }
 
+function lisp_repl_userinput(input)
+{
+    var element = document.createElement("div");
+    element.className = "lisp-user-input";
+    element.innerText = input;
+    document.getElementById("output").appendChild(element);
+}
+
 function lisp_repl()
 {
     var input = document.getElementById("input").value
+    lisp_repl_userinput(input);
     lisp_print(lisp_eval(lisp_read(input)));
 }
 
@@ -37,7 +50,7 @@ function lisp_load_file(path)
 function lisp_repl_onload()
 {
     lisp_load_file("lisp/boot.lisp");
-    lisp_load_file("test/boot-test.lisp");
+//    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
     lisp_print("Lisp ready");
 }
