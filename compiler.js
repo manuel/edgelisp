@@ -819,14 +819,14 @@ function lisp_mangled_param_name(param)
 function lisp_is_keyword_arg(string)
 {
     if (string.length > 1)
-        return string[string.length - 1] == ":";
+        return string[0] == ":";
     else
         return false;
 }
 
 function lisp_clean_keyword_arg(string)
 {
-    return string.slice(0, string.length - 1);
+    return string.slice(1, string.length);
 }
 
 /* Given a list of argument forms, return a call site. */
