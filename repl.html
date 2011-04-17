@@ -1,7 +1,7 @@
 <html>
 <head>
 <style type="text/css">
-html, input { font-family: mono; }
+html, input { font-family: mono; border-width: 0; font-size: medium; }
 .lisp-user-input { font-weight: bold; }
 </style>
 <script type="text/javascript" src="lib/json2.js"></script>
@@ -30,6 +30,7 @@ function lisp_repl()
 {
     var input = document.getElementById("input").value
     lisp_repl_userinput(input);
+    document.getElementById("input").value = "";
     lisp_print(lisp_eval(lisp_read(input)));
 }
 
@@ -53,14 +54,14 @@ function lisp_repl_onload()
 //    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
     lisp_print("Lisp ready");
+    document.getElementById("input").focus();
 }
 </script>
 </head>
 <body onload="lisp_repl_onload()">
 <div id="output"></div>
 <form action="javascript:lisp_repl()">
-<input type="text" id="input" value="(defun double (x) (* x 2))" style="width: 23em">
-<input type="submit" value="evaluate">
+<input type="text" id="input" value="" style="width: 100%">
 </form>
 </body>
 </html>
