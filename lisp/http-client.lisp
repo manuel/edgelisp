@@ -1,5 +1,3 @@
-(defgeneric http-get (url))
-
 (defun http-get ((url <string>))
   (native-body 
    {% var req = new XMLHttpRequest();
