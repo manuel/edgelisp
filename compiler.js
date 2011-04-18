@@ -1014,11 +1014,83 @@ function lisp_emit_vop_native_snippet(vop)
     return vop.text;
 }
 
+/* Evaluates a number of VOPs in sequence and returns the value of the last.
+   { vopt: "progn", vops: <list> } 
+   vops: list of VOPs. */
+function lisp_emit_vop_progn(vop)
+{
+    lisp_assert_not_null(vop.vops, "Bad PROGN", vop);
+    if (vop.vops.length > 0)
+        return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
+    else
+        return "null";
+}
+
+/* Variable reference.
+   { vopt: "identifier", name: <string>, namespace: <string> }
+   name: the name of the variable. */
+function lisp_emit_vop_identifier(vop)
+{
+    lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
+    lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
+    var mname = lisp_mangle(vop.name, vop.namespace);
+    var args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
+    return "(typeof " + mname + " != \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
+}
+
+/* Assigns a value to a variable.
+   { vopt: "set", name: <vop>, value: <vop> }
+   name: the "identifier" VOP of the variable;
+   value: VOP for the value. */
+function lisp_emit_vop_set(vop)
+{
+    var value = lisp_emit(vop.value);
+    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    return "(" + mname + " = " + value + ")";
+}
+
 /* { vopt: "defined?", name: <vop> } */
 function lisp_emit_vop_definedp(vop)
 {
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
     return "(typeof " + mname + " != \"undefined\")";
+}
+
+/* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
+function lisp_emit_vop_if(vop)
+{
+    var test = lisp_emit(vop.test);
+    var consequent = lisp_emit(vop.consequent);
+    var alternative = lisp_emit(vop.alternative);
+    return "(lisp_is_true(" +test+ ") ? " +consequent+ " : " +alternative+ ")";
+}
+
+/* Number literal.
+   { vopt: "number",
+     sign: <string>,
+     integral_digits: <string>,
+     fractional_digits: <string> } */
+function lisp_emit_vop_number(vop)
+{
+    var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
+    return "(SchemeNumber(\"" + num_repr + "\"))";
+}
+
+/* String literal.
+   { vopt: "string", s: <string> }
+   s: the string in JavaScript syntax. */
+function lisp_emit_vop_string(vop)
+{
+    lisp_assert_string(vop.s, "Bad .s", vop);
+    return JSON.stringify(vop.s);
+}
+
+/* Evaluates to the form itself.
+   { vopt: "quote", form: <form> }
+   form: any form. */
+function lisp_emit_vop_quote(vop)
+{
+    return JSON.stringify(vop.form);
 }
 
 /* Calls a function.
@@ -1048,15 +1120,6 @@ function lisp_emit_vop_funcall(vop)
     var args = [ keywords_dict ].concat(pos_args).join(", ");
 
     return "(" + lisp_emit(fun) + "(" + args + "))";
-}
-
-/* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
-function lisp_emit_vop_if(vop)
-{
-    var test = lisp_emit(vop.test);
-    var consequent = lisp_emit(vop.consequent);
-    var alternative = lisp_emit(vop.alternative);
-    return "(lisp_is_true(" +test+ ") ? " +consequent+ " : " +alternative+ ")";
 }
 
 /* Creates a lexical closure.
@@ -1173,69 +1236,6 @@ function lisp_emit_vop_lambda(vop)
     var body = lisp_emit(vop.body);
 
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
-}
-
-/* Number literal.
-   { vopt: "number",
-     sign: <string>,
-     integral_digits: <string>,
-     fractional_digits: <string> } */
-function lisp_emit_vop_number(vop)
-{
-    var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
-    return "(SchemeNumber(\"" + num_repr + "\"))";
-}
-
-/* Evaluates a number of VOPs in sequence and returns the value of the last.
-   { vopt: "progn", vops: <list> } 
-   vops: list of VOPs. */
-function lisp_emit_vop_progn(vop)
-{
-    lisp_assert_not_null(vop.vops, "Bad PROGN", vop);
-    if (vop.vops.length > 0)
-        return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
-    else
-        return "undefined";
-}
-
-/* Evaluates to the form itself.
-   { vopt: "quote", form: <form> }
-   form: any form. */
-function lisp_emit_vop_quote(vop)
-{
-    return JSON.stringify(vop.form);
-}
-
-/* Variable reference.
-   { vopt: "identifier", name: <string>, namespace: <string> }
-   name: the name of the variable. */
-function lisp_emit_vop_identifier(vop)
-{
-    lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
-    lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
-    var mname = lisp_mangle(vop.name, vop.namespace);
-    var args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
-    return "(typeof " + mname + " != \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
-}
-
-/* Assigns a value to a variable.
-   { vopt: "set", name: <vop>, value: <vop> }
-   name: the "identifier" VOP of the variable;
-   value: VOP for the value. */
-function lisp_emit_vop_set(vop)
-{
-    var value = lisp_emit(vop.value);
-    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
-    return "(" + mname + " = " + value + ")";
-}
-
-/* String literal.
-   { vopt: "string", s: <string> }
-   s: the string in JavaScript syntax. */
-function lisp_emit_vop_string(vop)
-{
-    lisp_assert_string(vop.s, "Bad .s", vop);
-    return JSON.stringify(vop.s);
 }
 
 
