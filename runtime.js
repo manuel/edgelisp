@@ -17,13 +17,57 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
 
-   /* Lisp runtime: this file should contain all functions needed to run
-   compiled Lisp code.  At the moment, it does have some dependencies
-   on functions in `lisp.js', though.
+/* Lisp runtime: this file should contain all functions needed to run
+   compiled Lisp code.  At the moment, it does have dependencies on
+   name mangling functions in `compiler.js', though.
 
    Lisp code that does use `eval' will always need to include the
-   compiler, `lisp.js', too. */
+   compiler too. */
 
+
+/*** Forms ***/
+
+function Lisp_number_form(sign, integral_digits, fractional_digits)
+{
+    this.formt = "number";
+    this.sign = sign;
+    this.integral_digits = integral_digits;
+    this.fractional_digits = fractional_digits;
+}
+
+function Lisp_string_form(s)
+{
+    this.formt = "string";
+    this.s = s;
+}
+
+function Lisp_symbol_form(name)
+{
+    this.formt = "symbol";
+    this.name = name;
+}
+
+function Lisp_compound_form(elts)
+{
+    this.formt = "compound";
+    this.elts = elts;
+}
+
+/* This whole comments-as-forms business is silly, but atm I don't
+   know another way to have comments ignored. */
+function Lisp_comment_form(contents)
+{
+    this.formt = "comment";
+    this.contents = contents;
+}
+
+
+/*** Utilities for generated code. ***/
+
+function lisp_undefined_identifier(name, namespace)
+{
+    return lisp_error("Undefined " + namespace, name);
+}
 
 /* Used inside lambdas. */
 function lisp_arity_min(length, min)
@@ -57,6 +101,226 @@ function lisp_check_type(obj, type)
 {
     if (!lisp_subtypep(lisp_type_of(obj), type))
         lisp_error("Type error", obj);
+}
+
+
+function lisp_show(obj)
+{
+    if (obj === null) {
+        return "null";
+    } else if (typeof obj == "function") {
+        return "#<function>";
+    } else {
+        return JSON.stringify(obj);
+    }
+}
+
+function lisp_array_contains(array, elt)
+{
+    for (var i in array) {
+        if (array[i] == elt) return true;
+    }
+    return false;
+}
+
+function lisp_iter_dict(dict, fun)
+{
+    for (var k in dict) {
+        if (dict.hasOwnProperty(k))
+            fun(k);
+    }
+}
+
+function lisp_error(message, arg)
+{
+    throw Error(message + ": " + lisp_show(arg));
+}
+
+function lisp_assert(value, message, arg)
+{
+    if (!value) lisp_error(message, arg);
+    return value;
+}
+
+function lisp_assert_not_null(value, message, arg)
+{
+    lisp_assert(value != null, message, arg);
+    return value;
+}
+
+function lisp_assert_number(value, message, arg)
+{
+    // fixme
+    lisp_assert(typeof value == "number", message, arg);
+    return value;
+}
+
+function lisp_assert_string(value, message, arg)
+{
+    lisp_assert(typeof value == "string", message, arg);
+    return value;
+}
+
+function lisp_assert_nonempty_string(value, message, arg)
+{
+    lisp_assert_string(value, message, arg);
+    lisp_assert(value.length > 0, message, arg);
+    return value;
+}
+
+function lisp_assert_function(value, message, arg)
+{
+    lisp_assert(typeof value == "function", message, arg);
+    return value;
+}
+
+function lisp_assert_symbol_form(value, message, arg)
+{
+    lisp_assert(typeof value == "object", message, arg);
+    lisp_assert(value.formt == "symbol", message, arg);
+    lisp_assert_nonempty_string(value.name, message, arg);
+    return value;
+}
+
+function lisp_assert_compound_form(value, message, arg)
+{
+    lisp_assert(typeof value == "object", message, arg);
+    lisp_assert(value.formt == "compound", message, arg);
+    lisp_assert_not_null(value.elts, message, arg);
+    lisp_assert_not_null(value.elts.length, message, arg);
+    return value;
+}
+
+
+/*** Built-in form manipulation functions ***/
+
+/* Applies a Lisp function to the elements of a compound form, a
+   simple form of destructuring.  The form's elements are simply
+   supplied as the function's positional arguments. */
+function lisp_bif_compound_apply(_key_, fun, form)
+{
+    var _key_ = null;
+    var args = [ _key_ ].concat(form.elts);
+    var thisArg = null;
+    return fun.apply(thisArg, args);
+}
+
+/* Creates a compound form from all positional arguments, which must
+   be forms. */
+function lisp_bif_make_compound(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+	var elt = arguments[i];
+	lisp_assert(elt && elt.formt, "make-compound", elt);
+	elts = elts.concat(elt);
+    }
+    return new Lisp_compound_form(elts);
+}
+
+/* Creates a compound form by appending all positional arguments,
+   which must be compound forms or lists.  This fuzzyness in accepting
+   both compound forms and lists enables the splicing in of forms
+   supplied via the rest parameter. */
+function lisp_bif_append_compounds(_key_)
+{
+    var elts = [];
+    for (var i = 1; i < arguments.length; i++) {
+        var elt = arguments[i];
+        if (elt.formt == "compound") {
+            elts = elts.concat(elt.elts);
+        } else {
+            lisp_assert(elt.length != null, "append-compounds", elt);
+            elts = elts.concat(elt);
+        }
+    }
+    return new Lisp_compound_form(elts);
+}
+
+function lisp_bif_compound_map(_key_, fun, compound)
+{
+    function js_fun(elt) {
+        return fun(null, elt);
+    }
+    lisp_assert_not_null(fun);
+    lisp_assert_compound_form(compound);
+    return new Lisp_compound_form(compound.elts.map(js_fun));
+}
+
+function lisp_bif_compound_elt(_key_, compound, i)
+{
+    lisp_assert_compound_form(compound, "compound-elt", compound);
+    var elt = compound.elts[i];
+    return elt;
+}
+
+function lisp_bif_compound_len(_key_, compound)
+{
+    lisp_assert_compound_form(compound, "compound-len", compound);
+    return compound.elts.length;
+}
+
+function lisp_bif_compound_elts(_key_, compound)
+{
+    lisp_assert_compound_form(compound, "compound-elts", compound);
+    return compound.elts;
+}
+
+function lisp_bif_compound_slice(_key_, compound, start)
+{
+    lisp_assert_compound_form(compound, "compound-slice", compound);
+    return new Lisp_compound_form(compound.elts.slice(start));
+}
+
+
+/*** Built-in string dictionaries ***/
+
+/* This is the type of dictionaries used to hold keyword arguments,
+   i.e. the one a function with an `&all-keys' signature keyword
+   receives.  They're called string dictionaries because their keys
+   can only be strings.
+   
+   By convention, all keys are prefixed with "%" (but not transformed
+   like variables), so we never get in conflict with JS's special
+   names, such as "prototype". */
+
+function lisp_mangle_string_dict_key(name)
+{
+    lisp_assert_string(name);
+    return "%" + name;
+}
+
+function lisp_is_string_dict_key(k)
+{
+    return k[0] == "%";
+}
+
+function Lisp_string_dict()
+{
+}
+
+/* Turns an ordinary dictionary into a string dictionary.  May only be
+   called if the caller has ensured that all keys are properly
+   mangled, or that the dictionary is empty. */
+function lisp_fast_string_dict(js_dict)
+{
+    js_dict.__proto__ = Lisp_string_dict.prototype;
+    return js_dict;
+}
+
+function lisp_bif_string_dict_get(_key_, dict, key)
+{
+    return dict[lisp_mangle_string_dict_key(key)];
+}
+
+function lisp_bif_string_dict_put(_key_, dict, key, value)
+{
+    dict[lisp_mangle_string_dict_key(key)] = value;
+}
+
+function lisp_bif_string_dict_has_key(_key_, dict, key)
+{
+    return lisp_mangle_string_dict_key(key) in dict;
 }
 
 
@@ -562,19 +826,37 @@ lisp_set("#t", "true");
 lisp_set("#f", "false");
 lisp_set("nil", "null");
 
+lisp_set_class("object", "Object.prototype");
+lisp_set_class("<boolean>", "Boolean.prototype");
+lisp_set_class("<function>", "Function.prototype");
+lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
+lisp_set_class("<list>", "Array.prototype");
+lisp_set_class("<number-form>", "Lisp_number_form.prototype");
+lisp_set_class("<number>", "Number.prototype");
+lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
+lisp_set_class("<string-form>", "Lisp_string_form.prototype");
+lisp_set_class("<string>", "String.prototype");
+lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
+
 lisp_set_function("*", "lisp_bif_mult");
 lisp_set_function("+", "lisp_bif_add");
 lisp_set_function("-", "lisp_bif_sub");
 lisp_set_function("/", "lisp_bif_div");
-lisp_set_function("=", "lisp_bif_eql");
 lisp_set_function("<", "lisp_bif_lt");
+lisp_set_function("=", "lisp_bif_eql");
 lisp_set_function(">", "lisp_bif_gt");
+lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
-lisp_set_function("call-with-escape-function",
-		  "lisp_bif_call_with_escape_function");
 lisp_set_function("call-while", "lisp_bif_call_while");
+lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
+lisp_set_function("compound-apply", "lisp_bif_compound_apply");
+lisp_set_function("compound-elt", "lisp_bif_compound_elt");
+lisp_set_function("compound-elts", "lisp_bif_compound_elts");
+lisp_set_function("compound-len", "lisp_bif_compound_len");
+lisp_set_function("compound-map", "lisp_bif_compound_map");
+lisp_set_function("compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("eql", "lisp_bif_eql");
@@ -587,21 +869,43 @@ lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
 lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("make-class", "lisp_bif_make_class");
+lisp_set_function("make-compound", "lisp_bif_make_compound");
 lisp_set_function("make-generic", "lisp_bif_make_generic");
+lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("number->string", "lisp_bif_number_to_string");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
-lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("print", "lisp_bif_print");
+lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("set-slot", "lisp_bif_set_slot");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
+lisp_set_function("signal", "lisp_bif_signal");
 lisp_set_function("slot", "lisp_bif_slot");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
+lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");
+lisp_set_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
+lisp_set_function("string-dict-put", "lisp_bif_string_dict_put");
 lisp_set_function("string-to-form", "lisp_bif_string_to_form");
 lisp_set_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");
-lisp_set_function("signal", "lisp_bif_signal");
 lisp_set_function("type-of", "lisp_bif_type_of");
+
+
+/*** Utilities ***/
+
+function lisp_set(lisp_name, js_object)
+{
+    eval(lisp_mangle_var(lisp_name) + " = " + js_object);
+}
+
+function lisp_set_function(lisp_name, js_function)
+{
+    eval(lisp_mangle_function(lisp_name) + " = " + js_function);
+}
+
+function lisp_set_class(lisp_name, js_class)
+{
+    eval(lisp_mangle_class(lisp_name) + " = " + js_class);
+}
