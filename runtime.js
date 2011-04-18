@@ -332,32 +332,7 @@ function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 }
 
 
-/*** Utilities ***/
-
-function lisp_lists_equal(list1, list2)
-{
-    if (list1.length != list2.length) return false;
-    for (var i = 0, len = list1.length; i < len; i++) {
-	if (list1[i] !== list2[i]) return false;
-    }
-    return true;
-}
-
-function lisp_bif_macroexpand_1(_key_, form)
-{
-    var macro = lisp_macro_function(form.elts[0].name);
-    return macro(null, form);
-}
-
-function lisp_bif_print(_key_, object)
-{
-    lisp_print(object); // defined in REPL
-}
-
-function lisp_bif_eq(_key_, a, b)
-{
-    return a === b;
-}
+/*** Classes ***/
 
 function lisp_type_of(obj)
 {
@@ -403,6 +378,39 @@ function lisp_bif_make_instance(_key_, cls)
     var obj = {};
     obj.__proto__ = cls;
     return obj;
+}
+
+function lisp_bif_is_typename(_key_, string)
+{
+    return lisp_is_type_name(string);
+}
+
+
+/*** Utilities ***/
+
+function lisp_lists_equal(list1, list2)
+{
+    if (list1.length != list2.length) return false;
+    for (var i = 0, len = list1.length; i < len; i++) {
+	if (list1[i] !== list2[i]) return false;
+    }
+    return true;
+}
+
+function lisp_bif_macroexpand_1(_key_, form)
+{
+    var macro = lisp_macro_function(form.elts[0].name);
+    return macro(null, form);
+}
+
+function lisp_bif_print(_key_, object)
+{
+    lisp_print(object); // defined in REPL
+}
+
+function lisp_bif_eq(_key_, a, b)
+{
+    return a === b;
 }
 
 function lisp_bif_slot(_key_, obj, name)
@@ -477,11 +485,6 @@ function lisp_bif_string_to_form(_key_, string)
 function lisp_bif_string_to_symbol(_key_, string)
 {
     return new Lisp_symbol_form(string);
-}
-
-function lisp_bif_is_typename(_key_, string)
-{
-    return lisp_is_type_name(string);
 }
 
 function lisp_bif_apply(_key_, fun, args, keys)
