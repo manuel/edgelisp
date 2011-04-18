@@ -1,2 +1,8 @@
+* Allowing # in symbol names messes up parsing of #'.
+
 * In the REPL the line "1 '" yields 1, and the erroneous "'" character
   is silently ignored.
+
+* QUOTE allows UNQUOTE.
+
+* Many more...

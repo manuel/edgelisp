@@ -17,10 +17,7 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
 
-//load("lib/json2.js");
-//load("lib/jsparse.js");
 
-
 /*** Syntax ***/
 
 /* CyberLisp does not use a cons-based representation for Lisp source.
@@ -36,7 +33,8 @@
    There are multiple types of forms; number forms, string forms,
    symbol forms, and compound forms:
    
-   1.2   --> { formt: "number", sign: "+", integral_digits: "1", fractional_digits: ".2" }
+   1.2   --> { formt: "number", sign: "+", integral_digits: "1",
+               fractional_digits: ".2" }
    "foo" --> { formt: "string", s: "foo" }
    foo   --> { formt: "symbol", name: "foo" }
    (foo) --> { formt: "compound", 
@@ -70,6 +68,8 @@ function Lisp_compound_form(elts)
     this.elts = elts;
 }
 
+/* This whole comments-as-forms business is silly, but atm I don't
+   know another way to have comments ignored. */
 function Lisp_comment_form(contents)
 {
     this.formt = "comment";
@@ -194,12 +194,14 @@ function lisp_native_escape_action(ast)
 
 function lisp_native_snippet_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("native-snippet"), new Lisp_string_form(ast) ]);
+    return new Lisp_compound_form([ new Lisp_symbol_form("native-snippet"),
+				    new Lisp_string_form(ast) ]);
 }
 
 function lisp_native_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("native") ].concat(ast[1]));
+    return new Lisp_compound_form([ new Lisp_symbol_form("native") ]
+				  .concat(ast[1]));
 }
 
 /**** Misc shortcuts ****/
@@ -269,7 +271,7 @@ function lisp_remove_comment_forms(forms)
 
 }
 
-
+
 /*** Compilation and Evaluation ***/
 
 function lisp_eval(forms)
@@ -412,13 +414,15 @@ function lisp_special_function(name)
 
 /**** List of special forms ****/
 
-/* (native &rest forms) */
+/* Contains a mixture of ordinary forms and NATIVE-SNIPPET forms.
+   (%%native &rest forms) */
 function lisp_compile_special_native(form) {
     return { vopt: "native",
 	     stuff: form.elts.slice(1).map(lisp_compile) };
 }
 
-/* (native-snippet text) */
+/* A piece of JS text to directly emit.  Must appear inside NATIVE.
+   (%%native-snippet text) */
 function lisp_compile_special_native_snippet(form) {
     return{ vopt: "native-snippet",
             text: form.elts[1].s };
@@ -426,7 +430,7 @@ function lisp_compile_special_native_snippet(form) {
 
 /* Returns true if `name' is defined (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (defined? identifier) */
+   (%%defined? identifier) */
 function lisp_compile_special_definedp(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -435,7 +439,7 @@ function lisp_compile_special_definedp(form)
 }
 
 /* Assigns the `value' to the global variable named `name'.
-   (defparameter name value) */
+   (%%defparameter name value) */
 function lisp_compile_special_defparameter(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -456,17 +460,18 @@ function lisp_compile_special_eval_when_compile(form)
 
 /* Registers a macro expander function.  An expander function takes a
    form as input and must return a form.
-   (defsyntax name expander-function) */
+   (%%defsyntax name expander-function) */
 function lisp_compile_special_defsyntax(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
-    lisp_set_macro_function(name_form.name, eval(lisp_emit(lisp_compile(expander_form))));
+    lisp_set_macro_function(name_form.name,
+			    eval(lisp_emit(lisp_compile(expander_form))));
     return { vopt: "identifier", name: "#f", namespace: "variable" };
 }
 
 /* Calls a function passed as argument.
-   (funcall fun &rest args &all-keys keys) => result */
+   (%%funcall fun &rest args &all-keys keys) => result */
 function lisp_compile_special_funcall(form)
 {
     var fun = lisp_assert_not_null(form.elts[1]);
@@ -476,11 +481,13 @@ function lisp_compile_special_funcall(form)
              call_site: lisp_compile_call_site(call_site) };
 }
 
-/* Name and namespace are not evaluated.
+/* Accesses a binding.  Name and namespace are not evaluated.
    (%%identifier name namespace) */
 function lisp_compile_special_identifier(form) {
-    var name = lisp_assert_symbol_form(form.elts[1], "Bad identifier name", form);
-    var namespace = lisp_assert_symbol_form(form.elts[2], "Bad identifier namespace", form);
+    var name = lisp_assert_symbol_form(form.elts[1],
+				       "Bad identifier name", form);
+    var namespace = lisp_assert_symbol_form(form.elts[2],
+					    "Bad identifier namespace", form);
     return { vopt: "identifier",
 	     name: name.name,
 	     namespace: namespace.name };
@@ -513,7 +520,7 @@ function lisp_compile_special_lambda(form)
 }
 
 /* Evaluates a number of forms in sequence and returns the value of the last.
-   (progn &rest forms) */
+   (%%progn &rest forms) */
 function lisp_compile_special_progn(form)
 {
     var forms = form.elts.slice(1);
@@ -521,7 +528,8 @@ function lisp_compile_special_progn(form)
              vops: forms.map(lisp_compile) };
 }
 
-/* (%%set name value) */
+/* Updates the value of a binding.
+   (%%set name value) */
 function lisp_compile_special_set(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -532,20 +540,20 @@ function lisp_compile_special_set(form)
 }
 
 /* See heading ``Quasiquotation''.
-   (quasiquote form) */
+   (%%quasiquote form) */
 function lisp_compile_special_quasiquote(form)
 {
     var quasiquoted = lisp_assert_not_null(form.elts[1]);
     return lisp_compile_qq(quasiquoted, 0);
 }
 
-/* (quote form) */
+/* (%%quote form) */
 function lisp_compile_special_quote(form)
 {
     return lisp_compile_special_quasiquote(form);
 }
 
-
+
 /*** Functions ***/
 
 /**** Overview ****/
@@ -873,7 +881,7 @@ function lisp_compile_call_site(args)
 // Name of the calling convention parameter.
 var lisp_keywords_dict = "_key_";
 
-
+
 /*** Quasiquotation ***/
 
 /* A quasiquote form is compiled into code that, when evaluated,
@@ -977,14 +985,18 @@ function lisp_compile_qq_compound(x, depth)
     function make_compound(elt_vops)
     {
         return { vopt: "funcall",
-		 fun: { vopt: "identifier", name: "make-compound", namespace:"function" },
+		 fun: { vopt: "identifier",
+		        name: "make-compound",
+		        namespace:"function" },
                  call_site: { pos_args: elt_vops } };
     }
 
     function append_compounds(elt_vops)
     {
         return { vopt: "funcall",
-		 fun: { vopt: "identifier", name: "append-compounds", namespace:"function" },
+		 fun: { vopt: "identifier",
+		        name: "append-compounds",
+		        namespace:"function" },
                  call_site: { pos_args: elt_vops } };
     }
 
@@ -999,7 +1011,7 @@ function lisp_compile_qq_compound(x, depth)
     }
 }
 
-
+
 /*** Virtual Operations ***/
 
 /* Virtual operations (VOPs) are low-level operations that are emitted
@@ -1025,6 +1037,8 @@ function lisp_vop_function(vopt)
 /* { vopt: "native", stuff: <vops> } */
 function lisp_emit_vop_native(vop)
 {
+    // Note that subforms of NATIVE are not separated by commas, as is
+    // usually the case.
     return vop.stuff.map(lisp_emit).join("");
 }
 
@@ -1037,7 +1051,8 @@ function lisp_emit_vop_native_snippet(vop)
 /* { vopt: "defined?", name: <vop> } */
 function lisp_emit_vop_definedp(vop)
 {
-    return "(typeof " + lisp_mangle(vop.name.name, vop.name.namespace) + " != \"undefined\")";
+    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    return "(typeof " + mname + " != \"undefined\")";
 }
 
 /* Calls a function.
@@ -1075,7 +1090,7 @@ function lisp_emit_vop_if(vop)
     var test = lisp_emit(vop.test);
     var consequent = lisp_emit(vop.consequent);
     var alternative = lisp_emit(vop.alternative);
-    return "(lisp_is_true(" + test + ") ? " + consequent + " : " + alternative + ")";
+    return "(lisp_is_true(" +test+ ") ? " +consequent+ " : " +alternative+ ")";
 }
 
 /* Creates a lexical closure.
@@ -1107,7 +1122,7 @@ function lisp_emit_vop_lambda(vop)
             "lisp_arity_min(arguments.length, " + js_min + "); ";
     } else {
         var check_arity = 
-            "lisp_arity_min_max(arguments.length, " + js_min + ", " + js_max + "); ";
+            "lisp_arity_min_max(arguments.length, " +js_min+ ", " +js_max+"); ";
     }
 
     // Required arguments type checks
@@ -1129,7 +1144,7 @@ function lisp_emit_vop_lambda(vop)
             var param = opt_params[i - js_min];
             var name = lisp_mangled_param_name(param);
             var value = param.init ? lisp_emit(param.init) : "undefined";
-            s += "if (arguments.length < " + (i + 1) + ") " + name + " = " + value + "; ";
+            s += "if (arguments.length < " +(i+1)+ ") " +name+ " = "+value+"; ";
         }
         init_opt_params = s;
     }
@@ -1195,7 +1210,10 @@ function lisp_emit_vop_lambda(vop)
 }
 
 /* Number literal.
-   { vopt: "number", sign: <string>, integral_digits: <string>, fractional_digits: <string> } */
+   { vopt: "number",
+     sign: <string>,
+     integral_digits: <string>,
+     fractional_digits: <string> } */
 function lisp_emit_vop_number(vop)
 {
     var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
@@ -1241,7 +1259,8 @@ function lisp_emit_vop_identifier(vop)
 function lisp_emit_vop_set(vop)
 {
     var value = lisp_emit(vop.value);
-    return "(" + lisp_mangle(vop.name.name, vop.name.namespace) + " = " + value + ")";
+    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    return "(" + mname + " = " + value + ")";
 }
 
 /* String literal.
@@ -1253,7 +1272,7 @@ function lisp_emit_vop_string(vop)
     return JSON.stringify(vop.s);
 }
 
-
+
 /*** Name Mangling ***/
 
 /* Lisp symbols may contain additional characters beyond those
@@ -1320,7 +1339,7 @@ function lisp_mangle_method(name)
     return lisp_mangle(name, "method");
 }
 
-
+
 /*** Utilities ***/
 
 function lisp_undefined_identifier(name, namespace)
@@ -1430,10 +1449,8 @@ function lisp_assert_compound_form(value, message, arg)
     return value;
 }
 
-/*** Built-in form manipulation functions ***/
 
-/* These are provided so that early, pre-generics macros can inspect
-   and manipulate forms. */
+/*** Built-in form manipulation functions ***/
 
 /* Applies a Lisp function to the elements of a compound form, a
    simple form of destructuring.  The form's elements are simply
@@ -1513,6 +1530,7 @@ function lisp_bif_compound_slice(_key_, compound, start)
     return new Lisp_compound_form(compound.elts.slice(start));
 }
 
+
 /*** Built-in string dictionaries ***/
 
 /* This is the type of dictionaries used to hold keyword arguments,
@@ -1562,6 +1580,7 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 {
     return lisp_mangle_string_dict_key(key) in dict;
 }
+
 
 /*** Export classes and built-in functions ***/
 

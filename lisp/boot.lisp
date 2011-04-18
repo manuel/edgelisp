@@ -1,3 +1,5 @@
+;; Bootstrap defmacro
+
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
     `(%%defsyntax ,(compound-elt defmacro-form 1)
@@ -8,24 +10,54 @@
                ,@(compound-slice defmacro-form 3)))
            (compound-slice %%form 1))))))
 
-(defmacro defined? (name) `(%%defined? ,name))
-(defmacro defparameter (name value) `(%%defparameter ,name ,value))
-(defmacro defsyntax (name transformer) `(%%defsyntax ,name ,transformer))
+;; Wrap special forms
+
+(defmacro defined? (name)
+  `(%%defined? ,name))
+
+(defmacro defparameter (name value)
+  `(%%defparameter ,name ,value))
+
+(defmacro defsyntax (name transformer)
+  `(%%defsyntax ,name ,transformer))
+
 (defmacro eval-when-compile (&rest forms)
   `(%%eval-when-compile (%%progn ,@forms)))
-(defmacro fdefined? (name) `(defined? (%%identifier ,name f)))
+
+(defmacro fdefined? (name)
+  `(defined? (%%identifier ,name function)))
+
 (defmacro funcall (function &rest arguments)
   `(%%funcall ,function ,@arguments))
-(defmacro function (name) `(%%identifier ,name function))
-(defmacro identifier (name namespace) `(%%identifier ,name ,namespace))
+
+(defmacro function (name)
+  `(%%identifier ,name function))
+
+(defmacro identifier (name namespace)
+  `(%%identifier ,name ,namespace))
+
 (defmacro if (test consequent &opt (alternative 'nil))
   `(%%if ,test ,consequent ,alternative))
-(defmacro lambda (sig &rest body) `(%%lambda ,sig (%%progn ,@body)))
-(defmacro native (&rest body) `(%%native ,@body))
-(defmacro native-snippet (string) `(%%native-snippet ,string))
-(defmacro progn (&rest body) `(%%progn ,@body))
-(defmacro quasiquote (form) `(%%quasiquote ,form))
-(defmacro quote (form) `(%%quote ,form))
+
+(defmacro lambda (sig &rest body)
+  `(%%lambda ,sig (%%progn ,@body)))
+
+(defmacro native (&rest body)
+  `(%%native ,@body))
+
+(defmacro native-snippet (string)
+  `(%%native-snippet ,string))
+
+(defmacro progn (&rest body)
+  `(%%progn ,@body))
+
+(defmacro quasiquote (form)
+  `(%%quasiquote ,form))
+
+(defmacro quote (form)
+  `(%%quote ,form))
+
+;; Common stuff
 
 (defmacro defvar (name value)
   `(defparameter ,name (if (defined? ,name) ,name ,value)))
@@ -115,6 +147,7 @@
 (defmacro native-body (&rest stuff)
   `{% (function(){ ~,@stuff })() %})
 
+;; OO
 
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
@@ -171,16 +204,17 @@
 		 (list ,@(params-specializers params))
 		 (lambda ,params ,@body))))
 
+;; Conditions
 
 (defmacro deferror (name &rest slots)
   `(defclass (,name <error>) ,@slots))
-
 
 (defclass <exception>)
 (defclass (<error> <exception>))
 (defclass (<warning> <exception>))
 (defclass (<restart> <exception>))
 
+;; Collections
 
 (defclass <dict>)
 

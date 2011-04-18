@@ -16,13 +16,14 @@
    along with GNU Emacs; see the file COPYING.  If not, write to the
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
-   
-/* Lisp runtime: this file should contain all functions needed to run
+
+   /* Lisp runtime: this file should contain all functions needed to run
    compiled Lisp code.  At the moment, it does have some dependencies
    on functions in `lisp.js', though.
 
    Lisp code that does use `eval' will always need to include the
    compiler, `lisp.js', too. */
+
 
 /* Used inside lambdas. */
 function lisp_arity_min(length, min)
@@ -57,6 +58,7 @@ function lisp_check_type(obj, type)
     if (!lisp_subtypep(lisp_type_of(obj), type))
         lisp_error("Type error", obj);
 }
+
 
 /*** Control Flow and Conditions ***/
 
@@ -184,6 +186,7 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
     }
 }
 
+
 /*** Multiple Dispatch ***/
 
 function Lisp_generic()
@@ -236,7 +239,8 @@ function lisp_bif_params_specializers(_key_, params)
 
 function lisp_bif_find_method(_key_, generic, arguments)
 {
-    var applicable_mes = lisp_find_applicable_method_entries(generic, arguments);
+    var applicable_mes =
+	lisp_find_applicable_method_entries(generic, arguments);
     if (applicable_mes.length == 0)
 	return lisp_no_applicable_method(generic, arguments);
     var me = lisp_most_specific_method_entry(generic, applicable_mes);
@@ -254,9 +258,12 @@ function lisp_find_applicable_method_entries(generic, arguments)
 	actual_specializers.push(lisp_type_of(arguments[i]));
     var applicable_mes = [];
     var mes = generic.method_entries;
-    for (var i = 0, len = mes.length; i < len; i++)
-	if (lisp_specializers_lists_agree(actual_specializers, mes[i].specializers))
+    for (var i = 0, len = mes.length; i < len; i++) {
+	if (lisp_specializers_lists_agree(actual_specializers,
+					  mes[i].specializers)) {
 	    applicable_mes.push(mes[i]);
+	}
+    }
     return applicable_mes;
 }
 
@@ -271,7 +278,7 @@ function lisp_specializers_lists_agree(actuals, formals)
 
 function lisp_specializers_agree(actual, formal)
 {
-    return lisp_subtypep(actual,formal);
+    return lisp_subtypep(actual, formal);
 }
 
 function lisp_most_specific_method_entry(generic, applicable_mes)
@@ -323,6 +330,7 @@ function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 {
     lisp_error("No most specific method.", generic);
 }
+
 
 /*** Utilities ***/
 
@@ -546,6 +554,7 @@ function lisp_bif_gensym(_key_)
     return new Lisp_symbol_form("%%g-" + lisp_gensym_counter);
 }
 
+
 lisp_set("#t", "true");
 lisp_set("#f", "false");
 lisp_set("nil", "null");
@@ -560,7 +569,8 @@ lisp_set_function(">", "lisp_bif_gt");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
-lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
+lisp_set_function("call-with-escape-function",
+		  "lisp_bif_call_with_escape_function");
 lisp_set_function("call-while", "lisp_bif_call_while");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
