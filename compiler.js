@@ -1535,12 +1535,12 @@ function lisp_bif_compound_slice(_key_, compound, start)
 
 /* This is the type of dictionaries used to hold keyword arguments,
    i.e. the one a function with an `&all-keys' signature keyword
-   receives.  They're ed string dictionaries because their keys
+   receives.  They're called string dictionaries because their keys
    can only be strings.
    
-   By convention, all keys are mangled (prefixed with "%", but not
-   transformed like, say, variables), so we never get in conflict with
-   JS's special names, such as "prototype". */
+   By convention, all keys are prefixed with "%" (but not transformed
+   like variables), so we never get in conflict with JS's special
+   names, such as "prototype". */
 
 function lisp_mangle_string_dict_key(name)
 {
