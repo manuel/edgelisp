@@ -1,4 +1,5 @@
 * Allowing # in symbol names messes up parsing of #'.
+  Semi-fixed: moved #' before symbols in syntax.
 
 * In the REPL the line "1 '" yields 1, and the erroneous "'" character
   is silently ignored.

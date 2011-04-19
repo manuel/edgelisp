@@ -204,6 +204,7 @@ function lisp_shortcut_syntax_action(name)
 
 var lisp_expression_syntax =
     whitespace(choice(lisp_line_comment_syntax,
+		      lisp_function_syntax,
 		      lisp_number_syntax,
                       lisp_string_syntax,
                       lisp_symbol_syntax,
@@ -212,8 +213,7 @@ var lisp_expression_syntax =
                       lisp_quote_syntax,
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,
-                      lisp_unquote_splicing_syntax,
-                      lisp_function_syntax));
+                      lisp_unquote_splicing_syntax));
 
 var lisp_program_syntax =
     whitespace(repeat1(lisp_expression_syntax));
