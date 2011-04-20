@@ -211,9 +211,9 @@ function lisp_bif_make_compound(_key_)
 {
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
-	var elt = arguments[i];
-	lisp_assert(elt && elt.formt, "make-compound", elt);
-	elts = elts.concat(elt);
+        var elt = arguments[i];
+        lisp_assert(elt && elt.formt, "make-compound", elt);
+        elts = elts.concat(elt);
     }
     return new Lisp_compound_form(elts);
 }
@@ -477,11 +477,11 @@ function lisp_make_method_entry(method, specializers)
 function lisp_bif_put_method(_key_, generic, specializers, method)
 {
     for (var i = 0, len = generic.method_entries; i < len; i++) {
-	var me = generic.method_entries[i];
-	if (lisp_lists_equal(me.specializers, specializers)) {
-	    me.method = method;
-	    return;
-	}
+        var me = generic.method_entries[i];
+        if (lisp_lists_equal(me.specializers, specializers)) {
+            me.method = method;
+            return;
+        }
     }
     generic.method_entries.push(lisp_make_method_entry(method, specializers));
 }
@@ -491,12 +491,12 @@ function lisp_bif_params_specializers(_key_, params)
     var specializers = [];
     var sig = lisp_compile_sig(params.elts);
     for (var i = 0, len = sig.req_params.length; i < len; i++) {
-	var param = sig.req_params[i];
-	var specializer = param.specializer ? param.specializer : "object";
-	var specs = [ new Lisp_symbol_form("%%identifier"),
-		      new Lisp_symbol_form(specializer),
-		      new Lisp_symbol_form("class") ];
-	specializers.push(new Lisp_compound_form(specs));
+        var param = sig.req_params[i];
+        var specializer = param.specializer ? param.specializer : "object";
+        var specs = [ new Lisp_symbol_form("%%identifier"),
+                      new Lisp_symbol_form(specializer),
+                      new Lisp_symbol_form("class") ];
+        specializers.push(new Lisp_compound_form(specs));
     }
     return new Lisp_compound_form(specializers);
 }
@@ -504,14 +504,14 @@ function lisp_bif_params_specializers(_key_, params)
 function lisp_bif_find_method(_key_, generic, arguments)
 {
     var applicable_mes =
-	lisp_find_applicable_method_entries(generic, arguments);
+        lisp_find_applicable_method_entries(generic, arguments);
     if (applicable_mes.length == 0)
-	return lisp_no_applicable_method(generic, arguments);
+        return lisp_no_applicable_method(generic, arguments);
     var me = lisp_most_specific_method_entry(generic, applicable_mes);
     if (me)
-	return me.method;
+        return me.method;
     else
-	return lisp_no_most_specific_method(generic, arguments, applicable_mes);
+        return lisp_no_most_specific_method(generic, arguments, applicable_mes);
 }
 
 function lisp_find_applicable_method_entries(generic, arguments)
@@ -519,14 +519,14 @@ function lisp_find_applicable_method_entries(generic, arguments)
     var actual_specializers = [];
     // start at 1 to skip over calling convention argument
     for (var i = 1, len = arguments.length; i < len; i++)
-	actual_specializers.push(lisp_type_of(arguments[i]));
+        actual_specializers.push(lisp_type_of(arguments[i]));
     var applicable_mes = [];
     var mes = generic.method_entries;
     for (var i = 0, len = mes.length; i < len; i++) {
-	if (lisp_specializers_lists_agree(actual_specializers,
-					  mes[i].specializers)) {
-	    applicable_mes.push(mes[i]);
-	}
+        if (lisp_specializers_lists_agree(actual_specializers,
+                                          mes[i].specializers)) {
+            applicable_mes.push(mes[i]);
+        }
     }
     return applicable_mes;
 }
@@ -535,8 +535,8 @@ function lisp_specializers_lists_agree(actuals, formals)
 {
     if (actuals.length != formals.length) return false;
     for (var i = 0, len = actuals.length; i < len; i++)
-	if (!lisp_specializers_agree(actuals[i], formals[i]))
-	    return false;
+        if (!lisp_specializers_agree(actuals[i], formals[i]))
+            return false;
     return true;
 }
 
@@ -548,20 +548,20 @@ function lisp_specializers_agree(actual, formal)
 function lisp_most_specific_method_entry(generic, applicable_mes)
 {
     if (applicable_mes.length == 1)
-	return applicable_mes[0];
+        return applicable_mes[0];
     for (var i = 0, len = applicable_mes.length; i < len; i++) 
-	if (lisp_least_method_entry(applicable_mes[i], applicable_mes))
-	    return applicable_mes[i];
+        if (lisp_least_method_entry(applicable_mes[i], applicable_mes))
+            return applicable_mes[i];
     return null;
 }
 
 function lisp_least_method_entry(me, mes)
 {
     for (var i = 0, len = mes.length; i < len; i++) {
-	if (me === mes[i])
-	    continue;
-	if (!lisp_smaller_method_entry(me, mes[i]))
-	    return false;
+        if (me === mes[i])
+            continue;
+        if (!lisp_smaller_method_entry(me, mes[i]))
+            return false;
     }
     return true;
 }
@@ -569,20 +569,20 @@ function lisp_least_method_entry(me, mes)
 function lisp_smaller_method_entry(me1, me2)
 {
     if (me1.specializers.length != me2.specializers.length)
-	return false;
+        return false;
     for (var i = 0, len = me1.specializers.length; i < len; i++)
-	if ((!lisp_classes_comparable(me1.specializers[i],
-				      me2.specializers[i])) ||
-	    (!lisp_subtypep(me1.specializers[i],
-			    me2.specializers[i])))
-	    return false;
+        if ((!lisp_classes_comparable(me1.specializers[i],
+                                      me2.specializers[i])) ||
+            (!lisp_subtypep(me1.specializers[i],
+                            me2.specializers[i])))
+            return false;
     return true;
 }
 
 function lisp_classes_comparable(class1, class2)
 {
     return ((lisp_subtypep(class1, class2)) ||
-	    (lisp_subtypep(class2, class1)))
+            (lisp_subtypep(class2, class1)))
 }
 
 function lisp_no_applicable_method(generic, arguments)
@@ -656,7 +656,7 @@ function lisp_lists_equal(list1, list2)
 {
     if (list1.length != list2.length) return false;
     for (var i = 0, len = list1.length; i < len; i++) {
-	if (list1[i] !== list2[i]) return false;
+        if (list1[i] !== list2[i]) return false;
     }
     return true;
 }

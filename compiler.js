@@ -51,10 +51,10 @@ var lisp_line_terminator = choice(ch("\r"), ch("\n"));
 
 var lisp_line_comment_syntax =
     action(join_action(sequence(";",
-				repeat0(negate(lisp_line_terminator)),
-				optional(lisp_line_terminator)),
-		       ""),
-	   lisp_line_comment_action);
+                                repeat0(negate(lisp_line_terminator)),
+                                optional(lisp_line_terminator)),
+                       ""),
+           lisp_line_comment_action);
 
 function lisp_line_comment_action(ast)
 {
@@ -146,12 +146,12 @@ var lisp_native_escape =
 
 var lisp_native_syntax =
     action(sequence("{%",
-		    repeat1(choice(lisp_native_escape,
-				   action(choice(negate("%"),
-						 join_action(sequence("%", not("}")), "")),
-					  lisp_native_snippet_action))),
-		    "%}"),
-	   lisp_native_action);
+                    repeat1(choice(lisp_native_escape,
+                                   action(choice(negate("%"),
+                                                 join_action(sequence("%", not("}")), "")),
+                                          lisp_native_snippet_action))),
+                    "%}"),
+           lisp_native_action);
 
 function lisp_native_escape_action(ast)
 {
@@ -161,13 +161,13 @@ function lisp_native_escape_action(ast)
 function lisp_native_snippet_action(ast)
 {
     return new Lisp_compound_form([ new Lisp_symbol_form("native-snippet"),
-				    new Lisp_string_form(ast) ]);
+                                    new Lisp_string_form(ast) ]);
 }
 
 function lisp_native_action(ast)
 {
     return new Lisp_compound_form([ new Lisp_symbol_form("native") ]
-				  .concat(ast[1]));
+                                  .concat(ast[1]));
 }
 
 /**** Misc shortcuts ****/
@@ -204,7 +204,7 @@ function lisp_shortcut_syntax_action(name)
 
 var lisp_expression_syntax =
     whitespace(choice(lisp_line_comment_syntax,
-		      lisp_number_syntax,
+                      lisp_number_syntax,
                       lisp_string_syntax,
                       lisp_compound_syntax,
                       lisp_native_syntax,
@@ -212,7 +212,7 @@ var lisp_expression_syntax =
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,
                       lisp_unquote_splicing_syntax,
-		      lisp_function_syntax,
+                      lisp_function_syntax,
                       lisp_symbol_syntax));
 
 var lisp_program_syntax =
@@ -230,8 +230,8 @@ function lisp_remove_comment_forms(forms)
     var res = [];
     for (var i = 0, len = forms.length; i < len; i++) {
         var form = forms[i];
-	if (form.formt != "comment")
-	    res.push(form);
+        if (form.formt != "comment")
+            res.push(form);
     }
     return res;
 
@@ -266,9 +266,9 @@ function lisp_compile(form)
     switch(form.formt) {
     case "number":
         return { vopt: "number",
-		 sign: form.sign,
-		 integral_digits: form.integral_digits,
-		 fractional_digits: form.fractional_digits };
+                 sign: form.sign,
+                 integral_digits: form.integral_digits,
+                 fractional_digits: form.fractional_digits };
     case "string":
         lisp_assert_string(form.s, "Bad .s", form);
         return { vopt: "string", s: form.s };
@@ -389,7 +389,7 @@ function lisp_special_function(name)
    (%%native &rest forms) */
 function lisp_compile_special_native(form) {
     return { vopt: "native",
-	     stuff: form.elts.slice(1).map(lisp_compile) };
+             stuff: form.elts.slice(1).map(lisp_compile) };
 }
 
 /* A piece of JS text to directly emit.  Must appear inside NATIVE.
@@ -406,7 +406,7 @@ function lisp_compile_special_definedp(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
     return { vopt: "defined?",
-	     name: lisp_compile(name_form) };
+             name: lisp_compile(name_form) };
 }
 
 /* Assigns the `value' to the global variable named `name'.
@@ -416,7 +416,7 @@ function lisp_compile_special_defparameter(form)
     var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set", 
-	     name: lisp_compile(name_form),
+             name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
 
@@ -437,7 +437,7 @@ function lisp_compile_special_defsyntax(form)
     var name_form = lisp_assert_symbol_form(form.elts[1]);
     var expander_form = lisp_assert_not_null(form.elts[2]);
     lisp_set_macro_function(name_form.name,
-			    eval(lisp_emit(lisp_compile(expander_form))));
+                            eval(lisp_emit(lisp_compile(expander_form))));
     return { vopt: "identifier", name: "#f", namespace: "variable" };
 }
 
@@ -456,35 +456,35 @@ function lisp_compile_special_funcall(form)
    (%%identifier name namespace) */
 function lisp_compile_special_identifier(form) {
     var name = lisp_assert_symbol_form(form.elts[1],
-				       "Bad identifier name", form);
+                                       "Bad identifier name", form);
     var namespace = lisp_assert_symbol_form(form.elts[2],
-					    "Bad identifier namespace", form);
+                                            "Bad identifier namespace", form);
     return { vopt: "identifier",
-	     name: name.name,
-	     namespace: namespace.name };
+             name: name.name,
+             namespace: namespace.name };
 }
 
 /* (%%symbol-form symbol) */
 function lisp_compile_special_symbol_form(form) {
     var symbol = lisp_assert_symbol_form(form.elts[1], "Bad symbol");
     return { vopt: "symbol-form",
-	     name: symbol.name };
+             name: symbol.name };
 }
 
 /* (%%number-form form) */
 function lisp_compile_special_number_form(form) {
     var numform = form.elts[1];
     return { vopt: "number-form",
-	    sign: numform.sign, 
-	    integral_digits: numform.integral_digits,
-	    fractional_digits: numform.fractional_digits };
+             sign: numform.sign, 
+             integral_digits: numform.integral_digits,
+             fractional_digits: numform.fractional_digits };
 }
 
 /* (%%string-form form) */
 function lisp_compile_special_string_form(form) {
     var strform = form.elts[1];
     return { vopt: "string-form",
-	    s: strform.s };
+             s: strform.s };
 }
 
 /* In CyberLisp `false' and `null' are considered false, all other
@@ -529,7 +529,7 @@ function lisp_compile_special_set(form)
     var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "set",
-	     name: lisp_compile(name_form),
+             name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
 
@@ -980,12 +980,12 @@ function lisp_qq_compound(form, depth)
 
     function make_compound(elts)
     {
-	return new Lisp_compound_form([new Lisp_symbol_form("make-compound")].concat(elts));
+        return new Lisp_compound_form([new Lisp_symbol_form("make-compound")].concat(elts));
     }
 
     function append_compounds(elts)
     {
-	return new Lisp_compound_form([new Lisp_symbol_form("append-compounds")].concat(elts));
+        return new Lisp_compound_form([new Lisp_symbol_form("append-compounds")].concat(elts));
     }
 }
 
@@ -1088,7 +1088,7 @@ function lisp_emit_vop_number(vop)
     return "(SchemeNumber(\"" + num_repr + "\"))";
 }
 
-/* Number form.  FISHY
+/* Number form.
    { vopt: "number-form",
      sign: <string>,
      integral_digits: <string>,
@@ -1107,7 +1107,7 @@ function lisp_emit_vop_string(vop)
     return JSON.stringify(vop.s);
 }
 
-/* String form.  FISHY
+/* String form.
    { vopt: "string-form", s: <string> } */
 function lisp_emit_vop_string_form(vop)
 {

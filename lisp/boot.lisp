@@ -3,12 +3,12 @@
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
     #`(%%defsyntax ,(compound-elt defmacro-form 1)
-       (%%lambda (%%form)
-         (compound-apply
-           (%%lambda ,(compound-elt defmacro-form 2)
-             (%%progn
-               ,@(compound-slice defmacro-form 3)))
-           (compound-slice %%form 1))))))
+        (%%lambda (%%form)
+          (compound-apply
+            (%%lambda ,(compound-elt defmacro-form 2)
+              (%%progn
+                ,@(compound-slice defmacro-form 3)))
+            (compound-slice %%form 1))))))
 
 ;; Wrap special forms
 
@@ -96,14 +96,14 @@
 
 (defmacro unwind-protect (protected &rest cleanups)
   #`(call-unwind-protected (lambda () ,protected)
-			   (lambda () ,@cleanups)))
+                           (lambda () ,@cleanups)))
 
 (defmacro handle (handler-specs &rest body)
   #`(bind-handlers (list ,@(compound-map (lambda (handler-spec)
-                                          #`(list ,(compound-elt handler-spec 0)
-                                                 ,(compound-elt handler-spec 1)))
-                                        handler-specs))
-                  (lambda () ,@body)))
+                                           #`(list ,(compound-elt handler-spec 0)
+                                                   ,(compound-elt handler-spec 1)))
+                                         handler-specs))
+                   (lambda () ,@body)))
 
 (defun not (x)
   (if x #f #t))
@@ -156,10 +156,10 @@
            (getter-name (string-concat "." slot-name))
            (setter-name (setter-name getter-name)))
       #`(progn
-         (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
-           (slot obj ,slot-name-form))
-         (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
-           (set-slot obj ,slot-name-form value))))))
+          (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
+            (slot obj ,slot-name-form))
+          (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
+            (set-slot obj ,slot-name-form value))))))
 
 (defmacro class (name)
   #`(identifier ,name class))
@@ -176,33 +176,33 @@
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
     #`(progn
-       (defvar (class ,class-name) (make-class))
-       ,(if superclass 
-            #`(set-superclass (class ,class-name) (class ,superclass))
-            #`nil)
-       ,@(compound-map (lambda (slot)
-			 (defclass-do-slot class-name slot))
-                       slots)
-       (defun ,class-name ()
-         (make ,class-name))
-       #',class-name)))
+        (defvar (class ,class-name) (make-class))
+        ,(if superclass 
+             #`(set-superclass (class ,class-name) (class ,superclass))
+             #`nil)
+        ,@(compound-map (lambda (slot)
+                          (defclass-do-slot class-name slot))
+                        slots)
+        (defun ,class-name ()
+          (make ,class-name))
+        #',class-name)))
 
 (defmacro generic (name)
   #`(identifier ,name generic))
 
 (defmacro defgeneric (name &rest args)
   #`(progn
-     (defvar (generic ,name) (make-generic))
-     (defun ,name (&fast fast-arguments)
-       (let ((method (find-method (generic ,name) fast-arguments)))
-	 (fast-apply method fast-arguments)))))
+      (defvar (generic ,name) (make-generic))
+      (defun ,name (&fast fast-arguments)
+        (let ((method (find-method (generic ,name) fast-arguments)))
+          (fast-apply method fast-arguments)))))
 
 (defmacro defmethod (name params &rest body)
   #`(progn
-     (defgeneric ,name)
-     (put-method (generic ,name)
-		 (list ,@(params-specializers params))
-		 (lambda ,params ,@body))))
+      (defgeneric ,name)
+      (put-method (generic ,name)
+                  (list ,@(params-specializers params))
+                  (lambda ,params ,@body))))
 
 ;; Conditions
 
