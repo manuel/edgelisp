@@ -173,11 +173,11 @@ function lisp_native_action(ast)
 /**** Misc shortcuts ****/
 
 var lisp_quote_syntax =
-    action(sequence("'", lisp_expression_syntax),
+    action(sequence("#'", lisp_expression_syntax),
            lisp_shortcut_syntax_action("%%quote"));
 
 var lisp_quasiquote_syntax =
-    action(sequence("`", lisp_expression_syntax),
+    action(sequence("#`", lisp_expression_syntax),
            lisp_shortcut_syntax_action("%%quasiquote"));
 
 var lisp_unquote_syntax =
@@ -189,7 +189,7 @@ var lisp_unquote_splicing_syntax =
            lisp_shortcut_syntax_action("%%unquote-splicing"));
 
 var lisp_function_syntax =
-    action(sequence("#'", lisp_symbol_syntax),
+    action(sequence("$", lisp_symbol_syntax),
            lisp_shortcut_syntax_action("function"));
 
 function lisp_shortcut_syntax_action(name)
@@ -204,16 +204,16 @@ function lisp_shortcut_syntax_action(name)
 
 var lisp_expression_syntax =
     whitespace(choice(lisp_line_comment_syntax,
-		      lisp_function_syntax,
 		      lisp_number_syntax,
                       lisp_string_syntax,
-                      lisp_symbol_syntax,
                       lisp_compound_syntax,
                       lisp_native_syntax,
                       lisp_quote_syntax,
                       lisp_quasiquote_syntax,
                       lisp_unquote_syntax,
-                      lisp_unquote_splicing_syntax));
+                      lisp_unquote_splicing_syntax,
+		      lisp_function_syntax,
+                      lisp_symbol_syntax));
 
 var lisp_program_syntax =
     whitespace(repeat1(lisp_expression_syntax));
@@ -349,11 +349,13 @@ var lisp_specials_table = {
     "%%lambda": lisp_compile_special_lambda,
     "%%native": lisp_compile_special_native,
     "%%native-snippet": lisp_compile_special_native_snippet,
+    "%%number-form": lisp_compile_special_number_form,
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
     "%%set": lisp_compile_special_set,
-    "%%symbol": lisp_compile_special_symbol
+    "%%string-form": lisp_compile_special_string_form,
+    "%%symbol-form": lisp_compile_special_symbol_form
 };
 
 /* VOPs (virtual operations) correspond roughly to special forms. */
@@ -367,10 +369,12 @@ var lisp_vop_table = {
     "native": lisp_emit_vop_native,
     "native-snippet": lisp_emit_vop_native_snippet,
     "number": lisp_emit_vop_number,
+    "number-form": lisp_emit_vop_number_form,
     "progn": lisp_emit_vop_progn,
     "set": lisp_emit_vop_set,
     "string": lisp_emit_vop_string,
-    "symbol": lisp_emit_vop_symbol
+    "string-form": lisp_emit_vop_string_form,
+    "symbol-form": lisp_emit_vop_symbol_form
 };
 
 function lisp_special_function(name)
@@ -460,11 +464,27 @@ function lisp_compile_special_identifier(form) {
 	     namespace: namespace.name };
 }
 
-/* (%%symbol symbol) */
-function lisp_compile_special_symbol(form) {
+/* (%%symbol-form symbol) */
+function lisp_compile_special_symbol_form(form) {
     var symbol = lisp_assert_symbol_form(form.elts[1], "Bad symbol");
-    return { vopt: "symbol",
+    return { vopt: "symbol-form",
 	     name: symbol.name };
+}
+
+/* (%%number-form form) */
+function lisp_compile_special_number_form(form) {
+    var numform = form.elts[1];
+    return { vopt: "number-form",
+	    sign: numform.sign, 
+	    integral_digits: numform.integral_digits,
+	    fractional_digits: numform.fractional_digits };
+}
+
+/* (%%string-form form) */
+function lisp_compile_special_string_form(form) {
+    var strform = form.elts[1];
+    return { vopt: "string-form",
+	    s: strform.s };
 }
 
 /* In CyberLisp `false' and `null' are considered false, all other
@@ -731,7 +751,7 @@ function lisp_compile_sig(params)
                    ((cur == opt) || (cur == key))) {
             // Optional or keyword parameter with init form
             var name_form = lisp_assert_symbol_form(param.elts[0]);
-            var init_form = lisp_assert_not_null(param.elts[1]);
+           var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
                      init: lisp_compile(init_form) };
         } else {
@@ -858,7 +878,7 @@ var lisp_keywords_dict = "_key_";
 
 /*** Quasiquotation ***/
 
-/* A quasiquote form is compiled into code that, when evaluated,
+/* A quasiquote form is transformed into code that, when evaluated,
    produces a form.  No, really.
 
    Except for multi-argument unquotes, which are not supported, this
@@ -872,11 +892,11 @@ function lisp_qq(form, depth)
 
     switch(form.formt) {
     case "number":
+        return new Lisp_compound_form([ new Lisp_symbol_form("%%number-form"), form ]);
     case "string":
-	// quoting self-evaluating object evaluates to that object
-	return form;
+        return new Lisp_compound_form([ new Lisp_symbol_form("%%string-form"), form ]);
     case "symbol":
-        return new Lisp_compound_form([ new Lisp_symbol_form("%%symbol"), form ]);
+        return new Lisp_compound_form([ new Lisp_symbol_form("%%symbol-form"), form ]);
     case "compound":
         return lisp_qq_compound(form, depth);
     }
@@ -1068,6 +1088,16 @@ function lisp_emit_vop_number(vop)
     return "(SchemeNumber(\"" + num_repr + "\"))";
 }
 
+/* Number form.  FISHY
+   { vopt: "number-form",
+     sign: <string>,
+     integral_digits: <string>,
+     fractional_digits: <string> } */
+function lisp_emit_vop_number_form(vop)
+{
+    return "(new Lisp_number_form("+JSON.stringify(vop.sign)+","+JSON.stringify(vop.integral_digits)+","+JSON.stringify(vop.fractional_digits)+"))";
+}
+
 /* String literal.
    { vopt: "string", s: <string> }
    s: the string in JavaScript syntax. */
@@ -1077,12 +1107,20 @@ function lisp_emit_vop_string(vop)
     return JSON.stringify(vop.s);
 }
 
-/* Symbol literal.
-   { vopt: "symbol", name: <string> } */
-function lisp_emit_vop_symbol(vop)
+/* String form.  FISHY
+   { vopt: "string-form", s: <string> } */
+function lisp_emit_vop_string_form(vop)
+{
+    lisp_assert_string(vop.s, "Bad .s", vop);
+    return "(new Lisp_string_form(" + JSON.stringify(vop.s) + "))";
+}
+
+/* Symbol form.
+   { vopt: "symbol-form", name: <string> } */
+function lisp_emit_vop_symbol_form(vop)
 {
     lisp_assert_string(vop.name, "Bad .name", vop);
-    return "lisp_bif_string_to_symbol(" + JSON.stringify(vop.name) + ")";
+    return "(new Lisp_symbol_form(" + JSON.stringify(vop.name) + "))";
 }
 
 /* Calls a function.
@@ -1239,7 +1277,7 @@ function lisp_emit_vop_lambda(vop)
    CyberLisp symbols. */
 
 // Needs to be in sync with `lisp_symbol_special_char'.
-var lisp_mangle_table = 
+var lisp_mangle_table =
     [
      ["-", "_"],
      ["&", "A"],

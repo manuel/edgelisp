@@ -2,7 +2,7 @@
 
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
-    `(%%defsyntax ,(compound-elt defmacro-form 1)
+    #`(%%defsyntax ,(compound-elt defmacro-form 1)
        (%%lambda (%%form)
          (compound-apply
            (%%lambda ,(compound-elt defmacro-form 2)
@@ -13,66 +13,66 @@
 ;; Wrap special forms
 
 (defmacro defined? (name)
-  `(%%defined? ,name))
+  #`(%%defined? ,name))
 
 (defmacro defparameter (name value)
-  `(%%defparameter ,name ,value))
+  #`(%%defparameter ,name ,value))
 
 (defmacro defsyntax (name transformer)
-  `(%%defsyntax ,name ,transformer))
+  #`(%%defsyntax ,name ,transformer))
 
 (defmacro eval-when-compile (&rest forms)
-  `(%%eval-when-compile (%%progn ,@forms)))
+  #`(%%eval-when-compile (%%progn ,@forms)))
 
 (defmacro fdefined? (name)
-  `(defined? (%%identifier ,name function)))
+  #`(defined? (%%identifier ,name function)))
 
 (defmacro funcall (function &rest arguments)
-  `(%%funcall ,function ,@arguments))
+  #`(%%funcall ,function ,@arguments))
 
 (defmacro function (name)
-  `(%%identifier ,name function))
+  #`(%%identifier ,name function))
 
 (defmacro identifier (name namespace)
-  `(%%identifier ,name ,namespace))
+  #`(%%identifier ,name ,namespace))
 
-(defmacro if (test consequent &opt (alternative 'nil))
-  `(%%if ,test ,consequent ,alternative))
+(defmacro if (test consequent &opt (alternative #'nil))
+  #`(%%if ,test ,consequent ,alternative))
 
 (defmacro lambda (sig &rest body)
-  `(%%lambda ,sig (%%progn ,@body)))
+  #`(%%lambda ,sig (%%progn ,@body)))
 
 (defmacro native (&rest body)
-  `(%%native ,@body))
+  #`(%%native ,@body))
 
 (defmacro native-snippet (string)
-  `(%%native-snippet ,string))
+  #`(%%native-snippet ,string))
 
 (defmacro progn (&rest body)
-  `(%%progn ,@body))
+  #`(%%progn ,@body))
 
 (defmacro quasiquote (form)
-  `(%%quasiquote ,form))
+  #`(%%quasiquote ,form))
 
 (defmacro quote (form)
-  `(%%quote ,form))
+  #`(%%quote ,form))
 
 ;; Common stuff
 
 (defmacro defvar (name value)
-  `(defparameter ,name (if (defined? ,name) ,name ,value)))
+  #`(defparameter ,name (if (defined? ,name) ,name ,value)))
 
 (defmacro defun (name sig &rest body)
-  `(defparameter (function ,name) (lambda ,sig ,@body)))
+  #`(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro when (test &rest consequent)
-  `(if ,test (progn ,@consequent) nil))
+  #`(if ,test (progn ,@consequent) nil))
 
 (defmacro unless (test &rest alternative)
-  `(if ,test nil (progn ,@alternative)))
+  #`(if ,test nil (progn ,@alternative)))
 
 (defmacro let (bindings &rest body)
-  `(funcall (lambda ,(compound-map (lambda (b) 
+  #`(funcall (lambda ,(compound-map (lambda (b) 
                                      (compound-elt b 0))
                                    bindings)
               ,@body)
@@ -82,31 +82,31 @@
 
 (defmacro let* (vs &rest forms)
   (if (> (compound-len vs) 0)
-      `(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
-      `(let () ,@forms)))
+      #`(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
+      #`(let () ,@forms)))
 
 (defmacro while (test &rest body)
-  `(call-while (lambda () ,test) (lambda () ,@body)))
+  #`(call-while (lambda () ,test) (lambda () ,@body)))
 
 (defmacro block (name &rest body)
-  `(call-with-escape-function (lambda (,name) ,@body)))
+  #`(call-with-escape-function (lambda (,name) ,@body)))
 
-(defmacro return-from (name &opt (value 'nil))
-  `(funcall ,name ,value))
+(defmacro return-from (name &opt (value #'nil))
+  #`(funcall ,name ,value))
 
 (defmacro unwind-protect (protected &rest cleanups)
-  `(call-unwind-protected (lambda () ,protected)
-                          (lambda () ,@cleanups)))
+  #`(call-unwind-protected (lambda () ,protected)
+			   (lambda () ,@cleanups)))
 
 (defmacro handle (handler-specs &rest body)
-  `(bind-handlers (list ,@(compound-map (lambda (handler-spec)
-                                          `(list ,(compound-elt handler-spec 0)
+  #`(bind-handlers (list ,@(compound-map (lambda (handler-spec)
+                                          #`(list ,(compound-elt handler-spec 0)
                                                  ,(compound-elt handler-spec 1)))
                                         handler-specs))
                   (lambda () ,@body)))
 
 (defun not (x)
-  (if x #f true))
+  (if x #f #t))
 
 (eval-when-compile
   (defun setter-name (getter-name)
@@ -114,38 +114,38 @@
 
 (defmacro set (place value)
   (if (symbol? place)
-      `(%%set ,place ,value)
-      `(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
+      #`(%%set ,place ,value)
+      #`(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
         ,@(compound-slice place 1)
         ,value)))
 
-(defmacro inc (place &opt (delta '1))
-  `(set ,place (+ ,place ,delta)))
+(defmacro inc (place &opt (delta #'1))
+  #`(set ,place (+ ,place ,delta)))
 
-(defmacro dec (place &opt (delta '1))
-  `(set ,place (- ,place ,delta)))
+(defmacro dec (place &opt (delta #'1))
+  #`(set ,place (- ,place ,delta)))
 
-(defmacro assert (test &opt (msg '"assertion failed"))
-  `(let ((result ,test))
+(defmacro assert (test &opt (msg #'"assertion failed"))
+  #`(let ((result ,test))
      (if result
          result
          (progn
            (print ,msg)
-           (print ',test)))))
+           (print #',test)))))
 
 (defmacro assert-eq (a b)
-  `(assert (eq ,a ,b)))
+  #`(assert (eq ,a ,b)))
 
 (defmacro assert-eql (a b)
-  `(assert (eql ,a ,b)))
+  #`(assert (eql ,a ,b)))
 
 (defmacro eval-and-compile (&rest forms)
-  `(progn
+  #`(progn
      (eval-when-compile ,@forms)
      ,@forms))
 
 (defmacro native-body (&rest stuff)
-  `{% (function(){ ~,@stuff })() %})
+  #`{% (function(){ ~,@stuff })() %})
 
 ;; OO
 
@@ -155,19 +155,19 @@
            (slot-name-form (string-to-form slot-name))
            (getter-name (string-concat "." slot-name))
            (setter-name (setter-name getter-name)))
-      `(progn
+      #`(progn
          (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
            (slot obj ,slot-name-form))
          (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
            (set-slot obj ,slot-name-form value))))))
 
 (defmacro class (name)
-  `(identifier ,name class))
+  #`(identifier ,name class))
 
 (defmacro make (class-name)
-  `(make-instance (class ,class-name)))
+  #`(make-instance (class ,class-name)))
 
-(defmacro defclass (name-and-super &opt (slots '()))
+(defmacro defclass (name-and-super &opt (slots #'()))
   (let ((class-name nil)
         (superclass nil))
     (if (symbol? name-and-super)
@@ -175,30 +175,30 @@
                (set superclass nil))
         (progn (set class-name (compound-elt name-and-super 0))
                (set superclass (compound-elt name-and-super 1))))
-    `(progn
+    #`(progn
        (defvar (class ,class-name) (make-class))
        ,(if superclass 
-            `(set-superclass (class ,class-name) (class ,superclass))
-            `nil)
+            #`(set-superclass (class ,class-name) (class ,superclass))
+            #`nil)
        ,@(compound-map (lambda (slot)
 			 (defclass-do-slot class-name slot))
                        slots)
        (defun ,class-name ()
          (make ,class-name))
-       ',class-name)))
+       #',class-name)))
 
 (defmacro generic (name)
-  `(identifier ,name generic))
+  #`(identifier ,name generic))
 
 (defmacro defgeneric (name &rest args)
-  `(progn
+  #`(progn
      (defvar (generic ,name) (make-generic))
      (defun ,name (&fast fast-arguments)
        (let ((method (find-method (generic ,name) fast-arguments)))
 	 (fast-apply method fast-arguments)))))
 
 (defmacro defmethod (name params &rest body)
-  `(progn
+  #`(progn
      (defgeneric ,name)
      (put-method (generic ,name)
 		 (list ,@(params-specializers params))
@@ -207,7 +207,7 @@
 ;; Conditions
 
 (defmacro deferror (name &rest slots)
-  `(defclass (,name <error>) ,@slots))
+  #`(defclass (,name <error>) ,@slots))
 
 (defclass <exception>)
 (defclass (<error> <exception>))
@@ -238,7 +238,7 @@
 (defclass <list>)
 
 (defun <list> (&rest args) 
-  (apply #'list args))
+  (apply $list args))
 
 (defmethod iter ((list <list>))
   (<list-iter> list))
@@ -295,27 +295,27 @@ collection determines how many times the function is called."
         (while (has-next iter)
           (funcall fun (now iter))
           (next iter)))
-      (let ((iters (map #'iter colls)))
-        (while (every #'has-next iters)
-          (apply fun (map #'now iters))
-          (each #'next iters)))))
+      (let ((iters (map $iter colls)))
+        (while (every $has-next iters)
+          (apply fun (map $now iters))
+          (each $next iters)))))
 
 (defun map ((fun <function>) &rest colls &key (into (<list>)))
   "Applies a function to the elements of one or more collections and
 returns a collection with the results of each application.  The
 function is called with N positional arguments, each taken from the
 collections from left to right.  The shortest collection determines
-how many times the function is called.  The `into' keyword argument
+how many times the function is called.  The #`into' keyword argument
 can be used to supply a different collection to hold the results."
   (if (= 1 (len colls))
       (let ((iter (iter (elt colls 0))))
         (while (has-next iter)
           (add into (funcall fun (now iter)))
           (next iter)))
-      (let ((iters (map #'iter colls)))
-        (while (every #'has-next iters)
-          (add into (apply fun (map #'now iters)))
-          (each #'next iters))))
+      (let ((iters (map $iter colls)))
+        (while (every $has-next iters)
+          (add into (apply fun (map $now iters)))
+          (each $next iters))))
   into)
 
 (defclass <number-iter> (i max))
@@ -341,4 +341,4 @@ can be used to supply a different collection to hold the results."
 (defmacro dotimes (var-and-ct &rest body)
   (let ((var (elt var-and-ct 0))
         (ct (elt var-and-ct 1)))
-    `(each (lambda (,var) ,@body) ,ct)))
+    #`(each (lambda (,var) ,@body) ,ct)))
