@@ -352,7 +352,8 @@ var lisp_specials_table = {
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
-    "%%set": lisp_compile_special_set
+    "%%set": lisp_compile_special_set,
+    "%%symbol": lisp_compile_special_symbol
 };
 
 /* VOPs (virtual operations) correspond roughly to special forms. */
@@ -367,9 +368,9 @@ var lisp_vop_table = {
     "native-snippet": lisp_emit_vop_native_snippet,
     "number": lisp_emit_vop_number,
     "progn": lisp_emit_vop_progn,
-    "quote": lisp_emit_vop_quote,
     "set": lisp_emit_vop_set,
-    "string": lisp_emit_vop_string
+    "string": lisp_emit_vop_string,
+    "symbol": lisp_emit_vop_symbol
 };
 
 function lisp_special_function(name)
@@ -459,6 +460,13 @@ function lisp_compile_special_identifier(form) {
 	     namespace: namespace.name };
 }
 
+/* (%%symbol symbol) */
+function lisp_compile_special_symbol(form) {
+    var symbol = lisp_assert_symbol_form(form.elts[1], "Bad symbol");
+    return { vopt: "symbol",
+	     name: symbol.name };
+}
+
 /* In CyberLisp `false' and `null' are considered false, all other
    objects (including the number zero) are true.  
    (%%if test consequent alternative) */
@@ -510,7 +518,7 @@ function lisp_compile_special_set(form)
 function lisp_compile_special_quasiquote(form)
 {
     var quasiquoted = lisp_assert_not_null(form.elts[1]);
-    return lisp_compile_qq(quasiquoted, 0);
+    return lisp_compile(lisp_qq(quasiquoted, 0));
 }
 
 /* (%%quote form) */
@@ -857,57 +865,59 @@ var lisp_keywords_dict = "_key_";
    algorithm should produce the same results as the one in Appendix B
    of Alan Bawden's paper "Quasiquotation in LISP", 1999. */
 
-function lisp_compile_qq(x, depth)
+function lisp_qq(form, depth)
 {
     if (depth < 0) 
         lisp_error("Negative quasiquotation nesting depth", x);
 
-    switch(x.formt) {
+    switch(form.formt) {
     case "number":
-    case "symbol":
     case "string":
-        return { vopt: "quote", form: x };
+	// quoting self-evaluating object evaluates to that object
+	return form;
+    case "symbol":
+        return new Lisp_compound_form([ new Lisp_symbol_form("%%symbol"), form ]);
     case "compound":
-        return lisp_compile_qq_compound(x, depth);
+        return lisp_qq_compound(form, depth);
     }
 
-    lisp_error("Bad quasiquoted form", x);
+    lisp_error("Bad quasiquoted form", form);    
 }
 
-function lisp_compile_qq_compound(x, depth)
+function lisp_qq_compound(form, depth)
 {
-    var op = x.elts[0];
+    var op = form.elts[0];
     if (op) {
         if (is_unquote(op)) {
             if (depth == 0) {
-                return lisp_compile(x.elts[1]);
+                return form.elts[1];
             } else {
-                return unquote(x.elts[1], depth - 1);
+                return unquote(form.elts[1], depth - 1);
             }
         } else if (is_quasiquote(op)) {
-            return quasiquote(x.elts[1], depth + 1);
+            return quasiquote(form.elts[1], depth + 1);
         } else {
-            return compile_compound(x, depth);
+            return qq_compound(form, depth);
         }
     } else {
         return make_compound([]);
     }
 
-    function compile_compound(x, depth)
+    function qq_compound(form, depth)
     {
         var compounds = [], compound_elts = [];
-        for (var i = 0, len = x.elts.length; i < len; i++) {
-            var sub = x.elts[i];
+        for (var i = 0, len = form.elts.length; i < len; i++) {
+            var sub = form.elts[i];
             if ((sub.formt == "compound") && is_unquote_splicing(sub.elts[0])) {
                 compounds.push(make_compound(compound_elts));
                 compound_elts = [];
                 if (depth == 0) {
-                    compounds.push(lisp_compile(sub.elts[1]));
+                    compounds.push(sub.elts[1]);
                 } else {
                     compounds.push(unquote_splicing(sub.elts[1], depth - 1));
                 }
             } else {
-                compound_elts.push(lisp_compile_qq(sub, depth));
+                compound_elts.push(lisp_qq(sub, depth));
             }
         }
         if (compound_elts.length > 0) 
@@ -932,48 +942,30 @@ function lisp_compile_qq_compound(x, depth)
 
     function quasiquote(x, depth)
     {
-        return make_compound([quote(symbol("%%quasiquote")),
-                              lisp_compile_qq(x, depth)]);
+        return make_compound([new Lisp_symbol_form("%%quasiquote"),
+                              lisp_qq(x, depth)]);
     }
 
     function unquote(x, depth)
     {
-        return make_compound([quote(symbol("%%unquote")),
-                              lisp_compile_qq(x, depth)]);
+        return make_compound([new Lisp_symbol_form("%%unquote"),
+                              lisp_qq(x, depth)]);
     }
 
     function unquote_splicing(x, depth)
     {
-        return make_compound([quote(symbol("%%unquote-splicing")),
-                              lisp_compile_qq(x, depth)]);
+        return make_compound([new Lisp_symbol_form("%%unquote-splicing"),
+                              lisp_qq(x, depth)]);
     }
 
-    function make_compound(elt_vops)
+    function make_compound(elts)
     {
-        return { vopt: "funcall",
-		 fun: { vopt: "identifier",
-		        name: "make-compound",
-		        namespace:"function" },
-                 call_site: { pos_args: elt_vops } };
+	return new Lisp_compound_form([new Lisp_symbol_form("make-compound")].concat(elts));
     }
 
-    function append_compounds(elt_vops)
+    function append_compounds(elts)
     {
-        return { vopt: "funcall",
-		 fun: { vopt: "identifier",
-		        name: "append-compounds",
-		        namespace:"function" },
-                 call_site: { pos_args: elt_vops } };
-    }
-
-    function symbol(name)
-    {
-        return new Lisp_symbol_form(name);
-    }
-
-    function quote(form)
-    {
-        return { vopt: "quote", form: form };
+	return new Lisp_compound_form([new Lisp_symbol_form("append-compounds")].concat(elts));
     }
 }
 
@@ -1085,12 +1077,12 @@ function lisp_emit_vop_string(vop)
     return JSON.stringify(vop.s);
 }
 
-/* Evaluates to the form itself.
-   { vopt: "quote", form: <form> }
-   form: any form. */
-function lisp_emit_vop_quote(vop)
+/* Symbol literal.
+   { vopt: "symbol", name: <string> } */
+function lisp_emit_vop_symbol(vop)
 {
-    return JSON.stringify(vop.form);
+    lisp_assert_string(vop.name, "Bad .name", vop);
+    return "lisp_bif_string_to_symbol(" + JSON.stringify(vop.name) + ")";
 }
 
 /* Calls a function.
