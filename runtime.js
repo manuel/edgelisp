@@ -25,6 +25,64 @@
    compiler too. */
 
 
+/*** Strings ***/
+
+function Lisp_string(s)
+{
+    this.s = s;
+}
+
+/*** Numbers ***/
+
+function Lisp_number(numrepr)
+{
+    this.n = SchemeNumber(numrepr);
+}
+
+function lisp_bif_add(_key_, a, b)
+{
+    return SchemeNumber.fn["+"](a, b);
+}
+
+function lisp_bif_sub(_key_, a, b)
+{
+    return SchemeNumber.fn["-"](a, b);
+}
+
+function lisp_bif_mult(_key_, a, b)
+{
+    return SchemeNumber.fn["*"](a, b);
+}
+
+function lisp_bif_div(_key_, a, b)
+{
+    return SchemeNumber.fn["/"](a, b);
+}
+
+function lisp_bif_eql(_key_, a, b)
+{
+    return SchemeNumber.fn["="](a, b);
+}
+
+function lisp_bif_lt(_key_, a, b)
+{
+    return SchemeNumber.fn["<"](a, b);
+}
+
+function lisp_bif_gt(_key_, a, b)
+{
+    return SchemeNumber.fn[">"](a, b);
+}
+
+
+/*** Functions ***/
+
+function lisp_bif_fast_apply(_key_, fun, _arguments)
+{
+    return fun.apply(null, _arguments);
+}
+
+
 /*** Forms ***/
 
 function Lisp_number_form(sign, integral_digits, fractional_digits)
@@ -104,6 +162,7 @@ function lisp_check_type(obj, type)
 }
 
 
+// fixme: should be generic PRINT-OBJECT
 function lisp_show(obj)
 {
     if (obj === null) {
@@ -131,6 +190,16 @@ function lisp_iter_dict(dict, fun)
     }
 }
 
+function lisp_lists_equal(list1, list2)
+{
+    if (list1.length != list2.length) return false;
+    for (var i = 0, len = list1.length; i < len; i++) {
+        if (list1[i] !== list2[i]) return false;
+    }
+    return true;
+}
+
+// fixme: should SIGNAL error
 function lisp_error(message, arg)
 {
     throw Error(message + ": " + lisp_show(arg));
@@ -450,6 +519,13 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
     }
 }
 
+function lisp_bif_call_while(_key_, test_fun, body_fun)
+{
+    while(test_fun(null)) {
+        body_fun(null);
+    }
+}
+
 
 /*** Multiple Dispatch ***/
 
@@ -650,32 +726,7 @@ function lisp_bif_is_typename(_key_, string)
 }
 
 
-/*** Utilities ***/
-
-function lisp_lists_equal(list1, list2)
-{
-    if (list1.length != list2.length) return false;
-    for (var i = 0, len = list1.length; i < len; i++) {
-        if (list1[i] !== list2[i]) return false;
-    }
-    return true;
-}
-
-function lisp_bif_macroexpand_1(_key_, form)
-{
-    var macro = lisp_macro_function(form.elts[0].name);
-    return macro(null, form);
-}
-
-function lisp_bif_print(_key_, object)
-{
-    lisp_print(object); // defined in REPL
-}
-
-function lisp_bif_eq(_key_, a, b)
-{
-    return a === b;
-}
+/*** Slots ***/
 
 function lisp_bif_slot(_key_, obj, name)
 {
@@ -693,6 +744,25 @@ function lisp_bif_has_slot(_key_, obj, name)
 {
     lisp_assert_string(name);
     return obj.hasOwnProperty(lisp_mangle_slot(name));
+}
+
+
+/*** Utilities ***/
+
+function lisp_bif_macroexpand_1(_key_, form)
+{
+    var macro = lisp_macro_function(form.elts[0].name);
+    return macro(null, form);
+}
+
+function lisp_bif_print(_key_, object)
+{
+    lisp_print(object); // defined in REPL
+}
+
+function lisp_bif_eq(_key_, a, b)
+{
+    return a === b;
 }
 
 function lisp_bif_symbol_name(_key_, symbol)
@@ -761,66 +831,8 @@ function lisp_is_true(obj) // T
     return (obj !== false) && (obj !== null);
 }
 
-function lisp_bif_add(_key_, a, b)
-{
-    return SchemeNumber.fn["+"](a, b);
-}
 
-function lisp_bif_sub(_key_, a, b)
-{
-    return SchemeNumber.fn["-"](a, b);
-}
-
-function lisp_bif_mult(_key_, a, b)
-{
-    return SchemeNumber.fn["*"](a, b);
-}
-
-function lisp_bif_div(_key_, a, b)
-{
-    return SchemeNumber.fn["/"](a, b);
-}
-
-function lisp_bif_eql(_key_, a, b)
-{
-    return SchemeNumber.fn["="](a, b);
-}
-
-function lisp_bif_lt(_key_, a, b)
-{
-    return SchemeNumber.fn["<"](a, b);
-}
-
-function lisp_bif_gt(_key_, a, b)
-{
-    return SchemeNumber.fn[">"](a, b);
-}
-
-function lisp_bif_number_to_string(_key_, a)
-{
-    return SchemeNumber.fn["number->string"](a);
-}
-
-function lisp_bif_call_while(_key_, test_fun, body_fun)
-{
-    while(test_fun(null)) {
-        body_fun(null);
-    }
-}
-
-function lisp_bif_fast_apply(_key_, fun, _arguments)
-{
-    return fun.apply(null, _arguments);
-}
-
-var lisp_gensym_counter = 0;
-
-function lisp_bif_gensym(_key_)
-{
-    lisp_gensym_counter++;
-    return new Lisp_symbol_form("%%g-" + lisp_gensym_counter);
-}
-
+/*** Export to Lisp ***/
 
 lisp_set("#t", "true");
 lisp_set("#f", "false");
@@ -832,10 +844,10 @@ lisp_set_class("<function>", "Function.prototype");
 lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
 lisp_set_class("<list>", "Array.prototype");
 lisp_set_class("<number-form>", "Lisp_number_form.prototype");
-lisp_set_class("<number>", "Number.prototype");
+lisp_set_class("<number>", "Lisp_number.prototype");
 lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
 lisp_set_class("<string-form>", "Lisp_string_form.prototype");
-lisp_set_class("<string>", "String.prototype");
+lisp_set_class("<string>", "Lisp_string.prototype");
 lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
 
 lisp_set_function("*", "lisp_bif_mult");
@@ -862,7 +874,6 @@ lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("eql", "lisp_bif_eql");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
-lisp_set_function("gensym", "lisp_bif_gensym");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
 lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");
@@ -873,7 +884,6 @@ lisp_set_function("make-class", "lisp_bif_make_class");
 lisp_set_function("make-compound", "lisp_bif_make_compound");
 lisp_set_function("make-generic", "lisp_bif_make_generic");
 lisp_set_function("make-instance", "lisp_bif_make_instance");
-lisp_set_function("number->string", "lisp_bif_number_to_string");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
