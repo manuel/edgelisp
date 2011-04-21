@@ -490,6 +490,7 @@ function lisp_bif_call_while(_key_, test_fun, body_fun)
     while(test_fun(null)) {
         body_fun(null);
     }
+    return null;
 }
 
 
