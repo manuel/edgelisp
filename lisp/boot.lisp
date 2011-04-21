@@ -205,6 +205,11 @@
                   (list ,@(params-specializers params))
                   (lambda ,params ,@body))))
 
+;; Fixup class hierarchy
+
+(set-superclass (class <string>) (class object))
+(set-superclass (class nil) (class object))
+
 ;; Numbers
 ;;
 ;; small-integer, big-integer, rational, and real are defined in JS.
@@ -216,13 +221,34 @@
 (set-superclass (class small-integer) (class integer))
 (set-superclass (class big-integer) (class integer))
 
-(defgeneric > (a b))
-(defmethod > ((a number) (b number))
-  {% jsnums.greaterThan(~a, ~b) %})
+(defmacro define-jsnums-binop (name jsnums-name)
+  #`(progn
+      (defgeneric ,name (a b))
+      (defmethod ,name ((a number) (b number))
+        {% jsnums.~(native-snippet ,jsnums-name)(~a, ~b) %})))
 
-(defgeneric / (a b))
-(defmethod / ((a number) (b number))
-  {% jsnums.divide(~a, ~b) %})
+(define-jsnums-binop > "greaterThan")
+(define-jsnums-binop / "divide")
+(define-jsnums-binop * "multiply")
+(define-jsnums-binop + "add")
+(define-jsnums-binop - "subtract")
+
+;; 
+
+(defgeneric show (object))
+
+;; fallback
+(defgeneric show ((a object))
+  {% JSON.stringify(~a) %})
+
+(defmethod show ((a nil))
+  "nil")
+
+(defmethod show ((a number))
+  {% (~a).toString() %})
+
+(defmethod show ((a <boolean>))
+  (if a "#t" "#f"))
 
 ;; Conditions
 
