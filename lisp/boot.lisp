@@ -180,7 +180,7 @@
         (defvar (class ,class-name) (make-class))
         ,(if superclass 
              #`(set-superclass (class ,class-name) (class ,superclass))
-             #`nil)
+             #`(set-superclass (class ,class-name) (class object)))
         ,@(compound-map (lambda (slot)
                           (defclass-do-slot class-name slot))
                         slots)
@@ -219,6 +219,10 @@
 (defgeneric > (a b))
 (defmethod > ((a number) (b number))
   {% jsnums.greaterThan(~a, ~b) %})
+
+(defgeneric / (a b))
+(defmethod / ((a number) (b number))
+  {% jsnums.divide(~a, ~b) %})
 
 ;; Conditions
 
