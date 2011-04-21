@@ -126,17 +126,13 @@ function lisp_check_type(obj, type)
         lisp_error("Type error", obj);
 }
 
-
-// fixme: should be generic PRINT-OBJECT
 function lisp_show(obj)
 {
-    if (obj === null) {
-        return "null";
-    } else if (typeof obj == "function") {
-        return "#<function>";
-    } else {
+    // show is defined as a generic function in boot.lisp
+    if (_lisp_function_show)
+        return _lisp_function_show(null, obj);
+    else
         return JSON.stringify(obj);
-    }
 }
 
 function lisp_array_contains(array, elt)
@@ -167,7 +163,7 @@ function lisp_lists_equal(list1, list2)
 // fixme: should SIGNAL error
 function lisp_error(message, arg)
 {
-    throw Error(message + ": " + lisp_show(arg));
+    throw Error(message + ": " + JSON.stringify(arg));
 }
 
 function lisp_assert(value, message, arg)
@@ -646,7 +642,10 @@ function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 
 function lisp_type_of(obj)
 {
-    return obj.__proto__;
+    if (obj === null)
+        return lisp_nil_class;
+    else
+        return obj.__proto__;
 }
 
 function lisp_bif_type_of(_key_, obj) 
@@ -806,7 +805,6 @@ function lisp_is_true(obj) // T
 
 lisp_set("#t", "true");
 lisp_set("#f", "false");
-lisp_set("nil", "null");
 
 lisp_set_class("object", "Object.prototype");
 lisp_set_class("<boolean>", "Boolean.prototype");
@@ -818,6 +816,10 @@ lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
 lisp_set_class("<string-form>", "Lisp_string_form.prototype");
 lisp_set_class("<string>", "String.prototype");
 lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
+
+var lisp_nil_class = lisp_bif_make_class(null);
+lisp_set_class("nil", "lisp_nil_class");
+lisp_set("nil", "null");
 
 // Numbers
 lisp_set_class("small-integer", "Number.prototype");

@@ -145,12 +145,14 @@ var lisp_native_escape =
            lisp_native_escape_action);
 
 var lisp_native_syntax =
-    action(sequence("{%",
+    action(sequence("#{",
                     repeat1(choice(lisp_native_escape,
-                                   action(choice(negate("%"),
-                                                 join_action(sequence("%", not("}")), "")),
+                                   action(choice(negate("#"),
+                                                 join_action(sequence("#",
+                                                                      not("}")),
+                                                             "")),
                                           lisp_native_snippet_action))),
-                    "%}"),
+                    "#}"),
            lisp_native_action);
 
 function lisp_native_escape_action(ast)

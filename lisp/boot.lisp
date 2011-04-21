@@ -146,7 +146,7 @@
      ,@forms))
 
 (defmacro native-body (&rest stuff)
-  #`{% (function(){ ~,@stuff })() %})
+  #`#{ (function(){ ~,@stuff })() #})
 
 ;; OO
 
@@ -225,9 +225,10 @@
   #`(progn
       (defgeneric ,name (a b))
       (defmethod ,name ((a number) (b number))
-        {% jsnums.~(native-snippet ,jsnums-name)(~a, ~b) %})))
+        #{ jsnums.~(native-snippet ,jsnums-name)(~a, ~b) #})))
 
 (define-jsnums-binop > "greaterThan")
+(define-jsnums-binop < "lessThan")
 (define-jsnums-binop / "divide")
 (define-jsnums-binop * "multiply")
 (define-jsnums-binop + "add")
@@ -239,16 +240,24 @@
 
 ;; fallback
 (defgeneric show ((a object))
-  {% JSON.stringify(~a) %})
+  #{ JSON.stringify(~a) #})
 
 (defmethod show ((a nil))
   "nil")
 
 (defmethod show ((a number))
-  {% (~a).toString() %})
+  #{ (~a).toString() #})
 
 (defmethod show ((a <boolean>))
   (if a "#t" "#f"))
+
+(defmethod show ((a <string>))
+  #{ JSON.stringify(~a) #})
+
+(defmethod show ((a <function>))
+  "#<function>")
+
+
 
 ;; Conditions
 
