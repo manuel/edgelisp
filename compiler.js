@@ -1085,7 +1085,7 @@ function lisp_emit_vop_if(vop)
 function lisp_emit_vop_number(vop)
 {
     var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
-    return "(new Lisp_number(\"" + num_repr + "\"))";
+    return "(lisp_number(\"" + num_repr + "\"))";
 }
 
 /* Number form.
@@ -1104,7 +1104,7 @@ function lisp_emit_vop_number_form(vop)
 function lisp_emit_vop_string(vop)
 {
     lisp_assert_string(vop.s, "Bad .s", vop);
-    return "(new Lisp_string(" + JSON.stringify(vop.s) +"))";
+    return JSON.stringify(vop.s);
 }
 
 /* String form.

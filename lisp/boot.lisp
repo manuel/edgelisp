@@ -81,9 +81,10 @@
                             bindings)))
 
 (defmacro let* (vs &rest forms)
-  (if (> (compound-len vs) 0)
-      #`(let (,(compound-elt vs 0)) (let* ,(compound-slice vs 1) ,@forms))
-      #`(let () ,@forms)))
+  (if (compound-empty? vs)
+      #`(let () ,@forms)
+      #`(let (,(compound-elt vs 0))
+          (let* ,(compound-slice vs 1) ,@forms))))
 
 (defmacro while (test &rest body)
   #`(call-while (lambda () ,test) (lambda () ,@body)))
@@ -204,6 +205,21 @@
                   (list ,@(params-specializers params))
                   (lambda ,params ,@body))))
 
+;; Numbers
+;;
+;; small-integer, big-integer, rational, and real are defined in JS.
+
+(defclass number)
+(set-superclass (class real) (class number))
+(set-superclass (class rational) (class real))
+(defclass (integer rational))
+(set-superclass (class small-integer) (class integer))
+(set-superclass (class big-integer) (class integer))
+
+(defgeneric > (a b))
+(defmethod > ((a number) (b number))
+  {% jsnums.greaterThan(~a, ~b) %})
+
 ;; Conditions
 
 (defmacro deferror (name &rest slots)
@@ -246,7 +262,7 @@
 (defmethod len ((list <list>))
   (list-len list))
 
-(defmethod elt ((list <list>) (i <number>))
+(defmethod elt ((list <list>) (i number))
   (list-elt list i))
 
 (defmethod add ((list <list>) elt)
@@ -326,7 +342,7 @@ can be used to supply a different collection to hold the results."
     (set (.max iter) max)
     iter))
 
-(defmethod iter ((max <number>))
+(defmethod iter ((max number))
   (<number-iter> max))
 
 (defmethod has-next ((iter <number-iter>))

@@ -34,44 +34,9 @@ function Lisp_string(s)
 
 /*** Numbers ***/
 
-function Lisp_number(numrepr)
+function lisp_number(numrepr)
 {
-    this.n = SchemeNumber(numrepr);
-}
-
-function lisp_bif_add(_key_, a, b)
-{
-    return SchemeNumber.fn["+"](a, b);
-}
-
-function lisp_bif_sub(_key_, a, b)
-{
-    return SchemeNumber.fn["-"](a, b);
-}
-
-function lisp_bif_mult(_key_, a, b)
-{
-    return SchemeNumber.fn["*"](a, b);
-}
-
-function lisp_bif_div(_key_, a, b)
-{
-    return SchemeNumber.fn["/"](a, b);
-}
-
-function lisp_bif_eql(_key_, a, b)
-{
-    return SchemeNumber.fn["="](a, b);
-}
-
-function lisp_bif_lt(_key_, a, b)
-{
-    return SchemeNumber.fn["<"](a, b);
-}
-
-function lisp_bif_gt(_key_, a, b)
-{
-    return SchemeNumber.fn[">"](a, b);
+    return jsnums.fromString(numrepr);
 }
 
 
@@ -341,6 +306,11 @@ function lisp_bif_compound_slice(_key_, compound, start)
     return new Lisp_compound_form(compound.elts.slice(start));
 }
 
+function lisp_bif_compound_emptyp(_key_, compound)
+{
+    lisp_assert_compound_form(compound, "compound-empty?", compound);
+    return compound.elts.length === 0;
+}
 
 /*** Built-in string dictionaries ***/
 
@@ -691,7 +661,7 @@ function lisp_subtypep(type1, type2)
     if (type1 == type2) 
         return true;
 
-    var supertype = type1.__proto__;
+    var supertype = type1.lisp_superclass;
     if (supertype)
         return lisp_subtypep(supertype, type2);
     
@@ -710,7 +680,7 @@ function lisp_bif_make_class(_key_)
 
 function lisp_bif_set_superclass(_key_, clsA, clsB)
 {
-    clsA.__proto__ = clsB;
+    clsA.lisp_superclass = clsB;
 }
 
 function lisp_bif_make_instance(_key_, cls)
@@ -844,19 +814,17 @@ lisp_set_class("<function>", "Function.prototype");
 lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
 lisp_set_class("<list>", "Array.prototype");
 lisp_set_class("<number-form>", "Lisp_number_form.prototype");
-lisp_set_class("<number>", "Lisp_number.prototype");
 lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
 lisp_set_class("<string-form>", "Lisp_string_form.prototype");
-lisp_set_class("<string>", "Lisp_string.prototype");
+lisp_set_class("<string>", "String.prototype");
 lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
 
-lisp_set_function("*", "lisp_bif_mult");
-lisp_set_function("+", "lisp_bif_add");
-lisp_set_function("-", "lisp_bif_sub");
-lisp_set_function("/", "lisp_bif_div");
-lisp_set_function("<", "lisp_bif_lt");
-lisp_set_function("=", "lisp_bif_eql");
-lisp_set_function(">", "lisp_bif_gt");
+// Numbers
+lisp_set_class("small-integer", "Number.prototype");
+lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
+lisp_set_class("real", "jsnums.FloatPoint.prototype");
+lisp_set_class("rational", "jsnums.Rational.prototype");
+
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
@@ -866,12 +834,12 @@ lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_functi
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
 lisp_set_function("compound-elts", "lisp_bif_compound_elts");
+lisp_set_function("compound-empty?", "lisp_bif_compound_emptyp");
 lisp_set_function("compound-len", "lisp_bif_compound_len");
 lisp_set_function("compound-map", "lisp_bif_compound_map");
 lisp_set_function("compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
-lisp_set_function("eql", "lisp_bif_eql");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
