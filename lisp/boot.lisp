@@ -140,9 +140,6 @@
 (defmacro assert-eq (a b)
   #`(assert (eq ,a ,b)))
 
-(defmacro assert-eql (a b)
-  #`(assert (eql ,a ,b)))
-
 (defmacro eval-and-compile (&rest forms)
   #`(progn
      (eval-when-compile ,@forms)
