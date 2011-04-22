@@ -250,15 +250,15 @@
   #`(defvar (dynamic ,name) ,value))
 
 (defmacro dynamic-bind (bindings &rest body)
-  (if (compound-empty? bindings)
+  (if (empty? bindings)
       #`(progn ,@body)
-      #`(dynamic-bind-1 ,(compound-elt bindings 0)
-          (dynamic-bind ,(compound-slice bindings 1)
+      #`(dynamic-bind-1 ,(elt bindings 0)
+          (dynamic-bind ,(slice bindings 1)
              ,@body))))
 
 (defmacro dynamic-bind-1 (binding &rest body)
-  (let ((name (compound-elt binding 0))
-        (value (compound-elt binding 1)))
+  (let ((name (elt binding 0))
+        (value (elt binding 1)))
   #`(let ((old-value (dynamic ,name)))
       (%%set (dynamic ,name) ,value)
       (unwind-protect (progn ,@body)
@@ -296,6 +296,19 @@
 (defclass (<restart> <exception>))
 
 ;; Collections
+
+(defgeneric elt (collection index))
+(defgeneric empty? (collection))
+(defgeneric slice (collection from-index))
+
+(defmethod elt ((c <compound-form>) (i small-integer))
+  (compound-elt c i))
+
+(defmethod empty? ((c <compound-form>))
+  (compound-empty? c))
+
+(defmethod slice ((c <compound-form>) (from small-integer))
+  (compound-slice c from))
 
 (defclass <dict>)
 
