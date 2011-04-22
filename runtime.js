@@ -567,15 +567,15 @@ function lisp_find_applicable_method_entries(generic, arguments)
     var applicable_mes = [];
     var mes = generic.method_entries;
     for (var i = 0, len = mes.length; i < len; i++) {
-        if (lisp_specializers_lists_agree(actual_specializers,
-                                          mes[i].specializers)) {
+        if (lisp_specializer_lists_agree(actual_specializers,
+                                         mes[i].specializers)) {
             applicable_mes.push(mes[i]);
         }
     }
     return applicable_mes;
 }
 
-function lisp_specializers_lists_agree(actuals, formals)
+function lisp_specializer_lists_agree(actuals, formals)
 {
     if (actuals.length != formals.length) return false;
     for (var i = 0, len = actuals.length; i < len; i++)
