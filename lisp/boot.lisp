@@ -116,7 +116,7 @@
   (defun setter-name (getter-name)
     (string-concat getter-name "-setter")))
 
-(defmacro set (place value)
+(defmacro setf (place value)
   (if (symbol? place)
       #`(setq ,place ,value)
       #`(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
@@ -124,10 +124,10 @@
         ,value)))
 
 (defmacro inc (place &optional (delta #'1))
-  #`(set ,place (+ ,place ,delta)))
+  #`(setf ,place (+ ,place ,delta)))
 
 (defmacro dec (place &optional (delta #'1))
-  #`(set ,place (- ,place ,delta)))
+  #`(setf ,place (- ,place ,delta)))
 
 (defmacro assert (test &optional (msg #'"assertion failed"))
   #`(let ((result ,test))
@@ -175,10 +175,10 @@
   (let ((class-name nil)
         (superclass nil))
     (if (symbol? name-and-super)
-        (progn (set class-name name-and-super)
-               (set superclass nil))
-        (progn (set class-name (compound-elt name-and-super 0))
-               (set superclass (compound-elt name-and-super 1))))
+        (progn (setf class-name name-and-super)
+               (setf superclass nil))
+        (progn (setf class-name (compound-elt name-and-super 0))
+               (setf superclass (compound-elt name-and-super 1))))
     #`(progn
         (defvar (class ,class-name) (make-class))
         ,(if superclass 
@@ -361,8 +361,8 @@
 
 (defun <list-iter> ((list <list>))
   (let ((iter (make <list-iter>)))
-    (set (.list iter) list)
-    (set (.i iter) 0)
+    (setf (.list iter) list)
+    (setf (.i iter) 0)
     iter))
 
 (defmethod has-next ((iter <list-iter>))
@@ -427,8 +427,8 @@ can be used to supply a different collection to hold the results."
 
 (defun <number-iter> (max)
   (let ((iter (make <number-iter>)))
-    (set (.i iter) 0)
-    (set (.max iter) max)
+    (setf (.i iter) 0)
+    (setf (.max iter) max)
     iter))
 
 (defmethod iter ((max number))
