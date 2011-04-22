@@ -57,6 +57,9 @@
 (defmacro quote (form)
   #`(%%quote ,form))
 
+(defmacro setq (name namespace)
+  #`(%%set ,name ,namespace))
+
 ;; Common stuff
 
 (defmacro defvar (name &optional (value #'nil))
@@ -115,7 +118,7 @@
 
 (defmacro set (place value)
   (if (symbol? place)
-      #`(%%set ,place ,value)
+      #`(setq ,place ,value)
       #`(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
         ,@(compound-slice place 1)
         ,value)))
@@ -268,9 +271,9 @@
   (let ((name (elt binding 0))
         (value (elt binding 1)))
   #`(let ((old-value (dynamic ,name)))
-      (%%set (dynamic ,name) ,value)
+      (setq (dynamic ,name) ,value)
       (unwind-protect (progn ,@body)
-        (%%set (dynamic ,name) old-value)))))
+        (setq (dynamic ,name) old-value)))))
 
 ;; 
 

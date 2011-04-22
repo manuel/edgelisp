@@ -356,7 +356,7 @@ var lisp_specials_table = {
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
-    "%%set": lisp_compile_special_set,
+    "setq": lisp_compile_special_setq,
     "%%string-form": lisp_compile_special_string_form,
     "%%symbol-form": lisp_compile_special_symbol_form
 };
@@ -374,7 +374,7 @@ var lisp_vop_table = {
     "number": lisp_emit_vop_number,
     "number-form": lisp_emit_vop_number_form,
     "progn": lisp_emit_vop_progn,
-    "set": lisp_emit_vop_set,
+    "setq": lisp_emit_vop_setq,
     "string": lisp_emit_vop_string,
     "string-form": lisp_emit_vop_string_form,
     "symbol-form": lisp_emit_vop_symbol_form
@@ -418,7 +418,7 @@ function lisp_compile_special_defparameter(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "set", 
+    return { vopt: "setq", 
              name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
@@ -526,12 +526,12 @@ function lisp_compile_special_progn(form)
 }
 
 /* Updates the value of a binding.
-   (%%set name value) */
-function lisp_compile_special_set(form)
+   (setq name value) */
+function lisp_compile_special_setq(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "set",
+    return { vopt: "setq",
              name: lisp_compile(name_form),
              value: lisp_compile(value_form) };
 }
@@ -1054,10 +1054,10 @@ function lisp_emit_vop_identifier(vop)
 }
 
 /* Assigns a value to a variable.
-   { vopt: "set", name: <vop>, value: <vop> }
+   { vopt: "setq", name: <vop>, value: <vop> }
    name: the "identifier" VOP of the variable;
    value: VOP for the value. */
-function lisp_emit_vop_set(vop)
+function lisp_emit_vop_setq(vop)
 {
     var value = lisp_emit(vop.value);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
