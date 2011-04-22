@@ -186,7 +186,7 @@
                         slots)
         (defun ,class-name ()
           (make ,class-name))
-        #',class-name)))
+        (class ,class-name))))
 
 (defmacro generic (name)
   #`(identifier ,name generic))
@@ -203,12 +203,20 @@
       (defgeneric ,name)
       (put-method (generic ,name)
                   (list ,@(params-specializers params))
-                  (lambda ,params ,@body))))
+                  (lambda ,params ,@body))
+      #',name))
 
 ;; Fixup class hierarchy
 
 (set-superclass (class <string>) (class object))
 (set-superclass (class <boolean>) (class object))
+(set-superclass (class <compound-form>) (class object))
+(set-superclass (class <number-form>) (class object))
+(set-superclass (class <string-form>) (class object))
+(set-superclass (class <symbol-form>) (class object))
+(set-superclass (class <string-dict>) (class object))
+(set-superclass (class <list>) (class object))
+(set-superclass (class <function>) (class object))
 (set-superclass (class nil) (class object))
 
 ;; Numbers

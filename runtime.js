@@ -527,6 +527,7 @@ function lisp_bif_put_method(_key_, generic, specializers, method)
         }
     }
     generic.method_entries.push(lisp_make_method_entry(method, specializers));
+    return null;
 }
 
 function lisp_bif_params_specializers(_key_, params)
