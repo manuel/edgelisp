@@ -578,14 +578,9 @@ function lisp_specializers_lists_agree(actuals, formals)
 {
     if (actuals.length != formals.length) return false;
     for (var i = 0, len = actuals.length; i < len; i++)
-        if (!lisp_specializers_agree(actuals[i], formals[i]))
+        if (!lisp_subtypep(actuals[i], formals[i]))
             return false;
     return true;
-}
-
-function lisp_specializers_agree(actual, formal)
-{
-    return lisp_subtypep(actual, formal);
 }
 
 function lisp_most_specific_method_entry(generic, applicable_mes)
