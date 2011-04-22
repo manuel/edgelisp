@@ -183,7 +183,7 @@ function lisp_assert_number(value, message, arg)
     // fixme
     lisp_assert(typeof value === "number", message, arg);
     return value;
-k}
+}
 
 function lisp_assert_string(value, message, arg)
 {
