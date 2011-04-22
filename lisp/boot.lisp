@@ -36,7 +36,7 @@
 (defmacro identifier (name namespace)
   #`(%%identifier ,name ,namespace))
 
-(defmacro if (test consequent &opt (alternative #'nil))
+(defmacro if (test consequent &optional (alternative #'nil))
   #`(%%if ,test ,consequent ,alternative))
 
 (defmacro lambda (sig &rest body)
@@ -59,7 +59,7 @@
 
 ;; Common stuff
 
-(defmacro defvar (name &opt (value #'nil))
+(defmacro defvar (name &optional (value #'nil))
   #`(defparameter ,name (if (defined? ,name) ,name ,value)))
 
 (defmacro defun (name sig &rest body)
@@ -92,7 +92,7 @@
 (defmacro block (name &rest body)
   #`(call-with-escape-function (lambda (,name) ,@body)))
 
-(defmacro return-from (name &opt (value #'nil))
+(defmacro return-from (name &optional (value #'nil))
   #`(funcall ,name ,value))
 
 (defmacro unwind-protect (protected &rest cleanups)
@@ -120,13 +120,13 @@
         ,@(compound-slice place 1)
         ,value)))
 
-(defmacro inc (place &opt (delta #'1))
+(defmacro inc (place &optional (delta #'1))
   #`(set ,place (+ ,place ,delta)))
 
-(defmacro dec (place &opt (delta #'1))
+(defmacro dec (place &optional (delta #'1))
   #`(set ,place (- ,place ,delta)))
 
-(defmacro assert (test &opt (msg #'"assertion failed"))
+(defmacro assert (test &optional (msg #'"assertion failed"))
   #`(let ((result ,test))
      (if result
          result
@@ -168,7 +168,7 @@
 (defmacro make (class-name)
   #`(make-instance (class ,class-name)))
 
-(defmacro defclass (name-and-super &opt (slots #'()))
+(defmacro defclass (name-and-super &optional (slots #'()))
   (let ((class-name nil)
         (superclass nil))
     (if (symbol? name-and-super)
@@ -246,7 +246,7 @@
 (defmacro dynamic (name)
   #`(identifier ,name dynamic))
 
-(defmacro defdynamic (name &opt (value #'nil))
+(defmacro defdynamic (name &optional (value #'nil))
   #`(defvar (dynamic ,name) ,value))
 
 (defmacro dynamic-bind (bindings &rest body)
@@ -299,13 +299,13 @@
 
 (defclass <dict>)
 
-(defgeneric get (dict key &opt default))
+(defgeneric get (dict key &optional default))
 (defgeneric put (dict key value))
 (defgeneric has-key (dict key))
 
 (defclass (<string-dict> <dict>))
 
-(defmethod get ((dict <string-dict>) (key <string>) &opt default)
+(defmethod get ((dict <string-dict>) (key <string>) &optional default)
   (if (has-key dict key)
       (string-dict-get dict key)
       default))
