@@ -239,7 +239,7 @@
 (defgeneric show (object))
 
 ;; fallback
-(defgeneric show ((a object))
+(defmethod show ((a object))
   #{ JSON.stringify(~a) #})
 
 (defmethod show ((a nil))
@@ -251,12 +251,8 @@
 (defmethod show ((a <boolean>))
   (if a "#t" "#f"))
 
-(defmethod show ((a <string>))
-  #{ JSON.stringify(~a) #})
-
 (defmethod show ((a <function>))
   "#<function>")
-
 
 
 ;; Conditions
