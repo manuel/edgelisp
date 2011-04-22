@@ -51,7 +51,7 @@ function lisp_repl_insert(input, className, optionalUrl)
       element.appendChild(link);
       textElement = link;
     }
-    textElement.innerText = input;
+    textElement.innerHTML = input;
     document.getElementById("output").appendChild(element);
 }
 
@@ -88,7 +88,6 @@ function lisp_load_file(path)
 function lisp_repl_onload()
 {
     lisp_load_file("lisp/boot.lisp");
-//    lisp_load_file("test/boot-test.lisp");
     lisp_load_file("lisp/http-client.lisp");
     lisp_load_file("lisp/generic-functions-test.lisp");
     document.getElementById("input").focus();
