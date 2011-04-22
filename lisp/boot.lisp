@@ -158,9 +158,9 @@
            (setter-name (setter-name getter-name)))
       #`(progn
           (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
-            (slot obj ,slot-name-form))
+            (slot-value obj ,slot-name-form))
           (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
-            (set-slot obj ,slot-name-form value))))))
+            (set-slot-value obj ,slot-name-form value))))))
 
 (defmacro class (name)
   #`(identifier ,name class))

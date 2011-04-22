@@ -694,13 +694,13 @@ function lisp_bif_is_typename(_key_, string)
 
 /*** Slots ***/
 
-function lisp_bif_slot(_key_, obj, name)
+function lisp_bif_slot_value(_key_, obj, name)
 {
     lisp_assert_string(name);
     return obj[lisp_mangle_slot(name)];
 }
 
-function lisp_bif_set_slot(_key_, obj, name, value)
+function lisp_bif_set_slot_value(_key_, obj, name, value)
 {
     lisp_assert_string(name);
     return obj[lisp_mangle_slot(name)] = value;
@@ -857,10 +857,10 @@ lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
-lisp_set_function("set-slot", "lisp_bif_set_slot");
+lisp_set_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("signal", "lisp_bif_signal");
-lisp_set_function("slot", "lisp_bif_slot");
+lisp_set_function("slot-value", "lisp_bif_slot_value");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
 lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");
 lisp_set_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
