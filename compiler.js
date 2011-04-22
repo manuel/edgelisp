@@ -245,8 +245,9 @@ function lisp_remove_comment_forms(forms)
 function lisp_eval(forms)
 {
     var vops = forms.map(lisp_compile);
-    var js = vops.map(lisp_emit).join(", ");
-    return eval(js);
+    var js = vops.map(lisp_emit);
+    var vals = js.map(eval);
+    return vals[vals.length-1];
 }
 
 function lisp_eval_string(string)
@@ -1059,6 +1060,8 @@ function lisp_emit_vop_identifier(vop)
 function lisp_emit_vop_set(vop)
 {
     var value = lisp_emit(vop.value);
+    lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
+    lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
     return "(" + mname + " = " + value + ")";
 }
@@ -1066,6 +1069,8 @@ function lisp_emit_vop_set(vop)
 /* { vopt: "defined?", name: <vop> } */
 function lisp_emit_vop_definedp(vop)
 {
+    lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
+    lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
     return "(typeof " + mname + " !== \"undefined\")";
 }

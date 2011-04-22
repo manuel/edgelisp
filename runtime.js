@@ -717,7 +717,10 @@ function lisp_bif_has_slot(_key_, obj, name)
 function lisp_bif_macroexpand_1(_key_, form)
 {
     var macro = lisp_macro_function(form.elts[0].name);
-    return macro(null, form);
+    if (macro)
+        return macro(null, form);
+    else
+        return form;
 }
 
 function lisp_bif_print(_key_, object)
