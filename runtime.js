@@ -523,7 +523,7 @@ function lisp_bif_put_method(_key_, generic, specializers, method)
         var me = generic.method_entries[i];
         if (lisp_lists_equal(me.specializers, specializers)) {
             me.method = method;
-            return;
+            return null;
         }
     }
     generic.method_entries.push(lisp_make_method_entry(method, specializers));
