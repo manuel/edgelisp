@@ -208,6 +208,7 @@
 ;; Fixup class hierarchy
 
 (set-superclass (class <string>) (class object))
+(set-superclass (class <boolean>) (class object))
 (set-superclass (class nil) (class object))
 
 ;; Numbers
@@ -227,12 +228,18 @@
       (defmethod ,name ((a number) (b number))
         #{ jsnums.~(native-snippet ,jsnums-name)(~a, ~b) #})))
 
+(define-jsnums-binop = "equals")
 (define-jsnums-binop > "greaterThan")
 (define-jsnums-binop < "lessThan")
 (define-jsnums-binop / "divide")
 (define-jsnums-binop * "multiply")
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
+
+;;
+
+(defmethod = ((a object) (b object))
+  (eq a b))
 
 ;;
 
