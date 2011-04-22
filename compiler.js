@@ -244,15 +244,12 @@ function lisp_remove_comment_forms(forms)
 
 function lisp_eval(forms)
 {
+    // The subforms in a sequence of forms are evaluated separately.
+    // While slower, this makes debugging easier.
     var vops = forms.map(lisp_compile);
     var js = vops.map(lisp_emit);
     var vals = js.map(eval);
     return vals[vals.length-1];
-}
-
-function lisp_eval_string(string)
-{
-    return lisp_eval(lisp_read(string));
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
