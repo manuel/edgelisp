@@ -59,7 +59,7 @@
 
 ;; Common stuff
 
-(defmacro defvar (name value)
+(defmacro defvar (name &opt (value #'nil))
   #`(defparameter ,name (if (defined? ,name) ,name ,value)))
 
 (defmacro defun (name sig &rest body)
@@ -233,6 +233,28 @@
 (define-jsnums-binop * "multiply")
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
+
+
+(defmacro dynamic (name)
+  #`(identifier ,name dynamic))
+
+(defmacro defdynamic (name)
+  #`(defvar (dynamic ,name)))
+
+(defmacro dynamic-bind (bindings &rest body)
+  (if (compound-empty? bindings)
+      #`(progn ,@body)
+      #`(dynamic-bind-1 ,(compound-elt bindings 0)
+          (dynamic-bind ,(compound-slice bindings 1)
+             ,@body))))
+
+(defmacro dynamic-bind-1 (binding &rest body)
+  (let ((name (compound-elt binding 0))
+        (value (compound-elt binding 1)))
+  #`(let ((old-value (dynamic ,name)))
+      (%%set (dynamic ,name) ,value)
+      (unwind-protect (progn ,@body)
+        (%%set (dynamic ,name) old-value)))))
 
 ;; 
 
