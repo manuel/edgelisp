@@ -232,7 +232,7 @@ function lisp_remove_comment_forms(forms)
     var res = [];
     for (var i = 0, len = forms.length; i < len; i++) {
         var form = forms[i];
-        if (form.formt != "comment")
+        if (form.formt !== "comment")
             res.push(form);
     }
     return res;
@@ -722,8 +722,8 @@ function lisp_is_sig_keyword(string)
 function lisp_is_type_name(string)
 {
     return ((string.length >= 3) &&
-            (string[0] == "<") &&
-            (string[string.length - 1] == ">"));
+            (string[0] === "<") &&
+            (string[string.length - 1] === ">"));
 }
 
 function lisp_clean_type_name(string)
@@ -739,18 +739,18 @@ function lisp_compile_sig(params)
 
     function compile_parameter(param)
     {
-        if (param.formt == "symbol") {
+        if (param.formt === "symbol") {
             // Ordinary parameter (positional or keyword)
             return { name: param.name };
-        } else if ((param.formt == "compound") &&
-                   (cur == req)) {
+        } else if ((param.formt === "compound") &&
+                   (cur === req)) {
             // Typed required parameter
             var name_form = lisp_assert_symbol_form(param.elts[0]);
             var specializer_form = lisp_assert_symbol_form(param.elts[1]);
             return { name: name_form.name,
                      specializer: specializer_form.name };
-        } else if ((param.formt == "compound") &&
-                   ((cur == opt) || (cur == key))) {
+        } else if ((param.formt === "compound") &&
+                   ((cur === opt) || (cur === key))) {
             // Optional or keyword parameter with init form
             var name_form = lisp_assert_symbol_form(param.elts[0]);
            var init_form = lisp_assert_not_null(param.elts[1]);
@@ -764,7 +764,7 @@ function lisp_compile_sig(params)
     for (var i = 0, len = params.length; i < len; i++) {
         var param = params[i];
         lisp_assert_not_null(param, "Bad param", params);
-        if (param.formt == "symbol") {
+        if (param.formt === "symbol") {
             if (lisp_is_sig_keyword(param.name)) {
                 switch (param.name) {
                 case lisp_optional_sig_keyword: 
@@ -823,7 +823,7 @@ function lisp_mangled_param_name(param)
 function lisp_is_keyword_arg(string)
 {
     if (string.length > 1)
-        return string[0] == ":";
+        return string[0] === ":";
     else
         return false;
 }
@@ -841,7 +841,7 @@ function lisp_compile_call_site(args)
     
     for (var i = 0, len = args.length; i < len; i++) {
         var arg = args[i];
-        if (arg.formt == "symbol") {
+        if (arg.formt === "symbol") {
             if (lisp_is_keyword_arg(arg.name)) {
                 var name = lisp_clean_keyword_arg(arg.name);
                 var value = lisp_compile(args[++i]);
@@ -911,7 +911,7 @@ function lisp_qq_compound(form, depth)
     var op = form.elts[0];
     if (op) {
         if (is_unquote(op)) {
-            if (depth == 0) {
+            if (depth === 0) {
                 return form.elts[1];
             } else {
                 return unquote(form.elts[1], depth - 1);
@@ -930,10 +930,10 @@ function lisp_qq_compound(form, depth)
         var compounds = [], compound_elts = [];
         for (var i = 0, len = form.elts.length; i < len; i++) {
             var sub = form.elts[i];
-            if ((sub.formt == "compound") && is_unquote_splicing(sub.elts[0])) {
+            if ((sub.formt === "compound") && is_unquote_splicing(sub.elts[0])) {
                 compounds.push(make_compound(compound_elts));
                 compound_elts = [];
-                if (depth == 0) {
+                if (depth === 0) {
                     compounds.push(sub.elts[1]);
                 } else {
                     compounds.push(unquote_splicing(sub.elts[1], depth - 1));
@@ -949,17 +949,17 @@ function lisp_qq_compound(form, depth)
 
     function is_quasiquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%quasiquote");
+        return op && (op.formt === "symbol") && (op.name === "%%quasiquote");
     }
 
     function is_unquote(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%unquote");
+        return op && (op.formt === "symbol") && (op.name === "%%unquote");
     }
 
     function is_unquote_splicing(op)
     {
-        return op && (op.formt == "symbol") && (op.name == "%%unquote-splicing");
+        return op && (op.formt === "symbol") && (op.name === "%%unquote-splicing");
     }
 
     function quasiquote(x, depth)
@@ -1049,7 +1049,7 @@ function lisp_emit_vop_identifier(vop)
     lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
     var mname = lisp_mangle(vop.name, vop.namespace);
     var args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
-    return "(typeof " + mname + " != \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
+    return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
 }
 
 /* Assigns a value to a variable.
@@ -1067,7 +1067,7 @@ function lisp_emit_vop_set(vop)
 function lisp_emit_vop_definedp(vop)
 {
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
-    return "(typeof " + mname + " != \"undefined\")";
+    return "(typeof " + mname + " !== \"undefined\")";
 }
 
 /* { vopt: "if", test: <vop>, consequent: <vop>, alternative: <vop> } */
@@ -1142,7 +1142,7 @@ function lisp_emit_vop_funcall(vop)
         var v = lisp_assert_not_null(key_args[k]);
         s += "\"" + k + "\": " + lisp_emit(v) + ", ";
     });
-    if (s != "") {
+    if (s !== "") {
         var keywords_dict = "lisp_fast_string_dict({ " + s + " })";
     } else {
         var keywords_dict = "null";

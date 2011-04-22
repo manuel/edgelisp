@@ -138,7 +138,7 @@ function lisp_show(obj)
 function lisp_array_contains(array, elt)
 {
     for (var i in array) {
-        if (array[i] == elt) return true;
+        if (array[i] === elt) return true;
     }
     return false;
 }
@@ -181,13 +181,13 @@ function lisp_assert_not_null(value, message, arg)
 function lisp_assert_number(value, message, arg)
 {
     // fixme
-    lisp_assert(typeof value == "number", message, arg);
+    lisp_assert(typeof value === "number", message, arg);
     return value;
 k}
 
 function lisp_assert_string(value, message, arg)
 {
-    lisp_assert(typeof value == "string", message, arg);
+    lisp_assert(typeof value === "string", message, arg);
     return value;
 }
 
@@ -200,22 +200,22 @@ function lisp_assert_nonempty_string(value, message, arg)
 
 function lisp_assert_function(value, message, arg)
 {
-    lisp_assert(typeof value == "function", message, arg);
+    lisp_assert(typeof value === "function", message, arg);
     return value;
 }
 
 function lisp_assert_symbol_form(value, message, arg)
 {
-    lisp_assert(typeof value == "object", message, arg);
-    lisp_assert(value.formt == "symbol", message, arg);
+    lisp_assert(typeof value === "object", message, arg);
+    lisp_assert(value.formt === "symbol", message, arg);
     lisp_assert_nonempty_string(value.name, message, arg);
     return value;
 }
 
 function lisp_assert_compound_form(value, message, arg)
 {
-    lisp_assert(typeof value == "object", message, arg);
-    lisp_assert(value.formt == "compound", message, arg);
+    lisp_assert(typeof value === "object", message, arg);
+    lisp_assert(value.formt === "compound", message, arg);
     lisp_assert_not_null(value.elts, message, arg);
     lisp_assert_not_null(value.elts.length, message, arg);
     return value;
@@ -257,7 +257,7 @@ function lisp_bif_append_compounds(_key_)
     var elts = [];
     for (var i = 1; i < arguments.length; i++) {
         var elt = arguments[i];
-        if (elt.formt == "compound") {
+        if (elt.formt === "compound") {
             elts = elts.concat(elt.elts);
         } else {
             lisp_assert(elt.length != null, "append-compounds", elt);
@@ -327,7 +327,7 @@ function lisp_mangle_string_dict_key(name)
 
 function lisp_is_string_dict_key(k)
 {
-    return k[0] == "%";
+    return k[0] === "%";
 }
 
 function Lisp_string_dict()
@@ -548,7 +548,7 @@ function lisp_bif_find_method(_key_, generic, arguments)
 {
     var applicable_mes =
         lisp_find_applicable_method_entries(generic, arguments);
-    if (applicable_mes.length == 0)
+    if (applicable_mes.length === 0)
         return lisp_no_applicable_method(generic, arguments);
     var me = lisp_most_specific_method_entry(generic, applicable_mes);
     if (me)
@@ -585,7 +585,7 @@ function lisp_specializers_lists_agree(actuals, formals)
 
 function lisp_most_specific_method_entry(generic, applicable_mes)
 {
-    if (applicable_mes.length == 1)
+    if (applicable_mes.length === 1)
         return applicable_mes[0];
     for (var i = 0, len = applicable_mes.length; i < len; i++) 
         if (lisp_least_method_entry(applicable_mes[i], applicable_mes))
@@ -653,7 +653,7 @@ function lisp_bif_type_of(_key_, obj)
    either equal to type2, or a subtype of type2. */
 function lisp_subtypep(type1, type2)
 {
-    if (type1 == type2) 
+    if (type1 === type2) 
         return true;
 
     var supertype = type1.lisp_superclass;
@@ -738,12 +738,12 @@ function lisp_bif_symbol_name(_key_, symbol)
 
 function lisp_bif_symbolp(_key_, form)
 {
-    return form.formt == "symbol";
+    return form.formt === "symbol";
 }
 
 function lisp_bif_compoundp(_key_, form)
 {
-    return form.formt == "compound";
+    return form.formt === "compound";
 }
 
 function lisp_bif_list(_key_)
