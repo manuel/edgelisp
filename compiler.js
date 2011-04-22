@@ -356,7 +356,7 @@ var lisp_specials_table = {
     "%%progn": lisp_compile_special_progn,
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
-    "setq": lisp_compile_special_setq,
+    "%%setq": lisp_compile_special_setq,
     "%%string-form": lisp_compile_special_string_form,
     "%%symbol-form": lisp_compile_special_symbol_form
 };
