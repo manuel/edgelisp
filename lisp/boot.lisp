@@ -234,12 +234,13 @@
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
 
+;;
 
 (defmacro dynamic (name)
   #`(identifier ,name dynamic))
 
-(defmacro defdynamic (name)
-  #`(defvar (dynamic ,name)))
+(defmacro defdynamic (name &opt (value #'nil))
+  #`(defvar (dynamic ,name) ,value))
 
 (defmacro dynamic-bind (bindings &rest body)
   (if (compound-empty? bindings)
