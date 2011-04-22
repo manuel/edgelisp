@@ -686,11 +686,6 @@ function lisp_bif_make_instance(_key_, cls)
     return obj;
 }
 
-function lisp_bif_is_typename(_key_, string)
-{
-    return lisp_is_type_name(string);
-}
-
 
 /*** Slots ***/
 

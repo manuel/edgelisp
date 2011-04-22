@@ -717,18 +717,6 @@ function lisp_is_sig_keyword(string)
     return lisp_array_contains(lisp_sig_keywords, string);
 }
 
-function lisp_is_type_name(string)
-{
-    return ((string.length >= 3) &&
-            (string[0] === "<") &&
-            (string[string.length - 1] === ">"));
-}
-
-function lisp_clean_type_name(string)
-{
-    return string.slice(1, string.length - 1);
-}
-
 /* Given a list of parameter forms, return a signature. */
 function lisp_compile_sig(params)
 {
