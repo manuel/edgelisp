@@ -58,7 +58,7 @@
   #`(%%quote ,form))
 
 (defmacro setq (name namespace)
-  #`(%%set ,name ,namespace))
+  #`(%%setq ,name ,namespace))
 
 ;; Common stuff
 
