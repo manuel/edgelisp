@@ -129,7 +129,7 @@ function lisp_check_type(obj, type)
 function lisp_show(obj)
 {
     // show is defined as a generic function in boot.lisp
-    if (_lisp_function_show)
+    if (typeof(_lisp_function_show) !== "undefined")
         return _lisp_function_show(null, obj);
     else
         return JSON.stringify(obj);
@@ -183,7 +183,7 @@ function lisp_assert_number(value, message, arg)
     // fixme
     lisp_assert(typeof value == "number", message, arg);
     return value;
-}
+k}
 
 function lisp_assert_string(value, message, arg)
 {
