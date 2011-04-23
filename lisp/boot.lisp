@@ -162,14 +162,8 @@
 (defmacro make (class-name)
   #`(make-instance (class ,class-name)))
 
-(defmacro defclass (name-and-super &optional (slots #'()))
-  (let ((class-name nil)
-        (superclass nil))
-    (if (symbol? name-and-super)
-        (progn (setf class-name name-and-super)
-               (setf superclass nil))
-        (progn (setf class-name (compound-elt name-and-super 0))
-               (setf superclass (compound-elt name-and-super 1))))
+(defmacro defclass (class-name &optional (supers #'()) (slots #'()))
+  (let ((superclass (if (compound-empty? supers) #f (compound-elt supers 0))))
     #`(progn
         (defvar (class ,class-name) (make-class))
         ,(if superclass 
@@ -220,7 +214,7 @@
 (defclass number)
 (set-superclass (class real) (class number))
 (set-superclass (class rational) (class real))
-(defclass (integer rational))
+(defclass integer (rational))
 (set-superclass (class small-integer) (class integer))
 (set-superclass (class big-integer) (class integer))
 
@@ -287,16 +281,6 @@
   "#<function>")
 
 
-;; Conditions
-
-(defmacro deferror (name &rest slots)
-  #`(defclass (,name <error>) ,@slots))
-
-(defclass <exception>)
-(defclass (<error> <exception>))
-(defclass (<warning> <exception>))
-(defclass (<restart> <exception>))
-
 ;; Collections
 
 (defgeneric elt (collection index))
@@ -318,7 +302,7 @@
 (defgeneric put (dict key value))
 (defgeneric has-key (dict key))
 
-(defclass (<string-dict> <dict>))
+(defclass <string-dict> (<dict>))
 
 (defmethod get ((dict <string-dict>) (key <string>) &optional default)
   (if (has-key dict key)
@@ -348,7 +332,9 @@
 (defmethod add ((list <list>) elt)
   (list-add list elt))
 
-(defclass <list-iter> (list i))
+(defclass <list-iter> () 
+  (list
+   i))
 
 (defun <list-iter> ((list <list>))
   (let ((iter (make <list-iter>)))
@@ -414,7 +400,9 @@ can be used to supply a different collection to hold the results."
           (each $next iters))))
   into)
 
-(defclass <number-iter> (i max))
+(defclass <number-iter> ()
+  (i
+   max))
 
 (defun <number-iter> (max)
   (let ((iter (make <number-iter>)))
