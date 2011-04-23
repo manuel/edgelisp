@@ -361,21 +361,21 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 
 /*** Control flow ***/
 
-function lisp_bif_call_with_escape_function(_key_, fun) {
-    var token = {};
-    var escape_function = function(_key_, result) {
-        token.result = result;
-        throw token;
-    };
+function lisp_bif_call_with_catch_tag(_key_, tag, body_fun)
+{
     try {
-        return fun(null, escape_function);
+        return body_fun(null);
     } catch(obj) {
-        if (obj === token) {
-            return token.result;
-        } else {
+        if (obj && (obj.lisp_tag === tag))
+            return obj.lisp_value;
+        else
             throw obj;
-        }
     }
+}
+
+function lisp_bif_throw(_key_, tag, value)
+{
+    throw { lisp_tag: tag, lisp_value: (value ? value : null) };
 }
 
 function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
@@ -387,12 +387,10 @@ function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
     }
 }
 
-function lisp_bif_call_while(_key_, test_fun, body_fun)
+function lisp_bif_call_forever(_key_, body_fun)
 {
-    while(test_fun(null)) {
+    while(true)
         body_fun(null);
-    }
-    return null;
 }
 
 
@@ -733,8 +731,8 @@ lisp_set_class("rational", "jsnums.Rational.prototype");
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
-lisp_set_function("call-while", "lisp_bif_call_while");
-lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
+lisp_set_function("call-with-catch-tag", "lisp_bif_call_with_catch_tag");
+lisp_set_function("call-forever", "lisp_bif_call_forever");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
 lisp_set_function("compound-elts", "lisp_bif_compound_elts");
@@ -772,6 +770,7 @@ lisp_set_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");
+lisp_set_function("throw", "lisp_bif_throw");
 lisp_set_function("type-of", "lisp_bif_type_of");
 
 

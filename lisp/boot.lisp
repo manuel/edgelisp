@@ -83,18 +83,28 @@
       #`(let (,(compound-elt vs 0))
           (let* ,(compound-slice vs 1) ,@forms))))
 
-(defmacro while (test &rest body)
-  #`(call-while (lambda () ,test) (lambda () ,@body)))
+(defmacro loop (&rest body)
+  #`(call-forever (lambda () ,@body)))
 
-(defmacro block (name &rest body)
-  #`(call-with-escape-function (lambda (,name) ,@body)))
+(defmacro catch (tag &rest body)
+  #`(call-with-catch-tag ,tag (lambda () ,@body)))
 
-(defmacro return-from (name &optional (value #'nil))
-  #`(funcall ,name ,value))
+(defmacro block (bname &rest forms)
+  #`(let ((,bname (list)))
+      (catch ,bname ,@forms)))
+
+(defmacro return-from (bname &optional (exp #'nil))
+  #`(throw ,bname ,exp))
 
 (defmacro unwind-protect (protected &rest cleanups)
   #`(call-unwind-protected (lambda () ,protected)
                            (lambda () ,@cleanups)))
+
+(defmacro while (test &rest body)
+  #`(block exit
+      (loop
+         (unless ,test (return-from exit))
+         ,@body)))
 
 (defun not (x)
   (if x #f #t))
