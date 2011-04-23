@@ -257,10 +257,20 @@
 ;; Conditions
 
 (defclass condition)
+(defclass error (condition))
+(defclass warning (condition))
+(defclass signal (condition))
+
+(defmethod show ((c condition))
+  "#<condition>")
 
 (defgeneric default-handler (condition))
-(defmethod default-handler ((c condition))
-  {% throw ~c %})
+(defmethod default-handler ((c error))
+  (invoke-debugger c))
+(defmethod default-handler ((c warning))
+  (print c))
+(defmethod default-handler ((c signal))
+  nil)
 
 (defclass condition-handlers-frame ()
   (handlers
@@ -303,10 +313,15 @@
   (let ((function-and-frame (find-applicable-handler c frame-or-nil)))
     (if (nil? function-and-frame)
         (default-handler c)
-        (block resume
-          (let ((resume-function (lambda (value) (return-from resume value))))
-            (funcall (elt function-and-frame 0) c resume-function)
-            (signal-with-frame c (slot-value frame-or-nil "parent-frame")))))))
+        (progn
+          (funcall (elt function-and-frame 0) c)
+          (signal-with-frame c (slot-value frame-or-nil "parent-frame"))))))
+
+(defun warn ((c condition))
+  (signal c))
+
+(defun error ((c condition))
+  (signal c))
 
 ;; 
 

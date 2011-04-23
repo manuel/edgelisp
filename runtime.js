@@ -710,6 +710,7 @@ function lisp_bif_macroexpand_1(_key_, form)
 function lisp_bif_print(_key_, object)
 {
     lisp_print(object); // defined in REPL
+    return null;
 }
 
 function lisp_bif_eq(_key_, a, b)
@@ -783,6 +784,11 @@ function lisp_is_true(obj) // T
     return (obj !== false) && (obj !== null);
 }
 
+function lisp_bif_invoke_debugger(_key_, condition)
+{
+    throw condition;
+}
+
 
 /*** Export to Lisp ***/
 
@@ -827,6 +833,7 @@ lisp_set_function("eq", "lisp_bif_eq");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
+lisp_set_function("invoke-debugger", "lisp_bif_invoke_debugger");
 lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
