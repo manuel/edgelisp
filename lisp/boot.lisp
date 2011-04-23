@@ -51,12 +51,6 @@
 (defmacro progn (&rest body)
   #`(%%progn ,@body))
 
-(defmacro quasiquote (form)
-  #`(%%quasiquote ,form))
-
-(defmacro quote (form)
-  #`(%%quote ,form))
-
 (defmacro setq (name namespace)
   #`(%%setq ,name ,namespace))
 
