@@ -321,7 +321,7 @@
   (apply $list args))
 
 (defmethod iter ((list list))
-  (<list-iter> list))
+  (list-iter list))
 
 (defmethod len ((list list))
   (list-len list))
@@ -332,23 +332,23 @@
 (defmethod add ((list list) elt)
   (list-add list elt))
 
-(defclass <list-iter> () 
+(defclass list-iter () 
   (list
    i))
 
-(defun <list-iter> ((list list))
-  (let ((iter (make <list-iter>)))
+(defun list-iter ((list list))
+  (let ((iter (make list-iter)))
     (setf (.list iter) list)
     (setf (.i iter) 0)
     iter))
 
-(defmethod has-next ((iter <list-iter>))
+(defmethod has-next ((iter list-iter))
   (< (.i iter) (len (.list iter))))
 
-(defmethod next ((iter <list-iter>))
+(defmethod next ((iter list-iter))
   (inc (.i iter)))
 
-(defmethod now ((iter <list-iter>))
+(defmethod now ((iter list-iter))
   (elt (.list iter) (.i iter)))
 
 (defmethod elt ((form compound-form) i)
@@ -400,26 +400,26 @@ can be used to supply a different collection to hold the results."
           (each $next iters))))
   into)
 
-(defclass <number-iter> ()
+(defclass number-iter ()
   (i
    max))
 
-(defun <number-iter> (max)
-  (let ((iter (make <number-iter>)))
+(defun number-iter (max)
+  (let ((iter (make number-iter)))
     (setf (.i iter) 0)
     (setf (.max iter) max)
     iter))
 
 (defmethod iter ((max number))
-  (<number-iter> max))
+  (number-iter max))
 
-(defmethod has-next ((iter <number-iter>))
+(defmethod has-next ((iter number-iter))
   (< (.i iter) (.max iter)))
 
-(defmethod now ((iter <number-iter>))
+(defmethod now ((iter number-iter))
   (.i iter))
 
-(defmethod next ((iter <number-iter>))
+(defmethod next ((iter number-iter))
   (inc (.i iter)))
 
 (defmacro dotimes (var-and-ct &rest body)
