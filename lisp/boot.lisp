@@ -165,8 +165,6 @@
         ,@(compound-map (lambda (slot)
                           (defclass-do-slot class-name slot))
                         slots)
-        (defun ,class-name ()
-          (make ,class-name))
         (class ,class-name))))
 
 (defmacro generic (name)
@@ -334,9 +332,6 @@
   (string-dict-has-key dict key))
 
 (defclass list)
-
-(defun list (&rest args) 
-  (apply $list args))
 
 (defmethod iter ((list list))
   (list-iter list))
