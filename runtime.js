@@ -359,7 +359,7 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
 }
 
 
-/*** Control Flow and Conditions ***/
+/*** Conditions ***/
 
 /* CyberLisp uses the same exception system as Dylan and Goo (which is
    basically Common Lisp's but with exception handlers and restarts
@@ -407,20 +407,6 @@ function lisp_bif_string_dict_has_key(_key_, dict, key)
    next-handler function (without arguments), which will continue the
    search for an applicable handler stack-upwards. */
 
-var lisp_handler_frame = null; // bottom-most frame or null
-
-function lisp_bif_bind_handlers(_key_, handlers, fun)
-{
-    try {
-        var orig_frame = lisp_handler_frame;
-        lisp_handler_frame = { handlers: handlers, 
-                               parent_frame: orig_frame };
-        return fun(null);
-    } finally {
-        lisp_handler_frame = orig_frame;
-    }
-}
-
 function lisp_bif_signal(_key_, exception)
 {
     function handler_type(handler) { return handler[0]; }
@@ -458,6 +444,8 @@ function lisp_bif_signal(_key_, exception)
 
     return do_signal(exception, lisp_handler_frame);
 }
+
+/*** Control flow ***/
 
 function lisp_bif_call_with_escape_function(_key_, fun) {
     var token = {};
@@ -824,7 +812,6 @@ lisp_set_class("rational", "jsnums.Rational.prototype");
 
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
-lisp_set_function("bind-handlers", "lisp_bif_bind_handlers");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-while", "lisp_bif_call_while");
 lisp_set_function("call-with-escape-function", "lisp_bif_call_with_escape_function");
@@ -854,7 +841,6 @@ lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
-lisp_set_function("signal", "lisp_bif_signal");
 lisp_set_function("slot-value", "lisp_bif_slot_value");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
 lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");

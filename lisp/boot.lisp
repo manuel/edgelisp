@@ -99,6 +99,9 @@
 (defun not (x)
   (if x #f #t))
 
+(defun nil? (x)
+  (if (eq nil x) #t #f))
+
 (eval-when-compile
   (defun setter-name (getter-name)
     (string-concat getter-name "-setter")))
@@ -253,6 +256,12 @@
 
 ;; Conditions
 
+(defclass condition)
+
+(defgeneric default-handler (condition))
+(defmethod default-handler ((c condition))
+  {% throw ~c %})
+
 (defclass condition-handlers-frame ()
   (handlers
    parent-frame))
@@ -267,7 +276,7 @@
 
 (defmacro handler-bind (handler-specs &rest body)
   #`(handler-bind/f (list ,@(compound-map (lambda (handler-spec)
-                                            #`(list ,(compound-elt handler-spec 0)
+                                            #`(list (class ,(compound-elt handler-spec 0))
                                                     ,(compound-elt handler-spec 1)))
                                           handler-specs))
                     (lambda () ,@body)))
@@ -275,6 +284,29 @@
 (defun handler-bind/f ((handlers list) (body-function function))
   (dynamic-bind ((condition-handlers-frame (make-condition-handlers-frame handlers)))
     (funcall body-function)))
+
+(defun find-applicable-handler ((c condition) &optional (frame (dynamic condition-handlers-frame)))
+  "Returns two-element list containing handler function and frame."
+  (if (nil? frame)
+      nil
+      (block found
+        (each (lambda (handler-binding)
+                (when (subtype? (type-of c) (elt handler-binding 0))
+                  (return-from found (list (elt handler-binding 1) frame))))
+              (slot-value frame "handlers"))
+        (find-applicable-handler c (slot-value frame "parent-frame")))))
+
+(defun signal ((c condition))
+  (signal-with-frame c (dynamic condition-handlers-frame)))
+
+(defun signal-with-frame ((c condition) frame-or-nil)
+  (let ((function-and-frame (find-applicable-handler c frame-or-nil)))
+    (if (nil? function-and-frame)
+        (default-handler c)
+        (block resume
+          (let ((resume-function (lambda (value) (return-from resume value))))
+            (funcall (elt function-and-frame 0) c resume-function)
+            (signal-with-frame c (slot-value frame-or-nil "parent-frame")))))))
 
 ;; 
 
