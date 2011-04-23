@@ -96,13 +96,6 @@
   #`(call-unwind-protected (lambda () ,protected)
                            (lambda () ,@cleanups)))
 
-(defmacro handle (handler-specs &rest body)
-  #`(bind-handlers (list ,@(compound-map (lambda (handler-spec)
-                                           #`(list ,(compound-elt handler-spec 0)
-                                                   ,(compound-elt handler-spec 1)))
-                                         handler-specs))
-                   (lambda () ,@body)))
-
 (defun not (x)
   (if x #f #t))
 
@@ -246,19 +239,44 @@
   #`(defvar (dynamic ,name) ,value))
 
 (defmacro dynamic-bind (bindings &rest body)
-  (if (empty? bindings)
+  (if (compound-empty? bindings)
       #`(progn ,@body)
-      #`(dynamic-bind-1 ,(elt bindings 0)
-          (dynamic-bind ,(slice bindings 1)
+      #`(dynamic-bind-1 ,(compound-elt bindings 0)
+          (dynamic-bind ,(compound-slice bindings 1)
              ,@body))))
 
 (defmacro dynamic-bind-1 (binding &rest body)
-  (let ((name (elt binding 0))
-        (value (elt binding 1)))
+  (let ((name (compound-elt binding 0))
+        (value (compound-elt binding 1)))
   #`(let ((old-value (dynamic ,name)))
       (setq (dynamic ,name) ,value)
       (unwind-protect (progn ,@body)
         (setq (dynamic ,name) old-value)))))
+
+;; Conditions
+
+(defclass condition-handlers-frame ()
+  (handlers
+   parent-frame))
+
+(defun make-condition-handlers-frame ((handlers list))
+  (let ((f (make condition-handlers-frame)))
+    (set-slot-value f "handlers" handlers)
+    (set-slot-value f "parent-frame" (dynamic condition-handlers-frame))
+    f))
+
+(defdynamic condition-handlers-frame)
+
+(defmacro handler-bind (handler-specs &rest body)
+  #`(handler-bind/f (list ,@(compound-map (lambda (handler-spec)
+                                            #`(list ,(compound-elt handler-spec 0)
+                                                    ,(compound-elt handler-spec 1)))
+                                          handler-specs))
+                    (lambda () ,@body)))
+
+(defun handler-bind/f ((handlers list) (body-function function))
+  (dynamic-bind ((condition-handlers-frame (make-condition-handlers-frame handlers)))
+    (funcall body-function)))
 
 ;; 
 
