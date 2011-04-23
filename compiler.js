@@ -624,7 +624,7 @@ function lisp_compile_special_quote(form)
    arguments that are general instances of a given type.  For example,
    the following signature has two typed parameters:
 
-   ((s <string>) (n <number>)) */
+   ((s string) (n number)) */
 
 /**** Parameter init forms ****/
 

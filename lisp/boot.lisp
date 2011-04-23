@@ -196,15 +196,15 @@
 
 ;; Fixup class hierarchy
 
-(set-superclass (class <string>) (class object))
-(set-superclass (class <boolean>) (class object))
-(set-superclass (class <compound-form>) (class object))
-(set-superclass (class <number-form>) (class object))
-(set-superclass (class <string-form>) (class object))
-(set-superclass (class <symbol-form>) (class object))
-(set-superclass (class <string-dict>) (class object))
-(set-superclass (class <list>) (class object))
-(set-superclass (class <function>) (class object))
+(set-superclass (class string) (class object))
+(set-superclass (class boolean) (class object))
+(set-superclass (class compound-form) (class object))
+(set-superclass (class number-form) (class object))
+(set-superclass (class string-form) (class object))
+(set-superclass (class symbol-form) (class object))
+(set-superclass (class string-dict) (class object))
+(set-superclass (class list) (class object))
+(set-superclass (class function) (class object))
 (set-superclass (class nil) (class object))
 
 ;; Numbers
@@ -274,10 +274,10 @@
 (defmethod show ((a number))
   #{ (~a).toString() #})
 
-(defmethod show ((a <boolean>))
+(defmethod show ((a boolean))
   (if a "#t" "#f"))
 
-(defmethod show ((a <function>))
+(defmethod show ((a function))
   "#<function>")
 
 
@@ -287,56 +287,56 @@
 (defgeneric empty? (collection))
 (defgeneric slice (collection from-index))
 
-(defmethod elt ((c <compound-form>) (i small-integer))
+(defmethod elt ((c compound-form) (i small-integer))
   (compound-elt c i))
 
-(defmethod empty? ((c <compound-form>))
+(defmethod empty? ((c compound-form))
   (compound-empty? c))
 
-(defmethod slice ((c <compound-form>) (from small-integer))
+(defmethod slice ((c compound-form) (from small-integer))
   (compound-slice c from))
 
-(defclass <dict>)
+(defclass dict)
 
 (defgeneric get (dict key &optional default))
 (defgeneric put (dict key value))
 (defgeneric has-key (dict key))
 
-(defclass <string-dict> (<dict>))
+(defclass string-dict (dict))
 
-(defmethod get ((dict <string-dict>) (key <string>) &optional default)
+(defmethod get ((dict string-dict) (key string) &optional default)
   (if (has-key dict key)
       (string-dict-get dict key)
       default))
 
-(defmethod put ((dict <string-dict>) (key <string>) value)
+(defmethod put ((dict string-dict) (key string) value)
   (string-dict-put dict key value))
 
-(defmethod has-key ((dict <string-dict>) (key <string>))
+(defmethod has-key ((dict string-dict) (key string))
   (string-dict-has-key dict key))
 
-(defclass <list>)
+(defclass list)
 
-(defun <list> (&rest args) 
+(defun list (&rest args) 
   (apply $list args))
 
-(defmethod iter ((list <list>))
+(defmethod iter ((list list))
   (<list-iter> list))
 
-(defmethod len ((list <list>))
+(defmethod len ((list list))
   (list-len list))
 
-(defmethod elt ((list <list>) (i number))
+(defmethod elt ((list list) (i number))
   (list-elt list i))
 
-(defmethod add ((list <list>) elt)
+(defmethod add ((list list) elt)
   (list-add list elt))
 
 (defclass <list-iter> () 
   (list
    i))
 
-(defun <list-iter> ((list <list>))
+(defun <list-iter> ((list list))
   (let ((iter (make <list-iter>)))
     (setf (.list iter) list)
     (setf (.i iter) 0)
@@ -351,13 +351,13 @@
 (defmethod now ((iter <list-iter>))
   (elt (.list iter) (.i iter)))
 
-(defmethod elt ((form <compound-form>) i)
+(defmethod elt ((form compound-form) i)
   (compound-elt form i))
 
-(defmethod iter ((form <compound-form>))
+(defmethod iter ((form compound-form))
   (iter (compound-elts form)))
 
-(defun every ((pred <function>) coll)
+(defun every ((pred function) coll)
   "Returns #t iff every element of a collection satisfies the predicate."
   (block exit
     (let ((iter (iter coll)))
@@ -367,7 +367,7 @@
         (next iter)))
     #t))
 
-(defun each ((fun <function>) &rest colls)
+(defun each ((fun function) &rest colls)
   "Applies a function to the elements of one or more collections for
 effect.  The function is called with N positional arguments, each
 taken from the collections from left to right.  The shortest
@@ -382,7 +382,7 @@ collection determines how many times the function is called."
           (apply fun (map $now iters))
           (each $next iters)))))
 
-(defun map ((fun <function>) &rest colls &key (into (<list>)))
+(defun map ((fun function) &rest colls &key (into (list)))
   "Applies a function to the elements of one or more collections and
 returns a collection with the results of each application.  The
 function is called with N positional arguments, each taken from the

@@ -802,15 +802,15 @@ lisp_set("#t", "true");
 lisp_set("#f", "false");
 
 lisp_set_class("object", "Object.prototype");
-lisp_set_class("<boolean>", "Boolean.prototype");
-lisp_set_class("<function>", "Function.prototype");
-lisp_set_class("<compound-form>", "Lisp_compound_form.prototype");
-lisp_set_class("<list>", "Array.prototype");
-lisp_set_class("<number-form>", "Lisp_number_form.prototype");
-lisp_set_class("<string-dict>", "Lisp_string_dict.prototype");
-lisp_set_class("<string-form>", "Lisp_string_form.prototype");
-lisp_set_class("<string>", "String.prototype");
-lisp_set_class("<symbol-form>", "Lisp_symbol_form.prototype");
+lisp_set_class("boolean", "Boolean.prototype");
+lisp_set_class("function", "Function.prototype");
+lisp_set_class("compound-form", "Lisp_compound_form.prototype");
+lisp_set_class("list", "Array.prototype");
+lisp_set_class("number-form", "Lisp_number_form.prototype");
+lisp_set_class("string-dict", "Lisp_string_dict.prototype");
+lisp_set_class("string-form", "Lisp_string_form.prototype");
+lisp_set_class("string", "String.prototype");
+lisp_set_class("symbol-form", "Lisp_symbol_form.prototype");
 
 var lisp_nil_class = lisp_bif_make_class(null);
 lisp_set_class("nil", "lisp_nil_class");
