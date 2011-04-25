@@ -118,9 +118,9 @@
 (defmacro or (&rest forms)
   (if (= 0 (list-len forms)) ;; heck, need destructuring-bind
       #'#t
-      #`(let ((res ,(list-elt forms 0)))
-          (if res
-              res
+      #`(let ((%%or-res ,(list-elt forms 0))) ;; heck, need hygiene
+          (if %%or-res
+              %%or-res
               (or ,@(list-slice forms 1))))))
 
 (defun not (x)
