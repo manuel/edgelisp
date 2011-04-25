@@ -235,6 +235,13 @@ function lisp_bif_compound_apply(_key_, fun, form)
     return fun.apply(thisArg, args);
 }
 
+/* Adds form at end of compound form. */
+function lisp_bif_compound_add(_key_, compound, form)
+{
+    compound.elts.push(form);
+    return compound;
+}
+
 /* Creates a compound form from all positional arguments, which must
    be forms. */
 function lisp_bif_make_compound(_key_)
@@ -296,10 +303,10 @@ function lisp_bif_compound_elts(_key_, compound)
     return compound.elts;
 }
 
-function lisp_bif_compound_slice(_key_, compound, start)
+function lisp_bif_compound_slice(_key_, compound, start, end)
 {
     lisp_assert_compound_form(compound, "compound-slice", compound);
-    return new Lisp_compound_form(compound.elts.slice(start));
+    return new Lisp_compound_form(compound.elts.slice(start, end));
 }
 
 function lisp_bif_compound_emptyp(_key_, compound)
@@ -665,6 +672,11 @@ function lisp_bif_list_len(_key_, list, i)
     return list.length;
 }
 
+function lisp_bif_list_slice(_key_, list, start, end)
+{
+    return list.slice(start, end);
+}
+
 function lisp_bif_list_add(_key_, list, elt)
 {
     list.push(elt);
@@ -734,6 +746,7 @@ lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-with-catch-tag", "lisp_bif_call_with_catch_tag");
 lisp_set_function("call-forever", "lisp_bif_call_forever");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
+lisp_set_function("compound-add", "lisp_bif_compound_add");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
 lisp_set_function("compound-elts", "lisp_bif_compound_elts");
 lisp_set_function("compound-empty?", "lisp_bif_compound_emptyp");
@@ -750,6 +763,7 @@ lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
 lisp_set_function("list-len", "lisp_bif_list_len");
+lisp_set_function("list-slice", "lisp_bif_list_slice");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_set_function("make-class", "lisp_bif_make_class");
 lisp_set_function("make-compound", "lisp_bif_make_compound");

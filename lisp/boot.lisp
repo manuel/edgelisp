@@ -115,6 +115,14 @@
          (unless ,test (return-from exit))
          ,@body)))
 
+(defmacro or (&rest forms)
+  (if (= 0 (list-len forms)) ;; heck, need destructuring-bind
+      #'#t
+      #`(let ((res ,(list-elt forms 0)))
+          (if res
+              res
+              (or ,@(list-slice forms 1))))))
+
 (defun not (x)
   (if x #f #t))
 
