@@ -1,4 +1,4 @@
-;; Bootstrap defmacro
+;;;; Bootstrap defmacro
 
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
@@ -10,10 +10,10 @@
                 ,@(compound-slice defmacro-form 3)))
             (compound-slice %%form 1))))))
 
-;; Wrap special forms
+;;;; Wrap special forms
 
-(defmacro defined? (name)
-  #`(%%defined? ,name))
+(defmacro defined? (identifier)
+  #`(%%defined? ,identifier))
 
 (defmacro defparameter (name value)
   #`(%%defparameter ,name ,value))
@@ -54,7 +54,7 @@
 (defmacro setq (name namespace)
   #`(%%setq ,name ,namespace))
 
-;; Common stuff
+;;;; Common stuff
 
 (defmacro defvar (name &optional (value #'nil))
   #`(defparameter ,name (if (defined? ,name) ,name ,value)))
@@ -116,9 +116,9 @@
          ,@body)))
 
 (defmacro or (&rest forms)
-  (if (= 0 (list-len forms)) ;; heck, need destructuring-bind
-      #'#t
-      #`(let ((%%or-res ,(list-elt forms 0))) ;; heck, need hygiene
+  (if (= 0 (list-len forms)) ; heck, need destructuring-bind
+      #'#t ; heck, need to rethink #' syntax
+      #`(let ((%%or-res ,(list-elt forms 0))) ; heck, need hygiene
           (if %%or-res
               %%or-res
               (or ,@(list-slice forms 1))))))
@@ -165,7 +165,7 @@
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
 
-;; OO
+;;;; Classes
 
 (eval-when-compile
   (defun defclass-do-slot (class-name slot)
@@ -215,7 +215,7 @@
                   (lambda ,params ,@body))
       #',name))
 
-;; Fixup class hierarchy
+;;;; Fixup class hierarchy
 
 (set-superclass (class string) (class object))
 (set-superclass (class boolean) (class object))
@@ -228,9 +228,9 @@
 (set-superclass (class function) (class object))
 (set-superclass (class nil) (class object))
 
-;; Numbers
-;;
-;; small-integer, big-integer, rational, and real are defined in JS.
+;;;; Numbers
+
+;;; small-integer, big-integer, rational, and real are defined in JS.
 
 (defclass number)
 (set-superclass (class real) (class number))
@@ -253,12 +253,12 @@
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
 
-;;
+;;;; Equality
 
 (defmethod = ((a object) (b object))
   (eq a b))
 
-;;
+;;;; Dynamic variables
 
 (defmacro dynamic (name)
   #`(identifier ,name dynamic))
@@ -281,7 +281,7 @@
         (unwind-protect (progn ,@body)
           (setq (dynamic ,name) old-value)))))
 
-;; Conditions
+;;;; Conditions
 
 (defclass condition)
 (defclass serious-condition (condition))
@@ -345,7 +345,7 @@
   (signal c)
   (invoke-debugger c))
 
-;; 
+;;;; Printing
 
 (defgeneric show (object))
 
@@ -365,8 +365,7 @@
 (defmethod show ((a function))
   "#<function>")
 
-
-;; Collections
+;;;; Collections
 
 (defgeneric elt (collection index))
 (defgeneric empty? (collection))
