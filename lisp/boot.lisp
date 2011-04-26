@@ -284,20 +284,14 @@
 ;; Conditions
 
 (defclass condition)
-(defclass error (condition))
+(defclass serious-condition (condition))
+(defclass error (serious-condition))
 (defclass warning (condition))
-(defclass signal (condition))
 
 (defmethod show ((c condition))
   "#<condition>")
 
-(defgeneric default-handler (condition))
-(defmethod default-handler ((c error))
-  (invoke-debugger c))
-(defmethod default-handler ((c warning))
-  (print c))
-(defmethod default-handler ((c signal))
-  nil)
+(defdynamic condition-handlers-frame)
 
 (defclass condition-handlers-frame ()
   (handlers
@@ -305,11 +299,9 @@
 
 (defun make-condition-handlers-frame ((handlers list))
   (let ((f (make condition-handlers-frame)))
-    (set-slot-value f "handlers" handlers)
-    (set-slot-value f "parent-frame" (dynamic condition-handlers-frame))
+    (setf (.handlers f) handlers)
+    (setf (.parent-frame f) (dynamic condition-handlers-frame))
     f))
-
-(defdynamic condition-handlers-frame)
 
 (defmacro handler-bind (handler-specs &rest body)
   #`(handler-bind/f (list ,@(compound-map (lambda (handler-spec)
@@ -324,31 +316,34 @@
 
 (defun find-applicable-handler ((c condition) &optional (frame (dynamic condition-handlers-frame)))
   "Returns two-element list containing handler function and frame."
-  (if (nil? frame)
-      nil
-      (block found
-        (each (lambda (handler-binding)
-                (when (subtype? (type-of c) (elt handler-binding 0))
-                  (return-from found (list (elt handler-binding 1) frame))))
-              (slot-value frame "handlers"))
-        (find-applicable-handler c (slot-value frame "parent-frame")))))
+  (unless (nil? frame)
+    (block found
+      (each (lambda (handler-binding)
+              (when (subtype? (type-of c) (elt handler-binding 0))
+                (return-from found (list (elt handler-binding 1) frame))))
+            (.handlers frame))
+      (find-applicable-handler c (.parent-frame frame)))))
 
 (defun signal ((c condition))
   (signal-with-frame c (dynamic condition-handlers-frame)))
 
 (defun signal-with-frame ((c condition) frame-or-nil)
   (let ((function-and-frame (find-applicable-handler c frame-or-nil)))
-    (if (nil? function-and-frame)
-        (default-handler c)
-        (progn
-          (funcall (elt function-and-frame 0) c)
-          (signal-with-frame c (slot-value frame-or-nil "parent-frame"))))))
+    (unless (nil? function-and-frame)
+      ;; "condition firewall": call handler with parent handlers that
+      ;; were in effect during its establishment
+      (dynamic-bind ((condition-handlers-frame (.parent-frame (elt function-and-frame 1))))
+        (funcall (elt function-and-frame 0) c))
+      ;; signal unhandled: continue search for handlers
+      (signal-with-frame c (.parent-frame frame)))))
 
 (defun warn ((c condition))
-  (signal c))
+  (signal c)
+  (print c))
 
 (defun error ((c condition))
-  (signal c))
+  (signal c)
+  (invoke-debugger c))
 
 ;; 
 
