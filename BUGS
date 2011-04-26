@@ -1,5 +1,3 @@
-* Unsupplied keyword arguments are undefined, should be nil.
-
 * In the REPL the line "1 '" yields 1, and the erroneous "'" character
   is silently ignored.
 
