@@ -276,10 +276,10 @@
 (defmacro dynamic-bind-1 (binding &rest body)
   (let ((name (compound-elt binding 0))
         (value (compound-elt binding 1)))
-  #`(let ((old-value (dynamic ,name)))
-      (setq (dynamic ,name) ,value)
-      (unwind-protect (progn ,@body)
-        (setq (dynamic ,name) old-value)))))
+    #`(let ((old-value (dynamic ,name)))
+        (setq (dynamic ,name) ,value)
+        (unwind-protect (progn ,@body)
+          (setq (dynamic ,name) old-value)))))
 
 ;; Conditions
 
