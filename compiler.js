@@ -1194,7 +1194,7 @@ function lisp_emit_vop_lambda(vop)
         for (var i = js_min; i < js_max; i++) {
             var param = opt_params[i - js_min];
             var name = lisp_mangled_param_name(param);
-            var value = param.init ? lisp_emit(param.init) : "undefined";
+            var value = param.init ? lisp_emit(param.init) : "null";
             s += "if (arguments.length < " +(i+1)+ ") " +name+ " = "+value+"; ";
         }
         init_opt_params = s;
@@ -1209,7 +1209,7 @@ function lisp_emit_vop_lambda(vop)
             var param = key_params[i];
             var name = lisp_mangled_param_name(param);
             var key_name = lisp_mangle_string_dict_key(param.name);
-            var init = param.init ? lisp_emit(param.init) : "undefined";
+            var init = param.init ? lisp_emit(param.init) : "null";
             with_key_dict += "if (\"" + key_name + "\" in " + lisp_keywords_dict + ") " +
                                  "var " + name + " = " + lisp_keywords_dict + "[\"" + key_name + "\"]; " +
                              "else var " + name + " = " + init + "; ";
