@@ -83,7 +83,7 @@
       #`(let (,(compound-elt bindings 0))
           (let* ,(compound-slice bindings 1) ,@forms))))
 
-(defmacro letrec* (bindings &rest forms)
+(defmacro letrec* (bindings &rest forms) ;; LETREC* actually
   #`(let ,(compound-map (lambda (b)
                           #`(,(compound-elt b 0) #{ undefined #}))
                         bindings)
@@ -289,61 +289,74 @@
 (defclass warning (condition))
 
 (defmethod show ((c condition))
-  "#<condition>")
+  "#(condition)")
 
-(defdynamic condition-handlers-frame)
+(defgeneric default-handler (condition))
+(defmethod default-handler ((c condition))
+  nil)
+(defmethod default-handler ((c warning))
+  (print c))
+(defmethod default-handler ((c serious-condition))
+  (invoke-debugger c))
 
-(defclass condition-handlers-frame ()
+(defclass handler ()
+  (handler-class
+   handler-function))
+
+(defun make-handler ((handler-class class) (handler-function function))
+  (let ((h (make handler)))
+    (setf (.handler-class h) handler-class)
+    (setf (.handler-function h) handler-function)
+    h))
+
+(defdynamic handler-frame)
+
+(defclass handler-frame ()
   (handlers
    parent-frame))
 
-(defun make-condition-handlers-frame ((handlers list))
-  (let ((f (make condition-handlers-frame)))
+(defun make-handler-frame ((handlers list))
+  (let ((f (make handler-frame)))
     (setf (.handlers f) handlers)
-    (setf (.parent-frame f) (dynamic condition-handlers-frame))
+    (setf (.parent-frame f) (dynamic handler-frame))
     f))
 
 (defmacro handler-bind (handler-specs &rest body)
-  #`(handler-bind/f (list ,@(compound-map (lambda (handler-spec)
-                                            #`(list (class ,(compound-elt handler-spec 0))
-                                                    ,(compound-elt handler-spec 1)))
-                                          handler-specs))
+  "handler-spec ::= (class-name function-form)"
+  #`(handler-bind/f (list ,@(compound-map
+                             (lambda (handler-spec)
+                               #`(make-handler
+                                  (class ,(compound-elt handler-spec 0))
+                                  ,(compound-elt handler-spec 1)))
+                             handler-specs))
                     (lambda () ,@body)))
 
 (defun handler-bind/f ((handlers list) (body-function function))
-  (dynamic-bind ((condition-handlers-frame (make-condition-handlers-frame handlers)))
+  (dynamic-bind ((handler-frame (make-handler-frame handlers)))
     (funcall body-function)))
 
-(defun find-applicable-handler ((c condition) &optional (frame (dynamic condition-handlers-frame)))
-  "Returns two-element list containing handler function and frame."
-  (unless (nil? frame)
+(defun find-applicable-handler-and-frame ((c condition)
+                                          &optional (f (dynamic handler-frame)))
+  (unless (nil? f)
     (block found
-      (each (lambda (handler-binding)
-              (when (subtype? (type-of c) (elt handler-binding 0))
-                (return-from found (list (elt handler-binding 1) frame))))
-            (.handlers frame))
-      (find-applicable-handler c (.parent-frame frame)))))
+      (each (lambda (h)
+              (when (subtype? (type-of c) (.handler-class h))
+                (return-from found (list h f))))
+            (.handlers f))
+      (find-applicable-handler-and-frame c (.parent-frame f)))))
 
 (defun signal ((c condition))
-  (signal-with-frame c (dynamic condition-handlers-frame)))
+  (signal0 c (dynamic handler-frame)))
 
-(defun signal-with-frame ((c condition) frame-or-nil)
-  (let ((function-and-frame (find-applicable-handler c frame-or-nil)))
-    (unless (nil? function-and-frame)
-      ;; "condition firewall": call handler with parent handlers that
-      ;; were in effect during its establishment
-      (dynamic-bind ((condition-handlers-frame (.parent-frame (elt function-and-frame 1))))
-        (funcall (elt function-and-frame 0) c))
-      ;; signal unhandled: continue search for handlers
-      (signal-with-frame c (.parent-frame frame)))))
-
-(defun warn ((c condition))
-  (signal c)
-  (print c))
-
-(defun error ((c condition))
-  (signal c)
-  (invoke-debugger c))
+(defun signal0 ((c condition) (f handler-frame))
+  (let ((handler-and-frame (find-applicable-handler-and-frame c f)))
+    (if (nil? handler-and-frame)
+        (default-handler c)
+        (let ((h (elt handler-and-frame 0))
+              (f (elt handler-and-frame 1)))
+          (funcall (.handler-function h) c)
+          ;; signal unhandled: continue search for handlers
+          (signal0 c (.parent-frame f))))))
 
 ;;;; Printing
 
