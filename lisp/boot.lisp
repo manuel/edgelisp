@@ -140,10 +140,10 @@
         ,@(compound-slice place 1)
         ,value)))
 
-(defmacro inc (place &optional (delta #'1))
+(defmacro incf (place &optional (delta #'1))
   #`(setf ,place (+ ,place ,delta)))
 
-(defmacro dec (place &optional (delta #'1))
+(defmacro decf (place &optional (delta #'1))
   #`(setf ,place (- ,place ,delta)))
 
 (defmacro assert (test &optional (msg #'"assertion failed"))
