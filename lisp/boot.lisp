@@ -228,6 +228,13 @@
 (set-superclass (class function) (class object))
 (set-superclass (class nil) (class object))
 
+;;;; Equality
+
+(defgeneric = (a b))
+
+(defmethod = ((a object) (b object))
+  (eq a b))
+
 ;;;; Numbers
 
 ;;; small-integer, big-integer, rational, and real are defined in JS.
@@ -252,11 +259,6 @@
 (define-jsnums-binop * "multiply")
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
-
-;;;; Equality
-
-(defmethod = ((a object) (b object))
-  (eq a b))
 
 ;;;; Dynamic variables
 
