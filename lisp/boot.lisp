@@ -165,19 +165,17 @@
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
 
-;;;; Classes
+;;;; Object system
 
-(eval-when-compile
-  (defun defclass-do-slot (class-name slot)
-    (let* ((slot-name (symbol-name slot))
-           (slot-name-form (string-to-form slot-name))
-           (getter-name (string-concat "." slot-name))
-           (setter-name (setter-name getter-name)))
-      #`(progn
-          (defmethod ,(string-to-symbol getter-name) ((obj ,class-name))
-            (slot-value obj ,slot-name-form))
-          (defmethod ,(string-to-symbol setter-name) ((obj ,class-name) value)
-            (set-slot-value obj ,slot-name-form value))))))
+(defmacro defslot (slot class)
+  (let* ((slot-name (symbol-name slot))
+         (getter-name (string-concat "." slot-name))
+         (setter-name (setter-name getter-name)))
+    #`(progn
+        (defmethod ,(string-to-symbol getter-name) ((obj ,class))
+          (slot-value obj ,(string-to-form slot-name)))
+        (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
+          (set-slot-value obj ,(string-to-form slot-name) value)))))
 
 (defmacro class (name)
   #`(identifier ,name class))
@@ -193,7 +191,7 @@
              #`(set-superclass (class ,class-name) (class ,superclass))
              #`(set-superclass (class ,class-name) (class object)))
         ,@(compound-map (lambda (slot)
-                          (defclass-do-slot class-name slot))
+                          #`(defslot ,slot ,class-name))
                         slots)
         (class ,class-name))))
 
