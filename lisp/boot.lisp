@@ -261,6 +261,36 @@
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
 
+;;;; Printing
+
+(defgeneric show (object))
+
+(defmethod show ((a object))
+  #{ JSON.stringify(~a) #})
+
+(defmethod show ((a nil))
+  "nil")
+
+(defmethod show ((a boolean))
+  (if a "#t" "#f"))
+
+(defmethod show ((a number))
+  #{ (~a).toString() #})
+
+(defmacro define-stupid-show (class-name)
+  #`(defmethod show ((a ,class-name))
+      ,(string-to-form
+        (string-concat "#(" (string-concat (symbol-name class-name) ")")))))
+
+(define-stupid-show compound-form)
+(define-stupid-show class)
+(define-stupid-show function)
+(define-stupid-show list)
+(define-stupid-show number-form)
+(define-stupid-show string-dict)
+(define-stupid-show string-form)
+(define-stupid-show symbol-form)
+
 ;;;; Dynamic variables
 
 (defmacro dynamic (name)
@@ -294,8 +324,10 @@
 
 (defclass control-error (error))
 
-(defmethod show ((c condition))
-  "#(condition)")
+(define-stupid-show condition)
+(define-stupid-show error)
+(define-stupid-show warning)
+(define-stupid-show restart)
 
 (defgeneric default-handler (condition))
 (defmethod default-handler ((c condition))
@@ -365,26 +397,6 @@
           (funcall (.handler-function h) c)
           ;; signal unhandled: continue search for handlers
           (signal0 c (.parent-frame f))))))
-
-;;;; Printing
-
-(defgeneric show (object))
-
-;; fallback
-(defmethod show ((a object))
-  #{ JSON.stringify(~a) #})
-
-(defmethod show ((a nil))
-  "nil")
-
-(defmethod show ((a number))
-  #{ (~a).toString() #})
-
-(defmethod show ((a boolean))
-  (if a "#t" "#f"))
-
-(defmethod show ((a function))
-  "#<function>")
 
 ;;;; Collections
 

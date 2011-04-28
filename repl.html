@@ -32,7 +32,7 @@ function lisp_repl_input(input)
 
 function lisp_repl_error(msg)
 {
-    lisp_repl_insert(msg, "lisp-repl-error");
+    lisp_repl_insert(JSON.stringify(msg), "lisp-repl-error");
 }
 
 function lisp_repl_log(input, url)
@@ -63,7 +63,7 @@ function lisp_repl()
       lisp_print(lisp_eval(lisp_read(input)));
       document.getElementById("input").value = "";
     } catch(error) {
-      lisp_repl_error(error.message);
+      lisp_repl_error(error);
     }
     window.scrollTo(0, document.body.scrollHeight);
 }
@@ -81,16 +81,15 @@ function lisp_load_file(path)
         lisp_error("XHR error", req.status);
       }
     } catch(error) {
-      lisp_repl_error(error.message);
+      lisp_repl_error(error);
     }
 }
 
 function lisp_repl_onload()
 {
-    lisp_load_file("lisp/boot.lisp");
-    lisp_load_file("lisp/http-client.lisp");
-    lisp_load_file("lisp/generic-functions-test.lisp");
     document.getElementById("input").focus();
+    lisp_load_file("lisp/boot.lisp");
+    lisp_load_file("lisp/web-repl.lisp");
 }
 </script>
 </head>
