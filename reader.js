@@ -203,8 +203,11 @@ var lisp_program_syntax =
 function lisp_read(string)
 {
     var result = lisp_program_syntax(ps(string));
-    if (result.ast) return lisp_remove_comment_forms(result.ast);
-    else lisp_error("Reader error", string);
+    if (result.ast) {
+        return lisp_remove_comment_forms(result.ast);
+    } else {
+        return lisp_error("Reader error", string);
+    }
 }
 
 function lisp_remove_comment_forms(forms)
