@@ -723,6 +723,73 @@ function lisp_bif_invoke_debugger(_key_, condition)
 }
 
 
+/*** Name Mangling ***/
+
+/* Lisp symbols may contain additional characters beyond those
+   supported by JavaScript names.  These special characters are
+   translated to uppercase characters, which are not allowed in
+   CyberLisp symbols. */
+
+// Needs to be in sync with `lisp_symbol_special_char'.
+var lisp_mangle_table =
+    [
+     ["-", "_"],
+     ["&", "A"],
+     [":", "C"],
+     [".", "D"],
+     ["=", "E"],
+     [">", "G"],
+     ["<", "L"],
+     ["%", "N"],
+     ["+", "P"],
+     ["?", "Q"],
+     ["/", "S"],
+     ["*", "T"],
+     ["#", "O"],
+     ];
+
+function lisp_mangle(name, namespace)
+{
+    lisp_assert_nonempty_string(name, "Bad name", name);
+    lisp_assert_nonempty_string(namespace, "Bad namespace", namespace);
+    for (var i = 0, len = lisp_mangle_table.length; i < len; i++) {
+        var pair = lisp_mangle_table[i];
+        var pattern = new RegExp("\\" + pair[0], "g");
+        name = name.replace(pattern, pair[1]);
+    }
+    return "_lisp_" + namespace + "_" + name;
+}
+
+/* Additionally, the different namespaces (variable, function, slot,
+   method) are prefixed, so they can coexist in their respective
+   JavaScript namespace(s). */
+
+function lisp_mangle_var(name)
+{
+    return lisp_mangle(name, "variable");
+}
+
+function lisp_mangle_function(name)
+{
+    return lisp_mangle(name, "function");
+}
+
+function lisp_mangle_class(name)
+{
+    return lisp_mangle(name, "class");
+}
+
+function lisp_mangle_slot(name)
+{
+    return lisp_mangle(name, "slot");
+}
+
+function lisp_mangle_method(name)
+{
+    return lisp_mangle(name, "method");
+}
+
+
 /*** Export to Lisp ***/
 
 lisp_set("#t", "true");
