@@ -186,6 +186,7 @@
         ,@(compound-map (lambda (slot)
                           #`(defslot ,slot ,class-name))
                         slots)
+        (define-stupid-show ,class-name)
         (class ,class-name))))
 
 (defmacro defgeneric (name &rest args)
@@ -326,7 +327,7 @@
     (unwind-protect (funcall f)
       (setf (.dynamic-value d old-value)))))
 
-;;;; Conditions
+;;;; Condition system
 
 (defclass condition)
 (defclass serious-condition (condition))
@@ -335,15 +336,12 @@
 (defclass restart (condition)
   (.associated-condition))
 
+;; simple-error is defined in JS
+(set-superclass (class simple-error) (class error))
+
 (defclass control-error (error))
 
 (defclass abort (restart))
-
-(define-stupid-show condition)
-(define-stupid-show error)
-(define-stupid-show warning)
-(define-stupid-show restart)
-(define-stupid-show abort)
 
 (defgeneric default-handler (condition-like))
 (defmethod default-handler ((c condition))

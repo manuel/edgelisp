@@ -96,14 +96,14 @@ function lisp_undefined_identifier(name, namespace)
 function lisp_arity_min(length, min)
 {
     if (length < min)
-        throw Error("Too few arguments ");
+        return lisp_error("Too few arguments ");
 }
 
 function lisp_arity_min_max(length, min, max)
 {
     lisp_arity_min(length, min);
     if (length > max)
-        throw Error("Too many arguments ");
+        return lisp_error("Too many arguments ");
 }
 
 /* Returns the sequence of arguments to which the rest parameter is
@@ -123,7 +123,7 @@ function lisp_rest_param(_arguments, max) {
 function lisp_check_type(obj, type)
 {
     if (!lisp_subtypep(lisp_type_of(obj), type))
-        lisp_error("Type error", obj);
+        return lisp_error("Type error", obj);
 }
 
 function lisp_show(obj)
@@ -160,15 +160,29 @@ function lisp_lists_equal(list1, list2)
     return true;
 }
 
-// fixme: should SIGNAL error
+function Lisp_simple_error(message, arg)
+{
+    this.message = message;
+    this.arg = arg;
+}
+
 function lisp_error(message, arg)
 {
-    throw Error(message + ": " + JSON.stringify(arg));
+    return lisp_signal(new Lisp_simple_error(message, arg));
+}
+
+function lisp_signal(condition)
+{
+    // careful, maybe Lisp SIGNAL isn't defined yet
+    if (typeof _lisp_function_signal !== "undefined")
+        return _lisp_function_signal(null, condition);
+    else
+        throw condition;
 }
 
 function lisp_assert(value, message, arg)
 {
-    if (!value) lisp_error(message, arg);
+    if (!value) return lisp_error(message, arg);
     return value;
 }
 
@@ -533,12 +547,12 @@ function lisp_classes_comparable(class1, class2)
 
 function lisp_no_applicable_method(generic, arguments)
 {
-    lisp_error("No applicable method", generic);
+    return lisp_error("No applicable method", generic);
 }
 
 function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 {
-    lisp_error("No most specific method", generic);
+    return lisp_error("No most specific method", generic);
 }
 
 
@@ -809,6 +823,7 @@ lisp_set_class("object", "Object.prototype");
 lisp_set_class("rational", "jsnums.Rational.prototype");
 lisp_set_class("real", "jsnums.FloatPoint.prototype");
 lisp_set_class("small-integer", "Number.prototype");
+lisp_set_class("simple-error", "Lisp_simple_error.prototype");
 lisp_set_class("string", "String.prototype");
 lisp_set_class("string-dict", "Lisp_string_dict.prototype");
 lisp_set_class("string-form", "Lisp_string_form.prototype");
