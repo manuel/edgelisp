@@ -321,6 +321,8 @@
 
 (defclass control-error (error))
 
+(defclass return-to-toplevel (restart))
+
 (define-stupid-show condition)
 (define-stupid-show error)
 (define-stupid-show warning)
@@ -457,7 +459,7 @@
   (< (.i iter) (len (.list iter))))
 
 (defmethod next ((iter list-iter))
-  (inc (.i iter)))
+  (incf (.i iter)))
 
 (defmethod now ((iter list-iter))
   (elt (.list iter) (.i iter)))
@@ -531,7 +533,7 @@ can be used to supply a different collection to hold the results."
   (.i iter))
 
 (defmethod next ((iter number-iter))
-  (inc (.i iter)))
+  (incf (.i iter)))
 
 (defmacro dotimes (var-and-ct &rest body)
   (let ((var (elt var-and-ct 0))
