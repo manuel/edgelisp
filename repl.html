@@ -98,6 +98,7 @@ function lisp_repl_onload()
     document.getElementById("input").focus();
     lisp_load_file("lisp/boot.lisp");
     lisp_load_file("lisp/web-repl.lisp");
+    window.scrollTo(0, document.body.scrollHeight);
 }
 </script>
 </head>
