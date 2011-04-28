@@ -576,9 +576,13 @@ function lisp_bif_subtypep(_key_, type1, type2)
     return lisp_subtypep(type1, type2);
 }
 
+function Lisp_class()
+{
+}
+
 function lisp_bif_make_class(_key_)
 {
-    return {};
+    return new Lisp_class();
 }
 
 function lisp_bif_set_superclass(_key_, clsA, clsB)
@@ -718,27 +722,25 @@ function lisp_bif_invoke_debugger(_key_, condition)
 
 lisp_set("#t", "true");
 lisp_set("#f", "false");
-
-lisp_set_class("object", "Object.prototype");
-lisp_set_class("boolean", "Boolean.prototype");
-lisp_set_class("function", "Function.prototype");
-lisp_set_class("compound-form", "Lisp_compound_form.prototype");
-lisp_set_class("list", "Array.prototype");
-lisp_set_class("number-form", "Lisp_number_form.prototype");
-lisp_set_class("string-dict", "Lisp_string_dict.prototype");
-lisp_set_class("string-form", "Lisp_string_form.prototype");
-lisp_set_class("string", "String.prototype");
-lisp_set_class("symbol-form", "Lisp_symbol_form.prototype");
-
-var lisp_nil_class = lisp_bif_make_class(null);
-lisp_set_class("nil", "lisp_nil_class");
 lisp_set("nil", "null");
 
-// Numbers
-lisp_set_class("small-integer", "Number.prototype");
+var lisp_nil_class = lisp_bif_make_class(null);
 lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
-lisp_set_class("real", "jsnums.FloatPoint.prototype");
+lisp_set_class("boolean", "Boolean.prototype");
+lisp_set_class("class", "Lisp_class.prototype");
+lisp_set_class("compound-form", "Lisp_compound_form.prototype");
+lisp_set_class("function", "Function.prototype");
+lisp_set_class("list", "Array.prototype");
+lisp_set_class("nil", "lisp_nil_class");
+lisp_set_class("number-form", "Lisp_number_form.prototype");
+lisp_set_class("object", "Object.prototype");
 lisp_set_class("rational", "jsnums.Rational.prototype");
+lisp_set_class("real", "jsnums.FloatPoint.prototype");
+lisp_set_class("small-integer", "Number.prototype");
+lisp_set_class("string", "String.prototype");
+lisp_set_class("string-dict", "Lisp_string_dict.prototype");
+lisp_set_class("string-form", "Lisp_string_form.prototype");
+lisp_set_class("symbol-form", "Lisp_symbol_form.prototype");
 
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
