@@ -167,18 +167,11 @@
 
 ;;;; Object system
 
-(defmacro defslot (slot class)
-  (let* ((slot-name (symbol-name slot))
-         (getter-name (string-concat "." slot-name))
-         (setter-name (setter-name getter-name)))
-    #`(progn
-        (defmethod ,(string-to-symbol getter-name) ((obj ,class))
-          (slot-value obj ,(string-to-form slot-name)))
-        (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
-          (set-slot-value obj ,(string-to-form slot-name) value)))))
-
 (defmacro class (name)
   #`(identifier ,name class))
+
+(defmacro generic (name)
+  #`(identifier ,name generic))
 
 (defmacro make (class-name)
   #`(make-instance (class ,class-name)))
@@ -195,9 +188,6 @@
                         slots)
         (class ,class-name))))
 
-(defmacro generic (name)
-  #`(identifier ,name generic))
-
 (defmacro defgeneric (name &rest args)
   #`(progn
       (defvar (generic ,name) (make-generic))
@@ -212,6 +202,15 @@
                   (list ,@(params-specializers params))
                   (lambda ,params ,@body))
       #',name))
+
+(defmacro defslot (slot class)
+  (let ((setter-name (setter-name (symbol-name slot)))
+        (slot-name-form (string-to-form (symbol-name slot))))
+    #`(progn
+        (defmethod ,slot ((obj ,class))
+          (slot-value obj ,slot-name-form))
+        (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
+          (set-slot-value obj ,slot-name-form value)))))
 
 ;;;; Fixup class hierarchy
 
@@ -338,8 +337,8 @@
   (signal (make control-error)))
 
 (defclass handler ()
-  (handler-class
-   handler-function))
+  (.handler-class
+   .handler-function))
 
 (defun make-handler ((handler-class class) (handler-function function))
   (let ((h (make handler)))
@@ -350,8 +349,8 @@
 (defdynamic handler-frame)
 
 (defclass handler-frame ()
-  (handlers
-   parent-frame))
+  (.handlers
+   .parent-frame))
 
 (defun make-handler-frame ((handlers list))
   (let ((f (make handler-frame)))
@@ -445,8 +444,8 @@
   (list-add list elt))
 
 (defclass list-iter () 
-  (list
-   i))
+  (.list
+   .i))
 
 (defun list-iter ((list list))
   (let ((iter (make list-iter)))
@@ -513,8 +512,8 @@ can be used to supply a different collection to hold the results."
   into)
 
 (defclass number-iter ()
-  (i
-   max))
+  (.i
+   .max))
 
 (defun number-iter (max)
   (let ((iter (make number-iter)))
