@@ -213,15 +213,31 @@
         (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
 
+(defgeneric show (object))
+
+(eval-when-compile
+  (defun show-unreadable (class-name &optional (more ""))
+    (string-concat "#(" (string-concat (string-concat (symbol-name class-name) more) ")")))) ; hack
+
+(defmacro define-stupid-show (class-name)
+  #`(defmethod show ((a ,class-name))
+      ,(string-to-form (show-unreadable class-name))))
+
 ;;;; Fixup class hierarchy
 
+(set-superclass (class big-integer) (class integer))
 (set-superclass (class boolean) (class object))
-(set-superclass (class compound-form) (class object))
 (set-superclass (class class) (class object))
+(set-superclass (class compound-form) (class object))
 (set-superclass (class function) (class object))
+(set-superclass (class integer) (class rational))
 (set-superclass (class list) (class object))
 (set-superclass (class nil) (class object))
+(set-superclass (class number) (class object))
 (set-superclass (class number-form) (class object))
+(set-superclass (class rational) (class real))
+(set-superclass (class real) (class number))
+(set-superclass (class small-integer) (class integer))
 (set-superclass (class string) (class object))
 (set-superclass (class string-dict) (class object))
 (set-superclass (class string-form) (class object))
@@ -235,15 +251,6 @@
   (eq a b))
 
 ;;;; Numbers
-
-;;; small-integer, big-integer, rational, and real are defined in JS.
-
-(defclass number)
-(set-superclass (class real) (class number))
-(set-superclass (class rational) (class real))
-(defclass integer (rational))
-(set-superclass (class small-integer) (class integer))
-(set-superclass (class big-integer) (class integer))
 
 (defmacro define-jsnums-binop (name jsnums-name)
   #`(progn
@@ -261,8 +268,6 @@
 
 ;;;; Printing
 
-(defgeneric show (object))
-
 (defmethod show ((a object))
   #{ JSON.stringify(~a) #})
 
@@ -274,11 +279,6 @@
 
 (defmethod show ((a number))
   #{ (~a).toString() #})
-
-(defmacro define-stupid-show (class-name)
-  #`(defmethod show ((a ,class-name))
-      ,(string-to-form
-        (string-concat "#(" (string-concat (symbol-name class-name) ")")))))
 
 (define-stupid-show compound-form)
 (define-stupid-show class)
@@ -338,7 +338,8 @@
 
 ;; simple-error is defined in JS
 (set-superclass (class simple-error) (class error))
-(define-stupid-show simple-error)
+(defmethod show ((s simple-error))
+  (show-unreadable #'simple-error (string-concat (simple-error-message s) (simple-error-arg s))))
 
 (defclass control-error (error))
 
@@ -382,22 +383,17 @@
       (defdynamic ,dynamic-frame)
       (defmacro ,condition-bind (condition-specs &rest body)
         "condition-spec ::= (class-name function-form associated-condition)"
-        #`(condition-bind-1st-class
-           (dynamic-id ,dynamic-frame)
-           (list ,@(compound-map
-                    (lambda (handler-spec)
-                      #`(make-handler
-                         (class ,(compound-elt handler-spec 0))
-                         ,(compound-elt handler-spec 1)
-                         ,(compound-elt handler-spec 2)))
-                    handler-specs))
-           (lambda () ,@body)))
+        #`(dynamic-bind-1st-class (dynamic-id ,dynamic-frame)
+                                  (list ,@(compound-map
+                                           (lambda (spec)
+                                             #`(make-handler
+                                                (class ,(compound-elt spec 0))
+                                                ,(compound-elt spec 1)
+                                                ,(compound-elt spec 2)))
+                                           condition-spec))
+                                  (lambda () ,@body)))
       (defun ,signal ((c ,condition))
         (signal-condition c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
-
-(defun condition-bind-1st-class ((df dynamic) (handlers list) (f body-function))
-  (dynamic-bind-1st-class df (make-handler-frame handlers)
-    f))
 
 (defun signal-condition ((c condition) (df dynamic) (f handler-frame))
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
@@ -407,7 +403,7 @@
               (f (elt handler-and-frame 1)))
           (call-condition-handler c h df f)
           ;; signal unhandled: continue search for handlers
-          (signal0 c (.parent-frame f))))))
+          (signal-condition c df (.parent-frame f))))))
 
 (defun find-applicable-handler-and-frame ((c condition) (f handler-frame))
   (when f
@@ -431,11 +427,11 @@
 
 (defgeneric call-condition-handler (condition handler dynamic-frame))
 
-(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) (f frame))
+(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) (f handler-frame))
   (dynamic-bind-1st-class df (.parent-frame f) ; condition firewall
     (lambda () (funcall (.handler-function h) c))))
 
-(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) (f frame))
+(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) (f handler-frame))
   ;; no restart firewall
   (funcall (.handler-function h) r))
 
@@ -445,6 +441,11 @@
 
 (defparameter $error $signal)
 (defparameter $warn $signal)
+
+;;;; Debugger
+
+(defun invoke-debugger ()
+  #{ alert("hey") #})
 
 ;;;; Streams
 

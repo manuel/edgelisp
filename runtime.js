@@ -39,6 +39,13 @@ function lisp_number(numrepr)
     return jsnums.fromString(numrepr);
 }
 
+function Lisp_number()
+{
+}
+
+function Lisp_integer()
+{
+}
 
 /*** Functions ***/
 
@@ -164,6 +171,16 @@ function Lisp_simple_error(message, arg)
 {
     this.message = message;
     this.arg = arg;
+}
+
+function lisp_bif_simple_error_message(_key_, simple_error)
+{
+    return simple_error.message;
+}
+
+function lisp_bif_simple_error_arg(_key_, simple_error)
+{
+    return simple_error.arg;
 }
 
 function lisp_error(message, arg)
@@ -736,10 +753,6 @@ function lisp_is_true(obj) // T
     return (obj !== false) && (obj !== null);
 }
 
-function lisp_bif_invoke_debugger(_key_, condition)
-{
-    throw condition;
-}
 
 
 /*** Name Mangling ***/
@@ -824,6 +837,8 @@ lisp_set_class("function", "Function.prototype");
 lisp_set_class("list", "Array.prototype");
 lisp_set_class("nil", "lisp_nil_class");
 lisp_set_class("number-form", "Lisp_number_form.prototype");
+lisp_set_class("number", "Lisp_number.prototype");
+lisp_set_class("integer", "Lisp_integer.prototype");
 lisp_set_class("object", "Object.prototype");
 lisp_set_class("rational", "jsnums.Rational.prototype");
 lisp_set_class("real", "jsnums.FloatPoint.prototype");
@@ -853,7 +868,6 @@ lisp_set_function("eval", "lisp_bif_eval");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");
-lisp_set_function("invoke-debugger", "lisp_bif_invoke_debugger");
 lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
@@ -870,6 +884,8 @@ lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
 lisp_set_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
+lisp_set_function("simple-error-message", "lisp_bif_simple_error_message");
+lisp_set_function("simple-error-arg", "lisp_bif_simple_error_arg");
 lisp_set_function("slot-value", "lisp_bif_slot_value");
 lisp_set_function("string-concat", "lisp_bif_string_concat");
 lisp_set_function("string-dict-get", "lisp_bif_string_dict_get");
