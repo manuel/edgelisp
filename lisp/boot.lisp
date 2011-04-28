@@ -321,12 +321,13 @@
 
 (defclass control-error (error))
 
-(defclass return-to-toplevel (restart))
+(defclass abort (restart))
 
 (define-stupid-show condition)
 (define-stupid-show error)
 (define-stupid-show warning)
 (define-stupid-show restart)
+(define-stupid-show abort)
 
 (defgeneric default-handler (condition))
 (defmethod default-handler ((c condition))
@@ -539,4 +540,3 @@ can be used to supply a different collection to hold the results."
   (let ((var (elt var-and-ct 0))
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
-
