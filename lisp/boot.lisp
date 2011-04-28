@@ -318,7 +318,7 @@
 (defmacro dynamic-bind-1 (binding &rest body)
   (let ((name (compound-elt binding 0))
         (value (compound-elt binding 1)))
-    #`(dynamic-bind-1st-class ,(dynamic name) ,value
+    #`(dynamic-bind-1st-class (dynamic-id ,name) ,value
         (lambda () ,@body))))
 
 (defun dynamic-bind-1st-class ((d dynamic) value (f function))
@@ -361,7 +361,7 @@
    .associated-condition))
 
 (defun make-handler ((handler-class class) (handler-function function)
-                     &optional associated-condition)
+                     &optional (associated-condition nil))
   (let ((h (make handler)))
     (setf (.handler-class h) handler-class)
     (setf (.handler-function h) handler-function)
@@ -383,14 +383,15 @@
       (defdynamic ,dynamic-frame)
       (defmacro ,condition-bind (condition-specs &rest body)
         "condition-spec ::= (class-name function-form associated-condition)"
-        #`(dynamic-bind-1st-class (dynamic-id ,dynamic-frame)
-                                  (list ,@(compound-map
-                                           (lambda (spec)
-                                             #`(make-handler
-                                                (class ,(compound-elt spec 0))
-                                                ,(compound-elt spec 1)
-                                                ,(compound-elt spec 2)))
-                                           condition-spec))
+        #`(dynamic-bind-1st-class (dynamic-id ,,dynamic-frame)
+                                  (make-handler-frame
+                                   (list ,@(compound-map
+                                            (lambda (spec)
+                                              #`(make-handler
+                                                 (class ,(compound-elt spec 0))
+                                                 ,(compound-elt spec 1)
+                                                 ,(compound-elt spec 2)))
+                                            condition-specs)))
                                   (lambda () ,@body)))
       (defun ,signal ((c ,condition))
         (signal-condition c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
@@ -444,8 +445,8 @@
 
 ;;;; Debugger
 
-(defun invoke-debugger (c)
-  #{ alert("hey") #})
+(defun invoke-debugger ((c condition))
+  (print (string-concat "Debugger:" (show c))))
 
 ;;;; Streams
 
