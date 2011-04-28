@@ -690,6 +690,11 @@ function lisp_bif_list_elt(_key_, list, i)
     return list[i];
 }
 
+function lisp_bif_list_emptyp(_key_, list)
+{
+    return list.length === 0;
+}
+
 function lisp_bif_list_len(_key_, list, i)
 {
     return list.length;
@@ -852,6 +857,7 @@ lisp_set_function("invoke-debugger", "lisp_bif_invoke_debugger");
 lisp_set_function("list", "lisp_bif_list");
 lisp_set_function("list-add", "lisp_bif_list_add");
 lisp_set_function("list-elt", "lisp_bif_list_elt");
+lisp_set_function("list-empty?", "lisp_bif_list_emptyp");
 lisp_set_function("list-len", "lisp_bif_list_len");
 lisp_set_function("list-slice", "lisp_bif_list_slice");
 lisp_set_function("macroexpand-1", "lisp_bif_macroexpand_1");

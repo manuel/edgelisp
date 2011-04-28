@@ -116,7 +116,7 @@
          ,@body)))
 
 (defmacro or (&rest forms)
-  (if (= 0 (list-len forms)) ; heck, need destructuring-bind
+  (if (list-empty? forms) ; heck, need destructuring-bind
       #'#t ; heck, need to rethink #' syntax
       #`(let ((%%or-res ,(list-elt forms 0))) ; heck, need hygiene
           (if %%or-res
@@ -325,7 +325,7 @@
   (let ((old-value (.dynamic-value d)))
     (setf (.dynamic-value d) ,value)
     (unwind-protect (funcall f)
-      (setf (.dynamic-value d old-value)))))
+      (setf (.dynamic-value d) old-value))))
 
 ;;;; Condition system
 
@@ -338,6 +338,7 @@
 
 ;; simple-error is defined in JS
 (set-superclass (class simple-error) (class error))
+(define-stupid-show simple-error)
 
 (defclass control-error (error))
 
@@ -392,19 +393,19 @@
                     handler-specs))
            (lambda () ,@body)))
       (defun ,signal ((c ,condition))
-        (signal0 c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
+        (signal-condition c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
 
 (defun condition-bind-1st-class ((df dynamic) (handlers list) (f body-function))
   (dynamic-bind-1st-class df (make-handler-frame handlers)
     f))
 
-(defun signal0 ((c condition) (df dynamic) (f handler-frame))
+(defun signal-condition ((c condition) (df dynamic) (f handler-frame))
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
     (if (nil? handler-and-frame)
         (default-handler c)
         (let ((h (elt handler-and-frame 0))
               (f (elt handler-and-frame 1)))
-          (signal-condition c h df f)
+          (call-condition-handler c h df f)
           ;; signal unhandled: continue search for handlers
           (signal0 c (.parent-frame f))))))
 
@@ -425,22 +426,22 @@
 (defmethod condition-applicable? ((r restart) (h handler))
   (and (subtype? (type-of c) (.handler-class h))
        (or (nil? (.associated-condition r))
-           (nil? (.associated-condition h)))
-           (= (.associated-condition r) (.associated-condition h))))
+           (nil? (.associated-condition h))
+           (eq (.associated-condition r) (.associated-condition h)))))
 
-(defgeneric signal-condition (condition handler dynamic-frame))
+(defgeneric call-condition-handler (condition handler dynamic-frame))
 
-(defmethod signal-condition ((c condition) (h handler) (df dynamic) (f frame))
+(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) (f frame))
   (dynamic-bind-1st-class df (.parent-frame f) ; condition firewall
     (lambda () (funcall (.handler-function h) c))))
 
-(defmethod signal-condition ((r restart) (h handler) (df dynamic) (f frame))
+(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) (f frame))
   ;; no restart firewall
   (funcall (.handler-function h) r))
 
 ;; get meta
-(define-handler-infrastructure handler-bind signal condition handler-frame)
-(define-handler-infrastructure restart-bind invoke-restart restart restart-frame)
+(define-handler-infrastructure handler-bind signal         condition handler-frame)
+(define-handler-infrastructure restart-bind invoke-restart restart   restart-frame)
 
 (defparameter $error $signal)
 (defparameter $warn $signal)
