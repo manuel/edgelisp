@@ -721,19 +721,19 @@ function lisp_qq_compound(form, depth)
 
     function quasiquote(x, depth)
     {
-        return make_compound([new Lisp_symbol_form("%%quasiquote"),
+        return make_compound([symbol(new Lisp_symbol_form("%%quasiquote")),
                               lisp_qq(x, depth)]);
     }
 
     function unquote(x, depth)
     {
-        return make_compound([new Lisp_symbol_form("%%unquote"),
+        return make_compound([symbol(new Lisp_symbol_form("%%unquote")),
                               lisp_qq(x, depth)]);
     }
 
     function unquote_splicing(x, depth)
     {
-        return make_compound([new Lisp_symbol_form("%%unquote-splicing"),
+        return make_compound([symbol(new Lisp_symbol_form("%%unquote-splicing")),
                               lisp_qq(x, depth)]);
     }
 
@@ -745,6 +745,11 @@ function lisp_qq_compound(form, depth)
     function append_compounds(elts)
     {
         return new Lisp_compound_form([new Lisp_symbol_form("append-compounds")].concat(elts));
+    }
+
+    function symbol(symbol)
+    {
+        return new Lisp_compound_form([new Lisp_symbol_form("%%symbol-form"), symbol]);
     }
 }
 
