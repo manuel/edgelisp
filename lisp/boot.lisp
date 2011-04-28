@@ -395,7 +395,7 @@
       (defun ,signal ((c ,condition))
         (signal-condition c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
 
-(defun signal-condition ((c condition) (df dynamic) (f handler-frame))
+(defun signal-condition ((c condition) (df dynamic) f)
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
     (if (nil? handler-and-frame)
         (default-handler c)
@@ -405,7 +405,7 @@
           ;; signal unhandled: continue search for handlers
           (signal-condition c df (.parent-frame f))))))
 
-(defun find-applicable-handler-and-frame ((c condition) (f handler-frame))
+(defun find-applicable-handler-and-frame ((c condition) f)
   (when f
     (block found
       (each (lambda (h)
@@ -427,11 +427,11 @@
 
 (defgeneric call-condition-handler (condition handler dynamic-frame))
 
-(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) (f handler-frame))
+(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) f)
   (dynamic-bind-1st-class df (.parent-frame f) ; condition firewall
     (lambda () (funcall (.handler-function h) c))))
 
-(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) (f handler-frame))
+(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) f)
   ;; no restart firewall
   (funcall (.handler-function h) r))
 
@@ -444,7 +444,7 @@
 
 ;;;; Debugger
 
-(defun invoke-debugger ()
+(defun invoke-debugger (c)
   #{ alert("hey") #})
 
 ;;;; Streams
