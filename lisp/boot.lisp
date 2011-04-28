@@ -217,16 +217,17 @@
 
 ;;;; Fixup class hierarchy
 
-(set-superclass (class string) (class object))
 (set-superclass (class boolean) (class object))
 (set-superclass (class compound-form) (class object))
+(set-superclass (class class) (class object))
+(set-superclass (class function) (class object))
+(set-superclass (class list) (class object))
+(set-superclass (class nil) (class object))
 (set-superclass (class number-form) (class object))
+(set-superclass (class string) (class object))
+(set-superclass (class string-dict) (class object))
 (set-superclass (class string-form) (class object))
 (set-superclass (class symbol-form) (class object))
-(set-superclass (class string-dict) (class object))
-(set-superclass (class list) (class object))
-(set-superclass (class function) (class object))
-(set-superclass (class nil) (class object))
 
 ;;;; Equality
 
@@ -289,6 +290,9 @@
 (defclass serious-condition (condition))
 (defclass error (serious-condition))
 (defclass warning (condition))
+(defclass restart (condition))
+
+(defclass control-error (error))
 
 (defmethod show ((c condition))
   "#(condition)")
@@ -300,6 +304,8 @@
   (print c))
 (defmethod default-handler ((c serious-condition))
   (invoke-debugger c))
+(defmethod default-handler ((c restart))
+  (signal (make control-error)))
 
 (defclass handler ()
   (handler-class
@@ -350,7 +356,7 @@
 (defun signal ((c condition))
   (signal0 c (dynamic handler-frame)))
 
-(defun signal0 ((c condition) (f handler-frame))
+(defun signal0 ((c condition) f)
   (let ((handler-and-frame (find-applicable-handler-and-frame c f)))
     (if (nil? handler-and-frame)
         (default-handler c)
@@ -522,3 +528,4 @@ can be used to supply a different collection to hold the results."
   (let ((var (elt var-and-ct 0))
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
+
