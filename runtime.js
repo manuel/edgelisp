@@ -641,6 +641,11 @@ function lisp_bif_eq(_key_, a, b)
     return a === b;
 }
 
+function lisp_bif_eval(_key_, form)
+{
+    return lisp_eval(form);
+}
+
 function lisp_bif_symbol_name(_key_, symbol)
 {
     lisp_assert_symbol_form(symbol);
@@ -757,6 +762,7 @@ lisp_set_function("compound-map", "lisp_bif_compound_map");
 lisp_set_function("compound-slice", "lisp_bif_compound_slice");
 lisp_set_function("compound?", "lisp_bif_compoundp");
 lisp_set_function("eq", "lisp_bif_eq");
+lisp_set_function("eval", "lisp_bif_eval");
 lisp_set_function("fast-apply", "lisp_bif_fast_apply");
 lisp_set_function("find-method", "lisp_bif_find_method");
 lisp_set_function("has-slot", "lisp_bif_has_slot");

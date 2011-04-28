@@ -17,6 +17,7 @@ a:hover { text-decoration: underline; }
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
 <script type="text/javascript" src="lib/js-numbers.js"></script>
+<script type="text/javascript" src="reader.js"></script>
 <script type="text/javascript" src="compiler.js"></script>
 <script type="text/javascript" src="runtime.js"></script>
 <script type="text/javascript">
@@ -55,12 +56,19 @@ function lisp_repl_insert(input, className, optionalUrl)
     document.getElementById("output").appendChild(element);
 }
 
+function lisp_repl_eval(string)
+{
+  var forms = lisp_read(string);
+  var progn = new Lisp_compound_form([new Lisp_symbol_form("%%progn")].concat(forms));
+  return lisp_eval(progn);
+}
+
 function lisp_repl()
 {
     var input = document.getElementById("input").value
     lisp_repl_input(input);
     try {
-      lisp_print(lisp_eval(lisp_read(input)));
+      lisp_print(lisp_repl_eval(input));
       document.getElementById("input").value = "";
     } catch(error) {
       lisp_repl_error(error);
@@ -76,7 +84,7 @@ function lisp_load_file(path)
       req.open("GET", path, false);
       req.send(null);
       if(req.status == 200) {
-        lisp_eval(lisp_read(req.responseText));
+        lisp_repl_eval(req.responseText);
       } else {
         lisp_error("XHR error", req.status);
       }
