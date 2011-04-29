@@ -206,8 +206,8 @@ function lisp_compile_special_eval_when_compile(form)
    (%%defsyntax name expander-function) */
 function lisp_compile_special_defsyntax(form)
 {
-    var name_form = lisp_assert_symbol_form(form.elts[1]);
-    var expander_form = lisp_assert_not_null(form.elts[2]);
+    var name_form = lisp_assert_symbol_form(form.elts[1], "Bad syntax name", form);
+    var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
     return { vopt: "identifier", name: "#f", namespace: "variable" };
 }
@@ -217,7 +217,7 @@ function lisp_compile_special_defsyntax(form)
 function lisp_compile_special_funcall(form)
 {
     var fun = lisp_assert_not_null(form.elts[1]);
-    var call_site = lisp_assert_not_null(form.elts.slice(2));
+    var call_site = lisp_assert_not_null(form.elts.slice(2), "Bad call-site", form);
     return { vopt: "funcall",
              fun: lisp_compile(fun),
              call_site: lisp_compile_call_site(call_site) };

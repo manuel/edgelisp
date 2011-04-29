@@ -291,22 +291,11 @@
 
 ;;;; Dynamic variables
 
-(defclass dynamic ()
-  (.dynamic-value))
-
-(defun make-dynamic (value)
-  (let ((d (make dynamic)))
-    (setf (.dynamic-value d) value)
-    d))
-
-(defmacro dynamic-id (name)
+(defmacro dynamic (name)
   #`(identifier ,name dynamic))
 
-(defmacro dynamic (name)
-  #`(.dynamic-value (dynamic-id ,name)))
-
 (defmacro defdynamic (name &optional (value #'nil))
-  #`(defvar (dynamic-id ,name) (make-dynamic ,value)))
+  #`(defvar (dynamic ,name) ,value))
 
 (defmacro dynamic-bind (bindings &rest body)
   (if (compound-empty? bindings)
@@ -318,14 +307,10 @@
 (defmacro dynamic-bind-1 (binding &rest body)
   (let ((name (compound-elt binding 0))
         (value (compound-elt binding 1)))
-    #`(dynamic-bind-1st-class (dynamic-id ,name) ,value
-        (lambda () ,@body))))
-
-(defun dynamic-bind-1st-class ((d dynamic) value (f function))
-  (let ((old-value (.dynamic-value d)))
-    (setf (.dynamic-value d) ,value)
-    (unwind-protect (funcall f)
-      (setf (.dynamic-value d) old-value))))
+    #`(let ((old-value (dynamic ,name)))
+        (setq (dynamic ,name) ,value)
+        (unwind-protect (progn ,@body)
+          (setq (dynamic ,name) old-value)))))
 
 ;;;; Condition system
 
@@ -345,7 +330,7 @@
 
 (defclass abort (restart))
 
-(defgeneric default-handler (condition-like))
+(defgeneric default-handler (condition))
 (defmethod default-handler ((c condition))
   nil)
 (defmethod default-handler ((c warning))
@@ -372,39 +357,56 @@
   (.handlers
    .parent-frame))
 
-(defun make-handler-frame ((handlers list) &optional parent-frame)
+(defun make-handler-frame ((handlers list) &optional (parent-frame nil))
   (let ((f (make handler-frame)))
     (setf (.handlers f) handlers)
     (setf (.parent-frame f) parent-frame)
     f))
 
-(defmacro define-handler-infrastructure (condition-bind signal condition dynamic-frame)
-  #`(progn
-      (defdynamic ,dynamic-frame)
-      (defmacro ,condition-bind (condition-specs &rest body)
-        "condition-spec ::= (class-name function-form associated-condition)"
-        #`(dynamic-bind-1st-class (dynamic-id ,,dynamic-frame)
-                                  (make-handler-frame
-                                   (list ,@(compound-map
-                                            (lambda (spec)
-                                              #`(make-handler
-                                                 (class ,(compound-elt spec 0))
-                                                 ,(compound-elt spec 1)
-                                                 ,(compound-elt spec 2)))
-                                            condition-specs)))
-                                  (lambda () ,@body)))
-      (defun ,signal ((c ,condition))
-        (signal-condition c (dynamic-id ,dynamic-frame) (dynamic ,dynamic-frame)))))
+(defdynamic handler-frame)
 
-(defun signal-condition ((c condition) (df dynamic) f)
+(defmacro handler-bind (specs &rest body)
+  "spec ::= (class-name function-form)"
+  #`(dynamic-bind ((handler-frame
+                    (make-handler-frame
+                     (list ,@(compound-map
+                              (lambda (spec)
+                                #`(make-handler
+                                   (class ,(compound-elt spec 0))
+                                   ,(compound-elt spec 1)))
+                              specs)))))
+      ,@body))
+
+(defun signal ((c condition))
+  (signal-condition c (dynamic handler-frame)))
+
+(defdynamic restart-frame)
+
+(defmacro restart-bind (specs &rest body)
+  "spec ::= (class-name function-form associated-condition)"
+  #`(dynamic-bind ((restart-frame
+                    (make-handler-frame
+                     (list ,@(compound-map
+                              (lambda (spec)
+                                #`(make-handler
+                                   (class ,(compound-elt spec 0))
+                                   ,(compound-elt spec 1)
+                                   ,(compound-elt spec 2)))
+                              specs)))))
+      ,@body))
+
+(defun invoke-restart ((r restart))
+  (signal-condition c (dynamic restart-frame)))
+
+(defun signal-condition ((c condition) f)
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
     (if (nil? handler-and-frame)
         (default-handler c)
         (let ((h (elt handler-and-frame 0))
               (f (elt handler-and-frame 1)))
-          (call-condition-handler c h df f)
+          (call-condition-handler c h f)
           ;; signal unhandled: continue search for handlers
-          (signal-condition c df (.parent-frame f))))))
+          (signal-condition c (.parent-frame f))))))
 
 (defun find-applicable-handler-and-frame ((c condition) f)
   (when f
@@ -426,19 +428,14 @@
            (nil? (.associated-condition h))
            (eq (.associated-condition r) (.associated-condition h)))))
 
-(defgeneric call-condition-handler (condition handler dynamic-frame))
+(defgeneric call-condition-handler (condition handler handler-frame))
+(handler-bind ((error (lambda (e) (return-from x 12)))) (signal (make error))))
+(defmethod call-condition-handler ((c condition) (h handler) (f handler-frame))
+  (dynamic-bind ((handler-frame (.parent-frame f))) ; condition firewall
+    (funcall (.handler-function h) c)))
 
-(defmethod call-condition-handler ((c condition) (h handler) (df dynamic) f)
-  (dynamic-bind-1st-class df (.parent-frame f) ; condition firewall
-    (lambda () (funcall (.handler-function h) c))))
-
-(defmethod call-condition-handler ((r restart) (h handler) (df dynamic) f)
-  ;; no restart firewall
+(defmethod call-condition-handler ((r restart) (h handler) (f handler-frame))
   (funcall (.handler-function h) r))
-
-;; get meta
-(define-handler-infrastructure handler-bind signal         condition handler-frame)
-(define-handler-infrastructure restart-bind invoke-restart restart   restart-frame)
 
 (defparameter $error $signal)
 (defparameter $warn $signal)
