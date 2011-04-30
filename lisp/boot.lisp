@@ -54,19 +54,13 @@
 (defmacro setq (name value)
   #`(%%setq ,name ,value))
 
-;;;; Common stuff
+;;;; Lexical variables
 
 (defmacro defvar (name &optional (value #'nil))
   #`(defparameter ,name (if (defined? ,name) ,name ,value)))
 
 (defmacro defun (name sig &rest body)
   #`(defparameter (function ,name) (lambda ,sig ,@body)))
-
-(defmacro when (test &rest consequent)
-  #`(if ,test (progn ,@consequent) nil))
-
-(defmacro unless (test &rest alternative)
-  #`(if ,test nil (progn ,@alternative)))
 
 (defmacro let (bindings &rest body)
   #`(funcall (lambda ,(compound-map (lambda (b) 
@@ -85,6 +79,14 @@
                         #`(setq ,(compound-elt b 0) ,(compound-elt b 1)))
                       bindings)
       ,@forms))
+
+;;;; Control flow
+
+(defmacro when (test &rest consequent)
+  #`(if ,test (progn ,@consequent) nil))
+
+(defmacro unless (test &rest alternative)
+  #`(if ,test nil (progn ,@alternative)))
 
 (defmacro loop (&rest body)
   #`(call-forever (lambda () ,@body)))
@@ -120,8 +122,7 @@
 (defun not (x)
   (if x #f #t))
 
-(defun nil? (x)
-  (if (eq nil x) #t #f))
+;;;; (Slightly) Generalized references
 
 (eval-when-compile
   (defun setter-name (getter-name)
@@ -139,6 +140,11 @@
 
 (defmacro decf (place &optional (delta #'1))
   #`(setf ,place (- ,place ,delta)))
+
+;;;; Stuff
+
+(defun nil? (x)
+  (if (eq nil x) #t #f))
 
 (defmacro assert (test &optional (msg #'"assertion failed"))
   #`(let ((result ,test))
@@ -158,6 +164,29 @@
 
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
+
+;;;; Dynamic variables
+
+(defmacro dynamic (name)
+  #`(identifier ,name dynamic))
+
+(defmacro defdynamic (name &optional (value #'nil))
+  #`(defvar (dynamic ,name) ,value))
+
+(defmacro dynamic-bind (bindings &rest body)
+  (if (compound-empty? bindings)
+      #`(progn ,@body)
+      #`(dynamic-bind-1 ,(compound-elt bindings 0)
+          (dynamic-bind ,(compound-slice bindings 1)
+             ,@body))))
+
+(defmacro dynamic-bind-1 (binding &rest body)
+  (let ((name (compound-elt binding 0))
+        (value (compound-elt binding 1)))
+    #`(let ((old-value (dynamic ,name)))
+        (setq (dynamic ,name) ,value)
+        (unwind-protect (progn ,@body)
+          (setq (dynamic ,name) old-value)))))
 
 ;;;; Object system
 
@@ -207,16 +236,6 @@
         (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
 
-(defgeneric show (object))
-
-(eval-when-compile
-  (defun show-unreadable (class-name &optional (more ""))
-    (string-concat "#(" (symbol-name class-name) more ")")))
-
-(defmacro define-stupid-show (class-name)
-  #`(defmethod show ((a ,class-name))
-      ,(string-to-form (show-unreadable class-name))))
-
 ;;;; Fixup class hierarchy
 
 (set-superclass (class big-integer) (class integer))
@@ -244,23 +263,17 @@
 (defmethod = ((a object) (b object))
   (eq a b))
 
-;;;; Numbers
-
-(defmacro define-jsnums-binop (name jsnums-name)
-  #`(progn
-      (defgeneric ,name (a b))
-      (defmethod ,name ((a number) (b number))
-        #{ jsnums.~(native-snippet ,jsnums-name)(~a, ~b) #})))
-
-(define-jsnums-binop = "equals")
-(define-jsnums-binop > "greaterThan")
-(define-jsnums-binop < "lessThan")
-(define-jsnums-binop / "divide")
-(define-jsnums-binop * "multiply")
-(define-jsnums-binop + "add")
-(define-jsnums-binop - "subtract")
-
 ;;;; Printing
+
+(defgeneric show (object))
+
+(eval-when-compile
+  (defun show-unreadable (class-name &optional (more ""))
+    (string-concat "#(" (symbol-name class-name) more ")")))
+
+(defmacro define-stupid-show (class-name)
+  #`(defmethod show ((a ,class-name))
+      ,(string-to-form (show-unreadable class-name))))
 
 (defmethod show ((a object))
   #{ JSON.stringify(~a) #})
@@ -283,28 +296,21 @@
 (define-stupid-show string-form)
 (define-stupid-show symbol-form)
 
-;;;; Dynamic variables
+;;;; Numbers
 
-(defmacro dynamic (name)
-  #`(identifier ,name dynamic))
+(defmacro define-jsnums-binop (name jsnums-name)
+  #`(progn
+      (defgeneric ,name (a b))
+      (defmethod ,name ((a number) (b number))
+        #{ jsnums.~(native-snippet ,jsnums-name)(~a, ~b) #})))
 
-(defmacro defdynamic (name &optional (value #'nil))
-  #`(defvar (dynamic ,name) ,value))
-
-(defmacro dynamic-bind (bindings &rest body)
-  (if (compound-empty? bindings)
-      #`(progn ,@body)
-      #`(dynamic-bind-1 ,(compound-elt bindings 0)
-          (dynamic-bind ,(compound-slice bindings 1)
-             ,@body))))
-
-(defmacro dynamic-bind-1 (binding &rest body)
-  (let ((name (compound-elt binding 0))
-        (value (compound-elt binding 1)))
-    #`(let ((old-value (dynamic ,name)))
-        (setq (dynamic ,name) ,value)
-        (unwind-protect (progn ,@body)
-          (setq (dynamic ,name) old-value)))))
+(define-jsnums-binop = "equals")
+(define-jsnums-binop > "greaterThan")
+(define-jsnums-binop < "lessThan")
+(define-jsnums-binop / "divide")
+(define-jsnums-binop * "multiply")
+(define-jsnums-binop + "add")
+(define-jsnums-binop - "subtract")
 
 ;;;; Condition system
 
