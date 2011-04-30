@@ -211,7 +211,7 @@
 
 (eval-when-compile
   (defun show-unreadable (class-name &optional (more ""))
-    (string-concat "#(" (string-concat (string-concat (symbol-name class-name) more) ")")))) ; hack
+    (string-concat "#(" (symbol-name class-name) more ")")))
 
 (defmacro define-stupid-show (class-name)
   #`(defmethod show ((a ,class-name))
@@ -318,7 +318,8 @@
 ;; simple-error is defined in JS
 (set-superclass (class simple-error) (class error))
 (defmethod show ((s simple-error))
-  (show-unreadable #'simple-error (string-concat (simple-error-message s) (simple-error-arg s))))
+  (show-unreadable #'simple-error
+                   (string-concat (simple-error-message s) (simple-error-arg s))))
 
 (defclass control-error (error))
 

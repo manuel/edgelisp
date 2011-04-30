@@ -744,9 +744,12 @@ function lisp_bif_list_add(_key_, list, elt)
     return list;
 }
 
-function lisp_bif_string_concat(_key_, s1, s2)
+function lisp_bif_string_concat(_key_)
 {
-    return s1.concat(s2);
+    var s = "";
+    for (var i = 1; i < arguments.length; i++)
+        s = s.concat(arguments[i]);
+    return s;
 }
 
 function lisp_bif_string_to_form(_key_, string)
