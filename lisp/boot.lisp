@@ -444,7 +444,13 @@
 
 ;;;; Debugger
 
+(defun compute-restarts ((c condition))
+  (list 5 6 7))
+
 (defun invoke-debugger ((c condition))
+  (each (lambda (restart)
+          (print (string-concat restart)))
+        (compute-restarts c))
   (native-body #{ throw ~c #}))
 
 (defparameter $original-no-applicable-method $no-applicable-method)
@@ -586,6 +592,9 @@ can be used to supply a different collection to hold the results."
 
 (defmethod iter ((max number))
   (number-iter max))
+
+(defmethod iter ((ni number-iter))
+  ni)
 
 (defmethod has-next ((iter number-iter))
   (< (.i iter) (.max iter)))
