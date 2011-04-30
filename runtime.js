@@ -24,6 +24,10 @@
    Lisp code that does use `eval' will always need to include the
    compiler too. */
 
+function Lisp_object()
+{
+}
+
 /*** Literal ***/
 
 function Lisp_literal()
@@ -647,12 +651,10 @@ function lisp_bif_set_class_name(_key_, klass, name)
 
 function lisp_type_of(obj)
 {
-    if (obj === undefined)
-        return lisp_error("this can never happen");
     if (obj === null)
         return Lisp_nil.prototype;
     else
-        return obj.__proto__;
+        return obj.constructor.prototype;
 }
 
 function lisp_bif_type_of(_key_, obj) 
