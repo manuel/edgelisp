@@ -647,6 +647,8 @@ function lisp_bif_set_class_name(_key_, klass, name)
 
 function lisp_type_of(obj)
 {
+    if (obj === undefined)
+        return lisp_error("this can never happen");
     if (obj === null)
         return Lisp_nil.prototype;
     else
