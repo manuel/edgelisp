@@ -203,6 +203,8 @@
   (let ((superclass (if (compound-empty? supers) #f (compound-elt supers 0))))
     #`(progn
         (defvar (class ,class-name) (make-class))
+        (%set-class-name (class ,class-name)
+                        ,(string-to-form (symbol-name class-name)))
         ,(if superclass 
              #`(set-superclass (class ,class-name) (class ,superclass))
              #`(set-superclass (class ,class-name) (class object)))
@@ -237,24 +239,29 @@
 
 ;;;; Fixup class hierarchy
 
-(set-superclass (class big-integer) (class integer))
-(set-superclass (class boolean) (class object))
-(set-superclass (class class) (class object))
-(set-superclass (class compound-form) (class form))
-(set-superclass (class form) (class object))
-(set-superclass (class function) (class object))
-(set-superclass (class integer) (class rational))
-(set-superclass (class list) (class object))
-(set-superclass (class nil) (class object))
-(set-superclass (class number) (class object))
-(set-superclass (class number-form) (class form))
-(set-superclass (class rational) (class real))
-(set-superclass (class real) (class number))
-(set-superclass (class small-integer) (class integer))
-(set-superclass (class string) (class object))
-(set-superclass (class string-dict) (class object))
-(set-superclass (class string-form) (class form))
-(set-superclass (class symbol-form) (class form))
+(defclass class (object))
+(defclass big-integer (integer))
+(defclass boolean (object))
+(defclass compound-form (form))
+(defclass form (object))
+(defclass function (object))
+(defclass integer (rational))
+(defclass list (object))
+(defclass nil (object))
+(defclass number (object))
+(defclass number-form (form))
+(defclass rational (real))
+(defclass real (number))
+(defclass small-integer (integer))
+(defclass string (object))
+(defclass string-dict (object))
+(defclass string-form (form))
+(defclass symbol-form (form))
+
+;;;; Import built-in functions
+
+(defun class-name ((c class)) (%class-name))
+(defun set-class-name ((c class) (s string)) (%set-class-name c s))
 
 ;;;; Equality
 
@@ -268,15 +275,21 @@
 (defgeneric show (object))
 
 (defmethod show ((a object))
+  (string-concat "#[" (show-object a) "]"))
+
+
+(defgeneric show-object (object))
+
+(defmethod show-object ((a object))
   #{ JSON.stringify(~a) #})
 
-(defmethod show ((a nil))
+(defmethod show-object ((a nil))
   "nil")
 
-(defmethod show ((a boolean))
+(defmethod show-object ((a boolean))
   (if a "#t" "#f"))
 
-(defmethod show ((a number))
+(defmethod show-object ((a number))
   #{ (~a).toString() #})
 
 ;;;; Numbers
@@ -304,9 +317,8 @@
 (defclass restart (condition)
   (.associated-condition))
 
-;; simple-error is defined in JS
-(set-superclass (class simple-error) (class error))
-(defmethod show ((s simple-error))
+(defclass simple-error (error))
+(defmethod show-object ((s simple-error))
   (string-concat (simple-error-message s) (simple-error-arg s)))
 
 (defclass control-error (error))

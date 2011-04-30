@@ -600,6 +600,16 @@ function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 
 /*** Classes ***/
 
+function lisp_bif_class_name(_key_, klass)
+{
+    return klass.lisp_name ? klass.lisp_name : "anonymous class";
+}
+
+function lisp_bif_set_class_name(_key_, klass, name)
+{
+    klass.lisp_name = name;
+}
+
 function lisp_type_of(obj)
 {
     if (obj === null)
@@ -882,6 +892,7 @@ lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-with-catch-tag", "lisp_bif_call_with_catch_tag");
 lisp_set_function("call-forever", "lisp_bif_call_forever");
+lisp_set_function("%class-name", "lisp_bif_class_name");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-add", "lisp_bif_compound_add");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
@@ -910,6 +921,7 @@ lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
+lisp_set_function("%set-class-name", "lisp_bif_set_class_name");
 lisp_set_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("simple-error-message", "lisp_bif_simple_error_message");
