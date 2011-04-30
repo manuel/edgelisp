@@ -292,6 +292,9 @@
 (defmethod show-object ((a number))
   #{ (~a).toString() #})
 
+(defmethod show-object ((a form))
+  #{ (~a).toString() #})
+
 ;;;; Numbers
 
 (defmacro define-jsnums-binop (name jsnums-name)
@@ -319,7 +322,7 @@
 
 (defclass simple-error (error))
 (defmethod show-object ((s simple-error))
-  (string-concat (simple-error-message s) (simple-error-arg s)))
+  (string-concat (simple-error-message s) ": " (simple-error-arg s)))
 
 (defclass control-error (error))
 
@@ -438,7 +441,7 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (print (string-concat "Debugger:" (show c)))
+  (print (string-concat "Condition: " (show c)))
   (throw c))
 
 ;;;; Streams
