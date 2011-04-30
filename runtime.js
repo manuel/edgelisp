@@ -208,6 +208,10 @@ function lisp_lists_equal(list1, list2)
     return true;
 }
 
+function Lisp_error()
+{
+}
+
 function Lisp_simple_error(message, arg)
 {
     this.message = message;
@@ -918,6 +922,7 @@ lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_set_class("boolean", "Boolean.prototype");
 lisp_set_class("class", "Lisp_class.prototype");
 lisp_set_class("compound-form", "Lisp_compound_form.prototype");
+lisp_set_class("error", "Error.prototype");
 lisp_set_class("form", "Lisp_form.prototype");
 lisp_set_class("function", "Function.prototype");
 lisp_set_class("generic", "Lisp_generic.prototype");
