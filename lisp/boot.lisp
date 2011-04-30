@@ -209,7 +209,6 @@
         ,@(compound-map (lambda (slot)
                           #`(defslot ,slot ,class-name))
                         slots)
-        (define-stupid-show ,class-name)
         (class ,class-name))))
 
 (defmacro defgeneric (name &rest args)
@@ -268,14 +267,6 @@
 
 (defgeneric show (object))
 
-(eval-when-compile
-  (defun show-unreadable (class-name &optional (more ""))
-    (string-concat "#(" (symbol-name class-name) more ")")))
-
-(defmacro define-stupid-show (class-name)
-  #`(defmethod show ((a ,class-name))
-      ,(string-to-form (show-unreadable class-name))))
-
 (defmethod show ((a object))
   #{ JSON.stringify(~a) #})
 
@@ -287,15 +278,6 @@
 
 (defmethod show ((a number))
   #{ (~a).toString() #})
-
-(define-stupid-show compound-form)
-(define-stupid-show class)
-(define-stupid-show function)
-(define-stupid-show list)
-(define-stupid-show number-form)
-(define-stupid-show string-dict)
-(define-stupid-show string-form)
-(define-stupid-show symbol-form)
 
 ;;;; Numbers
 
@@ -325,8 +307,7 @@
 ;; simple-error is defined in JS
 (set-superclass (class simple-error) (class error))
 (defmethod show ((s simple-error))
-  (show-unreadable #'simple-error
-                   (string-concat (simple-error-message s) (simple-error-arg s))))
+  (string-concat (simple-error-message s) (simple-error-arg s)))
 
 (defclass control-error (error))
 
