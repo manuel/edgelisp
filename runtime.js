@@ -426,7 +426,7 @@ function Lisp_string_dict()
    mangled, or that the dictionary is empty. */
 function lisp_fast_string_dict(js_dict)
 {
-    js_dict.__proto__ = Lisp_string_dict.prototype;
+    js_dict.constructor.prototype = Lisp_string_dict.prototype;
     return js_dict;
 }
 
@@ -712,6 +712,16 @@ function lisp_bif_set_superclass(_key_, clsA, clsB)
     return lisp_set_superclass(clsA, clsB);
 }
 
+function lisp_bif_superclass(_key_, clsA)
+{
+    return lisp_superclass(clsA);
+}
+
+function lisp_superclass(clsA)
+{
+    return clsA.lisp_superclass ? clsA.lisp_superclass : lisp_error("no superclass", clsA);
+}
+
 function lisp_set_superclass(clsA, clsB)
 {
     clsA.lisp_superclass = clsB;
@@ -720,8 +730,8 @@ function lisp_set_superclass(clsA, clsB)
 
 function lisp_bif_make_instance(_key_, cls)
 {
-    var obj = {};
-    obj.__proto__ = cls;
+    var obj = new Object();
+    obj.constructor.prototype = cls;
     return obj;
 }
 
@@ -921,8 +931,9 @@ function lisp_mangle_method(name)
     return lisp_mangle(name, "method");
 }
 
-
 /*** Export to Lisp ***/
+
+Object.prototype.lisp_name = "object";
 
 lisp_set("#t", "true");
 lisp_set("#f", "false");
@@ -999,6 +1010,7 @@ lisp_set_function("string-dict-put", "lisp_bif_string_dict_put");
 lisp_set_function("string-to-form", "lisp_bif_string_to_form");
 lisp_set_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_set_function("subtype?", "lisp_bif_subtypep");
+lisp_set_function("superclass", "lisp_bif_superclass");
 lisp_set_function("symbol-name", "lisp_bif_symbol_name");
 lisp_set_function("symbol?", "lisp_bif_symbolp");
 lisp_set_function("throw", "lisp_bif_throw");
