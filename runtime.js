@@ -57,6 +57,10 @@ function lisp_bif_fast_apply(_key_, fun, _arguments)
 
 /*** Forms ***/
 
+function Lisp_form()
+{
+}
+
 function Lisp_number_form(sign, integral_digits, fractional_digits)
 {
     this.formt = "number";
@@ -852,6 +856,7 @@ lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_set_class("boolean", "Boolean.prototype");
 lisp_set_class("class", "Lisp_class.prototype");
 lisp_set_class("compound-form", "Lisp_compound_form.prototype");
+lisp_set_class("form", "Lisp_form.prototype");
 lisp_set_class("function", "Function.prototype");
 lisp_set_class("list", "Array.prototype");
 lisp_set_class("nil", "lisp_nil_class");
