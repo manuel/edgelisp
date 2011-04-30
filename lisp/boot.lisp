@@ -245,6 +245,7 @@
 (defclass compound-form (form))
 (defclass form (object))
 (defclass function (object))
+(defclass generic (object))
 (defclass integer (rational))
 (defclass list (object))
 (defclass nil (object))
@@ -275,7 +276,7 @@
 (defgeneric show (object))
 
 (defmethod show ((a object))
-  (string-concat "#[" (show-object a) "]"))
+  (string-concat "#[" (%class-name (type-of a)) " " (show-object a) "]"))
 
 
 (defgeneric show-object (object))
@@ -293,6 +294,9 @@
   #{ (~a).toString() #})
 
 (defmethod show-object ((a form))
+  #{ (~a).toString() #})
+
+(defmethod show-object ((a function))
   #{ (~a).toString() #})
 
 ;;;; Numbers

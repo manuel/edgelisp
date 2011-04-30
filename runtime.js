@@ -24,14 +24,6 @@
    Lisp code that does use `eval' will always need to include the
    compiler too. */
 
-/*** Object ***/
-
-function Lisp_object()
-{
-}
-
-Lisp_object.prototype.lisp_name = "Lisp object";
-
 /*** Nil ***/
 
 function Lisp_nil()
@@ -171,7 +163,7 @@ function lisp_rest_param(_arguments, max) {
 function lisp_check_type(obj, type)
 {
     if (!lisp_subtypep(lisp_type_of(obj), type))
-        return lisp_error("Type error", obj);
+        return lisp_error("Type error", [obj, lisp_show(type)]);
 }
 
 function lisp_show(obj)
@@ -920,12 +912,13 @@ lisp_set_class("class", "Lisp_class.prototype");
 lisp_set_class("compound-form", "Lisp_compound_form.prototype");
 lisp_set_class("form", "Lisp_form.prototype");
 lisp_set_class("function", "Function.prototype");
+lisp_set_class("generic", "Lisp_generic.prototype");
 lisp_set_class("list", "Array.prototype");
 lisp_set_class("nil", "Lisp_nil.prototype");
 lisp_set_class("number-form", "Lisp_number_form.prototype");
 lisp_set_class("number", "Lisp_number.prototype");
 lisp_set_class("integer", "Lisp_integer.prototype");
-lisp_set_class("object", "Lisp_object.prototype");
+lisp_set_class("object", "Object.prototype");
 lisp_set_class("rational", "jsnums.Rational.prototype");
 lisp_set_class("real", "jsnums.FloatPoint.prototype");
 lisp_set_class("small-integer", "Number.prototype");
