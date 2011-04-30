@@ -445,8 +445,7 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (print (string-concat "Condition: " (show c)))
-  (throw c))
+  (native-body #{ throw ~c #}))
 
 (defparameter $original-no-applicable-method $no-applicable-method)
 (defun no-applicable-method (generic arguments)

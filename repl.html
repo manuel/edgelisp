@@ -10,9 +10,9 @@ a:hover { text-decoration: underline; }
                font-weight: bold; }
 .lisp-version { color: gray; font-size: x-small; }
 .lisp-repl-input { font-weight: bold; }
-.lisp-repl-error { color: orange; font-weight: bold; }
+.lisp-repl-error { color: red; }
 .lisp-repl-log { font-style: italic; }
-.lisp-repl-output { }
+.lisp-repl-output { color: blue; }
 </style>
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
@@ -31,9 +31,14 @@ function lisp_repl_input(input)
     lisp_repl_insert(input, "lisp-repl-input");
 }
 
+function lisp_repl_output(input)
+{
+    lisp_repl_insert(lisp_show(input), "lisp-repl-output");
+}
+
 function lisp_repl_error(msg)
 {
-    lisp_repl_insert(JSON.stringify(msg), "lisp-repl-error");
+    lisp_repl_insert(lisp_show(msg), "lisp-repl-error");
 }
 
 function lisp_repl_log(input, url)
@@ -66,19 +71,19 @@ function lisp_repl_prepare(string)
 function lisp_repl()
 {
     var input = document.getElementById("input").value
-//    try {
-      lisp_print(lisp_eval(lisp_repl_prepare(input)));
-    lisp_repl_input(input);
+    try {
+      lisp_repl_input(input);
+      lisp_repl_output(lisp_eval(lisp_repl_prepare(input)));
       document.getElementById("input").value = "";
-//    } catch(error) {
-//      lisp_repl_error(error);
-//    }
+    } catch(error) {
+      lisp_repl_error(error);
+    }
     window.scrollTo(0, document.body.scrollHeight);
 }
 
 function lisp_load_file(path)
 {
-//    try {
+    try {
       lisp_repl_log("Loading " + path, path);
       var req = new XMLHttpRequest();
       req.open("GET", path, false);
@@ -88,9 +93,9 @@ function lisp_load_file(path)
       } else {
         lisp_error("XHR error", req.status);
       }
-//    } catch(error) {
-//      lisp_repl_error(error);
-//    }
+    } catch(error) {
+      lisp_repl_error(error);
+    }
 }
 
 function lisp_repl_onload()
