@@ -447,15 +447,8 @@
 
 ;;;; Debugger
 
-(defun compute-restarts ((c condition))
-  (list 2 2))
-
 (defun invoke-debugger ((c condition))
-  (each (lambda (restart i)
-          (print (string-concat restart i)))
-        (compute-restarts c)
-        12)
-  (throw "debugger" c))
+  (native-body #{ throw ~c #}))
 
 (defparameter $original-no-applicable-method $no-applicable-method)
 (defun no-applicable-method (generic arguments)
