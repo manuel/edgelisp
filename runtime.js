@@ -627,6 +627,9 @@ function lisp_bif_type_of(_key_, obj)
    either equal to type2, or a subtype of type2. */
 function lisp_subtypep(type1, type2)
 {
+    if ((!type1) || (!type2))
+        lisp_error("subtype?", [type1, type2]);
+
     if (type1 === type2) 
         return true;
 
