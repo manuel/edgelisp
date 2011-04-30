@@ -709,7 +709,13 @@ function lisp_bif_make_class(_key_)
 
 function lisp_bif_set_superclass(_key_, clsA, clsB)
 {
+    return lisp_set_superclass(clsA, clsB);
+}
+
+function lisp_set_superclass(clsA, clsB)
+{
     clsA.lisp_superclass = clsB;
+    return null;
 }
 
 function lisp_bif_make_instance(_key_, cls)
