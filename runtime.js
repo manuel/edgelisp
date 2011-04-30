@@ -603,7 +603,7 @@ function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 function lisp_type_of(obj)
 {
     if (obj === null)
-        return lisp_nil_class;
+        return Lisp_nil.prototype;
     else
         return obj.__proto__;
 }
