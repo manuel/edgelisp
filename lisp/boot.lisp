@@ -239,26 +239,31 @@
 
 ;;;; Fixup class hierarchy
 
-(defclass big-integer (integer))
-(defclass boolean (literal))
-(defclass class (object))
-(defclass compound-form (form))
-(defclass form (object))
-(defclass function (object))
-(defclass generic (object))
-(defclass integer (rational))
-(defclass list (object))
-(defclass literal (object))
-(defclass nil (literal))
-(defclass number (literal))
-(defclass number-form (form))
-(defclass rational (real))
-(defclass real (number))
-(defclass small-integer (integer))
-(defclass string (literal))
-(defclass string-dict (object))
-(defclass string-form (form))
-(defclass symbol-form (form))
+(defmacro define-builtin-class (name superclass)
+  #`(progn
+      (set-superclass (class ,name) (class ,superclass))
+      (%set-class-name (class ,name) ,(string-to-form (symbol-name name)))))
+
+(define-builtin-class big-integer integer)
+(define-builtin-class boolean literal)
+(define-builtin-class class object)
+(define-builtin-class compound-form form)
+(define-builtin-class form object)
+(define-builtin-class function object)
+(define-builtin-class generic object)
+(define-builtin-class integer rational)
+(define-builtin-class list object)
+(define-builtin-class literal object)
+(define-builtin-class nil literal)
+(define-builtin-class number literal)
+(define-builtin-class number-form form)
+(define-builtin-class rational real)
+(define-builtin-class real number)
+(define-builtin-class small-integer integer)
+(define-builtin-class string literal)
+(define-builtin-class string-dict object)
+(define-builtin-class string-form form)
+(define-builtin-class symbol-form form)
 
 ;;;; Import built-in functions
 
@@ -279,8 +284,8 @@
 (defmethod show ((a object))
   (string-concat "#[" (%class-name (type-of a)) " " (show-object a) "]"))
 
-(defmethod show ((a literal))
-  (show-object a))
+;;(defmethod show ((a literal))
+;;  (show-object a))
 
 (defgeneric show-object (object))
 
