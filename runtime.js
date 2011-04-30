@@ -24,11 +24,21 @@
    Lisp code that does use `eval' will always need to include the
    compiler too. */
 
+/*** Object ***/
+
+function Lisp_object()
+{
+}
+
+Lisp_object.prototype.lisp_name = "Lisp object";
+
 /*** Nil ***/
 
 function Lisp_nil()
 {
 }
+
+Lisp_nil.prototype.lisp_name = "Lisp nil";
 
 /*** Strings ***/
 
@@ -36,6 +46,8 @@ function Lisp_string(s)
 {
     this.s = s;
 }
+
+Lisp_string.prototype.lisp_name = "Lisp string";
 
 /*** Numbers ***/
 
@@ -48,9 +60,13 @@ function Lisp_number()
 {
 }
 
+Lisp_number.prototype.lisp_name = "Lisp number";
+
 function Lisp_integer()
 {
 }
+
+Lisp_integer.prototype.lisp_name = "Lisp integer";
 
 /*** Functions ***/
 
@@ -459,9 +475,15 @@ function lisp_bif_call_forever(_key_, body_fun)
 
 /*** Multiple Dispatch ***/
 
-function Lisp_generic()
+function Lisp_generic(name)
 {
     this.method_entries = [];
+    this.name = name;
+}
+
+function lisp_generic_name(generic)
+{
+    return generic.name ? generic.name : "anonymous generic";
 }
 
 function Lisp_method_entry(method, specializers)
@@ -470,9 +492,9 @@ function Lisp_method_entry(method, specializers)
     this.specializers = specializers;
 }
 
-function lisp_bif_make_generic(_key_)
+function lisp_bif_make_generic(_key_, name)
 {
-    return new Lisp_generic();
+    return new Lisp_generic(name);
 }
 
 function lisp_make_method_entry(method, specializers)
@@ -589,12 +611,12 @@ function lisp_classes_comparable(class1, class2)
 
 function lisp_no_applicable_method(generic, arguments)
 {
-    return lisp_error("No applicable method", generic);
+    return lisp_error("No applicable method", lisp_generic_name(generic));
 }
 
 function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 {
-    return lisp_error("No most specific method", generic);
+    return lisp_error("No most specific method", lisp_generic_name(generic));
 }
 
 
@@ -623,12 +645,24 @@ function lisp_bif_type_of(_key_, obj)
     return lisp_type_of(obj);
 }
 
+function lisp_show_type_sensibly(type)
+{
+    if (type === null) {
+        return "#![null-type (error)]";
+    } else if (type.lisp_name) {
+        return "#![" + type.lisp_name + "]";
+    } else {
+        return JSON.stringify(type);
+    }
+}
+
 /* Returns true iff type1 is a general subtype of type2, meaning
    either equal to type2, or a subtype of type2. */
 function lisp_subtypep(type1, type2)
 {
     if ((!type1) || (!type2))
-        lisp_error("subtype?", [type1, type2]);
+        lisp_error("subtype?", [lisp_show_type_sensibly(type1),
+                                lisp_show_type_sensibly(type2)]);
 
     if (type1 === type2) 
         return true;
@@ -648,6 +682,8 @@ function lisp_bif_subtypep(_key_, type1, type2)
 function Lisp_class()
 {
 }
+
+Lisp_class.prototype.lisp_name = "Lisp class";
 
 function lisp_bif_make_class(_key_)
 {
@@ -880,7 +916,7 @@ lisp_set_class("nil", "Lisp_nil.prototype");
 lisp_set_class("number-form", "Lisp_number_form.prototype");
 lisp_set_class("number", "Lisp_number.prototype");
 lisp_set_class("integer", "Lisp_integer.prototype");
-lisp_set_class("object", "Object.prototype");
+lisp_set_class("object", "Lisp_object.prototype");
 lisp_set_class("rational", "jsnums.Rational.prototype");
 lisp_set_class("real", "jsnums.FloatPoint.prototype");
 lisp_set_class("small-integer", "Number.prototype");

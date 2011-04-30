@@ -215,7 +215,7 @@
 
 (defmacro defgeneric (name &rest args)
   #`(progn
-      (defvar (generic ,name) (make-generic))
+      (defvar (generic ,name) (make-generic ,(string-to-form (symbol-name name))))
       (defun ,name (&fast fast-arguments)
         (let ((method (find-method (generic ,name) fast-arguments)))
           (fast-apply method fast-arguments)))))
@@ -239,9 +239,9 @@
 
 ;;;; Fixup class hierarchy
 
-(defclass class (object))
 (defclass big-integer (integer))
 (defclass boolean (object))
+(defclass class (object))
 (defclass compound-form (form))
 (defclass form (object))
 (defclass function (object))
@@ -260,7 +260,7 @@
 
 ;;;; Import built-in functions
 
-(defun class-name ((c class)) (%class-name))
+(defun class-name ((c class)) (%class-name c))
 (defun set-class-name ((c class) (s string)) (%set-class-name c s))
 
 ;;;; Equality
@@ -438,7 +438,8 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (print (string-concat "Debugger:" (show c))))
+  (print (string-concat "Debugger:" (show c)))
+  (throw c))
 
 ;;;; Streams
 
