@@ -111,7 +111,7 @@ function lisp_repl_onload()
 //    lisp_load_file("lisp/web-repl.lisp");
     if(location.hash) {
         var code = location.hash.slice(1);
-        lisp_repl_log("Executing from URL: ");
+        lisp_repl_log("Evaluating URL fragment:");
         lisp_repl_eval(code);
     }
     window.scrollTo(0, document.body.scrollHeight);

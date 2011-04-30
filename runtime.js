@@ -24,6 +24,14 @@
    Lisp code that does use `eval' will always need to include the
    compiler too. */
 
+/*** Literal ***/
+
+function Lisp_literal()
+{
+}
+
+Lisp_literal.prototype.lisp_name = "Lisp literal";
+
 /*** Nil ***/
 
 function Lisp_nil()
@@ -914,6 +922,7 @@ lisp_set_class("form", "Lisp_form.prototype");
 lisp_set_class("function", "Function.prototype");
 lisp_set_class("generic", "Lisp_generic.prototype");
 lisp_set_class("list", "Array.prototype");
+lisp_set_class("literal", "Lisp_literal.prototype");
 lisp_set_class("nil", "Lisp_nil.prototype");
 lisp_set_class("number-form", "Lisp_number_form.prototype");
 lisp_set_class("number", "Lisp_number.prototype");

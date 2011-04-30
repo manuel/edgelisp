@@ -240,7 +240,7 @@
 ;;;; Fixup class hierarchy
 
 (defclass big-integer (integer))
-(defclass boolean (object))
+(defclass boolean (literal))
 (defclass class (object))
 (defclass compound-form (form))
 (defclass form (object))
@@ -248,13 +248,14 @@
 (defclass generic (object))
 (defclass integer (rational))
 (defclass list (object))
-(defclass nil (object))
-(defclass number (object))
+(defclass literal (object))
+(defclass nil (literal))
+(defclass number (literal))
 (defclass number-form (form))
 (defclass rational (real))
 (defclass real (number))
 (defclass small-integer (integer))
-(defclass string (object))
+(defclass string (literal))
 (defclass string-dict (object))
 (defclass string-form (form))
 (defclass symbol-form (form))
@@ -278,6 +279,8 @@
 (defmethod show ((a object))
   (string-concat "#[" (%class-name (type-of a)) " " (show-object a) "]"))
 
+(defmethod show ((a literal))
+  (show-object a))
 
 (defgeneric show-object (object))
 
@@ -445,13 +448,10 @@
 ;;;; Debugger
 
 (defun compute-restarts ((c condition))
-  (list 5 6 7))
+  (list 2 2))
 
 (defun invoke-debugger ((c condition))
-  (each (lambda (restart)
-          (print (string-concat restart)))
-        (compute-restarts c))
-  (native-body #{ throw ~c #}))
+  (throw "debugger" c))
 
 (defparameter $original-no-applicable-method $no-applicable-method)
 (defun no-applicable-method (generic arguments)
@@ -512,7 +512,12 @@
 (defmethod add ((list list) elt)
   (list-add list elt))
 
-(defclass list-iter () 
+(defclass iter)
+
+(defmethod iter ((iter iter))
+  iter)
+
+(defclass list-iter (iter)
   (.list
    .i))
 
@@ -580,21 +585,18 @@ can be used to supply a different collection to hold the results."
           (each $next iters))))
   into)
 
-(defclass number-iter ()
+(defclass number-iter (iter)
   (.i
    .max))
 
-(defun number-iter (max)
+(defun make-number-iter (max)
   (let ((iter (make number-iter)))
     (setf (.i iter) 0)
     (setf (.max iter) max)
     iter))
 
 (defmethod iter ((max number))
-  (number-iter max))
-
-(defmethod iter ((ni number-iter))
-  ni)
+  (make-number-iter max))
 
 (defmethod has-next ((iter number-iter))
   (< (.i iter) (.max iter)))
