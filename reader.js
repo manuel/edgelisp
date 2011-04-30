@@ -156,7 +156,7 @@ function lisp_native_action(ast)
 
 var lisp_quote_syntax =
     action(sequence("#'", lisp_expression_syntax),
-           lisp_shortcut_syntax_action("%%quote"));
+           lisp_shortcut_syntax_action("%%quasiquote"));
 
 var lisp_quasiquote_syntax =
     action(sequence("#`", lisp_expression_syntax),

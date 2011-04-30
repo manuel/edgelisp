@@ -51,8 +51,8 @@
 (defmacro progn (&rest body)
   #`(%%progn ,@body))
 
-(defmacro setq (name namespace)
-  #`(%%setq ,name ,namespace))
+(defmacro setq (name value)
+  #`(%%setq ,name ,value))
 
 ;;;; Common stuff
 
@@ -77,13 +77,7 @@
                               (compound-elt b 1)) 
                             bindings)))
 
-(defmacro let* (bindings &rest forms)
-  (if (compound-empty? bindings)
-      #`(let () ,@forms)
-      #`(let (,(compound-elt bindings 0))
-          (let* ,(compound-slice bindings 1) ,@forms))))
-
-(defmacro letrec* (bindings &rest forms) ;; LETREC* actually
+(defmacro let* (bindings &rest forms) ;; Scheme's letrec*
   #`(let ,(compound-map (lambda (b)
                           #`(,(compound-elt b 0) #{ undefined #}))
                         bindings)
@@ -429,7 +423,7 @@
            (eq (.associated-condition r) (.associated-condition h)))))
 
 (defgeneric call-condition-handler (condition handler handler-frame))
-(handler-bind ((error (lambda (e) (return-from x 12)))) (signal (make error))))
+
 (defmethod call-condition-handler ((c condition) (h handler) (f handler-frame))
   (dynamic-bind ((handler-frame (.parent-frame f))) ; condition firewall
     (funcall (.handler-function h) c)))

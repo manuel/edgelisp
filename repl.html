@@ -52,7 +52,7 @@ function lisp_repl_insert(input, className, optionalUrl)
       element.appendChild(link);
       textElement = link;
     }
-    textElement.innerHTML = input;
+    textElement.innerHTML = input.toString();
     document.getElementById("output").appendChild(element);
 }
 
@@ -66,9 +66,9 @@ function lisp_repl_prepare(string)
 function lisp_repl()
 {
     var input = document.getElementById("input").value
-    lisp_repl_input(input);
 //    try {
       lisp_print(lisp_eval(lisp_repl_prepare(input)));
+    lisp_repl_input(input);
       document.getElementById("input").value = "";
 //    } catch(error) {
 //      lisp_repl_error(error);

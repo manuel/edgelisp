@@ -65,10 +65,18 @@ function Lisp_number_form(sign, integral_digits, fractional_digits)
     this.fractional_digits = fractional_digits;
 }
 
+Lisp_number_form.prototype.toString = function() {
+    return this.sign + this.integral_digits + this.fractional_digits;
+}
+
 function Lisp_string_form(s)
 {
     this.formt = "string";
     this.s = s;
+}
+
+Lisp_string_form.prototype.toString = function() {
+    return "\"" + this.s + "\"";
 }
 
 function Lisp_symbol_form(name)
@@ -77,10 +85,18 @@ function Lisp_symbol_form(name)
     this.name = name;
 }
 
+Lisp_symbol_form.prototype.toString = function() {
+    return this.name;
+}
+
 function Lisp_compound_form(elts)
 {
     this.formt = "compound";
     this.elts = elts;
+}
+
+Lisp_compound_form.prototype.toString = function() {
+    return "(" + this.elts.map(function(elt){return elt.toString();}).join(" ") + ")";
 }
 
 /* This whole comments-as-forms business is silly, but atm I don't

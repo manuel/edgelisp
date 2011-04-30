@@ -35,6 +35,7 @@ function lisp_eval(form)
 
 function lisp_compile(form)
 {
+    //    lisp_print("compiling " + form.toString());
     switch(form.formt) {
     case "number":
         return { vopt: "number",
@@ -308,8 +309,7 @@ function lisp_compile_special_setq(form)
    (%%quasiquote form) */
 function lisp_compile_special_quasiquote(form)
 {
-    var quasiquoted = lisp_assert_not_null(form.elts[1]);
-    return lisp_compile(lisp_qq(quasiquoted, 0));
+    return lisp_compile(lisp_qq(form));
 }
 
 /* (%%quote form) */
@@ -637,119 +637,94 @@ var lisp_keywords_dict = "_key_";
 
 /*** Quasiquotation ***/
 
-/* A quasiquote form is transformed into code that, when evaluated,
-   produces a form.  No, really.
+var lisp_qq_rules =
+    [
+     // Atoms
+     [["%%quasiquote", {"?": "symbol", "type":"symbol"}],
+      ["%%symbol-form", {"!":"symbol"}]],
+     [["%%quasiquote", {"?": "number", "type":"number"}],
+      ["%%number-form", {"!":"number"}]],
+     [["%%quasiquote", {"?": "string", "type":"string"}],
+      ["%%string-form", {"!":"string"}]],
+     // Lists
+     [["%%quasiquote", ["%%unquote", {"?":"expr"}]],
+      {"!":"expr"}],
+     [["%%quasiquote", [["%%unquote-splicing", {"?":"first"}], {"?*":"rest"}]],
+      ["append-compounds", {"!":"first"}, ["%%quasiquote", {"!":"rest"}]]],
+     [["%%quasiquote", [{"?":"first"}, {"?*":"rest"}]],
+      ["append-compounds", ["make-compound", ["%%quasiquote", {"!":"first"}]],
+       ["%%quasiquote", {"!":"rest"}]]],
+     [["%%quasiquote", []],
+      ["make-compound"]]
+     ];
 
-   Except for multi-argument unquotes, which are not supported, this
-   algorithm should produce the same results as the one in Appendix B
-   of Alan Bawden's paper "Quasiquotation in LISP", 1999. */
-
-function lisp_qq(form, depth)
+function lisp_qq(form)
 {
-    if (depth < 0) 
-        lisp_error("Negative quasiquotation nesting depth", x);
-
-    switch(form.formt) {
-    case "number":
-        return new Lisp_compound_form([ new Lisp_symbol_form("%%number-form"), form ]);
-    case "string":
-        return new Lisp_compound_form([ new Lisp_symbol_form("%%string-form"), form ]);
-    case "symbol":
-        return new Lisp_compound_form([ new Lisp_symbol_form("%%symbol-form"), form ]);
-    case "compound":
-        return lisp_qq_compound(form, depth);
-    }
-
-    lisp_error("Bad quasiquoted form", form);    
-}
-
-function lisp_qq_compound(form, depth)
-{
-    var op = form.elts[0];
-    if (op) {
-        if (is_unquote(op)) {
-            if (depth === 0) {
-                return form.elts[1];
-            } else {
-                return unquote(form.elts[1], depth - 1);
-            }
-        } else if (is_quasiquote(op)) {
-            return quasiquote(form.elts[1], depth + 1);
-        } else {
-            return qq_compound(form, depth);
+    if (!form) lisp_error("bad qq form");
+    for (var i = 0; i < lisp_qq_rules.length; i++) {
+        var rule = lisp_qq_rules[i];
+        var lhs = rule[0];
+        var rhs = rule[1];
+        var bindings = qq_match(lhs, form);
+        if (bindings !== false) {
+            return qq_rewrite(rhs, bindings);
         }
-    } else {
-        return make_compound([]);
+    }
+    lisp_print("@@");
+    throw "@@";
+
+    function qq_match(lhs, form)
+    {
+        var bindings = qq_match0(lhs, form);
+        //        lisp_print((bindings ? "MATCH: " : "no match: ") + JSON.stringify(lhs) + form.toString());
+        return bindings;
     }
 
-    function qq_compound(form, depth)
-    {
-        var compounds = [], compound_elts = [];
-        for (var i = 0, len = form.elts.length; i < len; i++) {
-            var sub = form.elts[i];
-            if ((sub.formt === "compound") && is_unquote_splicing(sub.elts[0])) {
-                compounds.push(make_compound(compound_elts));
-                compound_elts = [];
-                if (depth === 0) {
-                    compounds.push(sub.elts[1]);
-                } else {
-                    compounds.push(unquote_splicing(sub.elts[1], depth - 1));
+    function qq_match0(lhs, form) {
+        if (!form) lisp_error("bad match form");
+        var bindings = {};
+        if (typeof lhs === "string") {
+            if (form.formt !== "symbol") return false;
+            return (lhs === form.name) ? bindings : false;
+        } else if (lhs["?"]) {
+            if (lhs.type && !(lhs.type === form.formt)) return false;
+            bindings[lhs["?"]] = form;
+            return bindings;
+        } else if (lhs.length !== undefined) {
+            if (form.formt !== "compound") return false;
+            var hasRestVar = false;
+            for (var i = 0; i < lhs.length; i++) {
+                if (lhs[i]["?*"]) {
+                    bindings[lhs[i]["?*"]] = new Lisp_compound_form(form.elts.slice(i));
+                    hasRestVar = true;
+                    break;
                 }
-            } else {
-                compound_elts.push(lisp_qq(sub, depth));
+                if (i >= form.elts.length) return false;
+                var nested_bindings = qq_match(lhs[i], form.elts[i]);
+                if (!nested_bindings) { return false; }
+                for (var name in nested_bindings)
+                    if (nested_bindings.hasOwnProperty(name))
+                        bindings[name] = nested_bindings[name];
             }
+            if ((!hasRestVar) && (lhs.length !== form.elts.length)) return false;
+            return bindings;
+        } else {
+            return lisp_error("bad lhs", lhs);
         }
-        if (compound_elts.length > 0) 
-            compounds.push(make_compound(compound_elts));
-        return append_compounds(compounds);
     }
 
-    function is_quasiquote(op)
-    {
-        return op && (op.formt === "symbol") && (op.name === "%%quasiquote");
-    }
-
-    function is_unquote(op)
-    {
-        return op && (op.formt === "symbol") && (op.name === "%%unquote");
-    }
-
-    function is_unquote_splicing(op)
-    {
-        return op && (op.formt === "symbol") && (op.name === "%%unquote-splicing");
-    }
-
-    function quasiquote(x, depth)
-    {
-        return make_compound([symbol(new Lisp_symbol_form("%%quasiquote")),
-                              lisp_qq(x, depth)]);
-    }
-
-    function unquote(x, depth)
-    {
-        return make_compound([symbol(new Lisp_symbol_form("%%unquote")),
-                              lisp_qq(x, depth)]);
-    }
-
-    function unquote_splicing(x, depth)
-    {
-        return make_compound([symbol(new Lisp_symbol_form("%%unquote-splicing")),
-                              lisp_qq(x, depth)]);
-    }
-
-    function make_compound(elts)
-    {
-        return new Lisp_compound_form([new Lisp_symbol_form("make-compound")].concat(elts));
-    }
-
-    function append_compounds(elts)
-    {
-        return new Lisp_compound_form([new Lisp_symbol_form("append-compounds")].concat(elts));
-    }
-
-    function symbol(symbol)
-    {
-        return new Lisp_compound_form([new Lisp_symbol_form("%%symbol-form"), symbol]);
+    function qq_rewrite(rhs, bindings) {
+        if (typeof rhs === "string") {
+            return new Lisp_symbol_form(rhs);
+        } else if (rhs["!"]) {
+            return bindings[rhs["!"]];
+        } else if (rhs.length !== undefined) {
+            return new Lisp_compound_form(rhs.map(function(nested_rhs) {
+                        return qq_rewrite(nested_rhs, bindings); 
+                    }));
+        } else {
+            return lisp_error("bad rhs", lhs);
+        }
     }
 }
 
