@@ -611,14 +611,23 @@ function lisp_classes_comparable(class1, class2)
 
 function lisp_no_applicable_method(generic, arguments)
 {
+    return _lisp_function_no_applicable_method(null, generic, arguments);
+}
+
+function _lisp_function_no_applicable_method(_key_, generic, arguments)
+{
     return lisp_error("No applicable method", lisp_generic_name(generic));
 }
 
 function lisp_no_most_specific_method(generic, arguments, applicable_mes)
 {
-    return lisp_error("No most specific method", lisp_generic_name(generic));
+    return _lisp_function_no_most_specific_method(null, generic, arguments);
 }
 
+function _lisp_function_no_most_specific_method(_key_, generic, arguments)
+{
+    return lisp_error("No most specific method", lisp_generic_name(generic));
+}
 
 /*** Classes ***/
 

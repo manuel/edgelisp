@@ -444,6 +444,14 @@
   (print (string-concat "Condition: " (show c)))
   (throw c))
 
+(defparameter $original-no-applicable-method $no-applicable-method)
+(defun no-applicable-method (generic arguments)
+  (original-no-applicable-method generic arguments))
+
+(defparameter $original-no-most-specific-method $no-most-specific-method)
+(defun no-most-specific-method (generic arguments)
+  (original-no-most-specific-method generic arguments))
+
 ;;;; Streams
 
 
