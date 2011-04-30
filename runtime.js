@@ -24,6 +24,11 @@
    Lisp code that does use `eval' will always need to include the
    compiler too. */
 
+/*** Nil ***/
+
+function Lisp_nil()
+{
+}
 
 /*** Strings ***/
 
@@ -851,7 +856,6 @@ lisp_set("#t", "true");
 lisp_set("#f", "false");
 lisp_set("nil", "null");
 
-var lisp_nil_class = lisp_bif_make_class(null);
 lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_set_class("boolean", "Boolean.prototype");
 lisp_set_class("class", "Lisp_class.prototype");
@@ -859,7 +863,7 @@ lisp_set_class("compound-form", "Lisp_compound_form.prototype");
 lisp_set_class("form", "Lisp_form.prototype");
 lisp_set_class("function", "Function.prototype");
 lisp_set_class("list", "Array.prototype");
-lisp_set_class("nil", "lisp_nil_class");
+lisp_set_class("nil", "Lisp_nil.prototype");
 lisp_set_class("number-form", "Lisp_number_form.prototype");
 lisp_set_class("number", "Lisp_number.prototype");
 lisp_set_class("integer", "Lisp_integer.prototype");
