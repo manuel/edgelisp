@@ -17,12 +17,10 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
 
-/* Lisp runtime: this file should contain all functions needed to run
-   compiled Lisp code.  At the moment, it does have dependencies on
-   name mangling functions in `compiler.js', though.
+/* Lisp runtime: this file contains all types and functions needed to
+   run compiled Lisp code.
 
-   Lisp code that does use `eval' will always need to include the
-   compiler too. */
+   Lisp code that uses `eval' will need to include the compiler too. */
 
 function Lisp_object()
 {
