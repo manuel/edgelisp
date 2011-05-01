@@ -1007,6 +1007,10 @@ lisp_export_function("symbol?", "lisp_bif_symbolp");
 lisp_export_function("throw", "lisp_bif_throw");
 lisp_export_function("type-of", "lisp_bif_type_of");
 
+// Additional functions:
+// - signal
+// - no-applicable-method
+// - no-most-specific-method
 
 /*** Utilities ***/
 
