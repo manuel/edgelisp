@@ -445,19 +445,19 @@
 (defmethod call-condition-handler ((r restart) (h handler) (f handler-frame))
   (funcall (.handler-function h) r))
 
-(defparameter $error $signal)
-(defparameter $warn $signal)
+(defparameter \error \signal)
+(defparameter \warn \signal)
 
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
   (native-body #{ throw ~c #}))
 
-(defparameter $original-no-applicable-method $no-applicable-method)
+(defparameter \original-no-applicable-method \no-applicable-method)
 (defun no-applicable-method (generic arguments)
   (original-no-applicable-method generic arguments))
 
-(defparameter $original-no-most-specific-method $no-most-specific-method)
+(defparameter \original-no-most-specific-method \no-most-specific-method)
 (defun no-most-specific-method (generic arguments)
   (original-no-most-specific-method generic arguments))
 
@@ -562,10 +562,10 @@ collection determines how many times the function is called."
         (while (has-next iter)
           (funcall fun (now iter))
           (next iter)))
-      (let ((iters (map $iter colls)))
-        (while (every $has-next iters)
-          (apply fun (map $now iters))
-          (each $next iters)))))
+      (let ((iters (map \iter colls)))
+        (while (every \has-next iters)
+          (apply fun (map \now iters))
+          (each \next iters)))))
 
 (defun map ((fun function) &rest colls &key (into (list)))
   "Applies a function to the elements of one or more collections and
@@ -579,10 +579,10 @@ can be used to supply a different collection to hold the results."
         (while (has-next iter)
           (add into (funcall fun (now iter)))
           (next iter)))
-      (let ((iters (map $iter colls)))
-        (while (every $has-next iters)
-          (add into (apply fun (map $now iters)))
-          (each $next iters))))
+      (let ((iters (map \iter colls)))
+        (while (every \has-next iters)
+          (add into (apply fun (map \now iters)))
+          (each \next iters))))
   into)
 
 (defclass number-iter (iter)

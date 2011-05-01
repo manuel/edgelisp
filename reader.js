@@ -171,7 +171,7 @@ var lisp_unquote_splicing_syntax =
            lisp_shortcut_syntax_action("%%unquote-splicing"));
 
 var lisp_function_syntax =
-    action(sequence("$", lisp_symbol_syntax),
+    action(sequence("\\", lisp_symbol_syntax),
            lisp_shortcut_syntax_action("function"));
 
 function lisp_shortcut_syntax_action(name)
