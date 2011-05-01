@@ -637,6 +637,7 @@ var lisp_keywords_dict = "_key_";
 
 /*** Quasiquotation ***/
 
+// These rules are from the Fargo language.
 var lisp_qq_rules =
     [
      // Atoms
@@ -670,17 +671,9 @@ function lisp_qq(form)
             return qq_rewrite(rhs, bindings);
         }
     }
-    lisp_print("@@");
-    throw "@@";
+    return lisp_error("Quasiquote bug", form);
 
-    function qq_match(lhs, form)
-    {
-        var bindings = qq_match0(lhs, form);
-        //        lisp_print((bindings ? "MATCH: " : "no match: ") + JSON.stringify(lhs) + form.toString());
-        return bindings;
-    }
-
-    function qq_match0(lhs, form) {
+    function qq_match(lhs, form) {
         if (!form) lisp_error("bad match form");
         var bindings = {};
         if (typeof lhs === "string") {

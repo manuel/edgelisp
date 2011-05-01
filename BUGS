@@ -1,6 +1,8 @@
 * In the REPL the line "1 '" yields 1, and the erroneous "'" character
   is silently ignored.
 
+* Order of evaluation of function arguments is undefined.
+
 * QUOTE allows UNQUOTE.
 
-* Many more...
+* Probably many more...
