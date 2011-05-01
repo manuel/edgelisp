@@ -286,8 +286,8 @@
 (defmethod show ((a object))
   (string-concat "#[" (%class-name (type-of a)) " " (show-object a) "]"))
 
-;;(defmethod show ((a literal))
-;;  (show-object a))
+(defmethod show ((a literal))
+  (show-object a))
 
 (defgeneric show-object (object))
 
