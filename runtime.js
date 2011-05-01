@@ -414,7 +414,7 @@ function Lisp_string_dict()
    mangled, or that the dictionary is empty. */
 function lisp_fast_string_dict(js_dict)
 {
-    js_dict.constructor.prototype = Lisp_string_dict.prototype;
+    js_dict.__proto__ = Lisp_string_dict.prototype;
     return js_dict;
 }
 
@@ -644,7 +644,7 @@ function lisp_type_of(obj)
     else if (obj.hasOwnProperty("lisp_is_class"))
         return Lisp_class.prototype;
     else
-        return obj.constructor.prototype;
+        return obj.__proto__;
 }
 
 function lisp_bif_type_of(_key_, obj) 
@@ -724,7 +724,7 @@ function lisp_set_superclass(clsA, clsB)
 function lisp_bif_make_instance(_key_, cls)
 {
     var obj = new Object();
-    obj.constructor.prototype = cls;
+    obj.__proto__ = cls;
     return obj;
 }
 
