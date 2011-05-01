@@ -34,15 +34,11 @@ function Lisp_literal()
 {
 }
 
-Lisp_literal.prototype.lisp_name = "Lisp literal";
-
 /*** Nil ***/
 
 function Lisp_nil()
 {
 }
-
-Lisp_nil.prototype.lisp_name = "Lisp nil";
 
 /*** Strings ***/
 
@@ -50,8 +46,6 @@ function Lisp_string(s)
 {
     this.s = s;
 }
-
-Lisp_string.prototype.lisp_name = "Lisp string";
 
 /*** Numbers ***/
 
@@ -64,13 +58,9 @@ function Lisp_number()
 {
 }
 
-Lisp_number.prototype.lisp_name = "Lisp number";
-
 function Lisp_integer()
 {
 }
-
-Lisp_integer.prototype.lisp_name = "Lisp integer";
 
 /*** Functions ***/
 
@@ -653,6 +643,8 @@ function lisp_type_of(obj)
 {
     if (obj === null)
         return Lisp_nil.prototype;
+    else if (obj.hasOwnProperty("lisp_is_class"))
+        return Lisp_class.prototype;
     else
         return obj.constructor.prototype;
 }
@@ -698,9 +690,8 @@ function lisp_bif_subtypep(_key_, type1, type2)
 
 function Lisp_class()
 {
+    this.lisp_is_class = true;
 }
-
-Lisp_class.prototype.lisp_name = "Lisp class";
 
 function lisp_bif_make_class(_key_)
 {
@@ -933,42 +924,40 @@ function lisp_mangle_method(name)
 
 /*** Export to Lisp ***/
 
-Object.prototype.lisp_name = "object";
-
 lisp_set("#t", "true");
 lisp_set("#f", "false");
 lisp_set("nil", "null");
 
-lisp_set_class("big-integer", "jsnums.BigInteger.prototype")
-lisp_set_class("boolean", "Boolean.prototype");
-lisp_set_class("class", "Lisp_class.prototype");
-lisp_set_class("compound-form", "Lisp_compound_form.prototype");
-lisp_set_class("error", "Error.prototype");
-lisp_set_class("form", "Lisp_form.prototype");
-lisp_set_class("function", "Function.prototype");
-lisp_set_class("generic", "Lisp_generic.prototype");
-lisp_set_class("list", "Array.prototype");
-lisp_set_class("literal", "Lisp_literal.prototype");
-lisp_set_class("nil", "Lisp_nil.prototype");
-lisp_set_class("number-form", "Lisp_number_form.prototype");
-lisp_set_class("number", "Lisp_number.prototype");
-lisp_set_class("integer", "Lisp_integer.prototype");
-lisp_set_class("object", "Object.prototype");
-lisp_set_class("rational", "jsnums.Rational.prototype");
-lisp_set_class("real", "jsnums.FloatPoint.prototype");
-lisp_set_class("small-integer", "Number.prototype");
-lisp_set_class("simple-error", "Lisp_simple_error.prototype");
-lisp_set_class("string", "String.prototype");
-lisp_set_class("string-dict", "Lisp_string_dict.prototype");
-lisp_set_class("string-form", "Lisp_string_form.prototype");
-lisp_set_class("symbol-form", "Lisp_symbol_form.prototype");
+lisp_export_class("big-integer", "jsnums.BigInteger.prototype")
+lisp_export_class("boolean", "Boolean.prototype");
+lisp_export_class("class", "Lisp_class.prototype");
+lisp_export_class("compound-form", "Lisp_compound_form.prototype");
+lisp_export_class("error", "Error.prototype");
+lisp_export_class("form", "Lisp_form.prototype");
+lisp_export_class("function", "Function.prototype");
+lisp_export_class("generic", "Lisp_generic.prototype");
+lisp_export_class("list", "Array.prototype");
+lisp_export_class("literal", "Lisp_literal.prototype");
+lisp_export_class("nil", "Lisp_nil.prototype");
+lisp_export_class("number-form", "Lisp_number_form.prototype");
+lisp_export_class("number", "Lisp_number.prototype");
+lisp_export_class("integer", "Lisp_integer.prototype");
+lisp_export_class("object", "Object.prototype");
+lisp_export_class("rational", "jsnums.Rational.prototype");
+lisp_export_class("real", "jsnums.FloatPoint.prototype");
+lisp_export_class("small-integer", "Number.prototype");
+lisp_export_class("simple-error", "Lisp_simple_error.prototype");
+lisp_export_class("string", "String.prototype");
+lisp_export_class("string-dict", "Lisp_string_dict.prototype");
+lisp_export_class("string-form", "Lisp_string_form.prototype");
+lisp_export_class("symbol-form", "Lisp_symbol_form.prototype");
 
 lisp_set_function("append-compounds", "lisp_bif_append_compounds");
 lisp_set_function("apply", "lisp_bif_apply");
 lisp_set_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_set_function("call-with-catch-tag", "lisp_bif_call_with_catch_tag");
 lisp_set_function("call-forever", "lisp_bif_call_forever");
-lisp_set_function("%class-name", "lisp_bif_class_name");
+lisp_set_function("class-name", "lisp_bif_class_name");
 lisp_set_function("compound-apply", "lisp_bif_compound_apply");
 lisp_set_function("compound-add", "lisp_bif_compound_add");
 lisp_set_function("compound-elt", "lisp_bif_compound_elt");
@@ -997,7 +986,7 @@ lisp_set_function("make-instance", "lisp_bif_make_instance");
 lisp_set_function("params-specializers", "lisp_bif_params_specializers");
 lisp_set_function("print", "lisp_bif_print");
 lisp_set_function("put-method", "lisp_bif_put_method");
-lisp_set_function("%set-class-name", "lisp_bif_set_class_name");
+lisp_set_function("set-class-name", "lisp_bif_set_class_name");
 lisp_set_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_set_function("set-superclass", "lisp_bif_set_superclass");
 lisp_set_function("simple-error-message", "lisp_bif_simple_error_message");
@@ -1029,7 +1018,10 @@ function lisp_set_function(lisp_name, js_function)
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
 }
 
-function lisp_set_class(lisp_name, js_class)
+function lisp_export_class(lisp_name, js_class)
 {
-    eval(lisp_mangle_class(lisp_name) + " = " + js_class);
+    var class_name = lisp_mangle_class(lisp_name);
+    eval("(" + class_name + " = " + js_class + ", " +
+         class_name + ".lisp_name = \"" + lisp_name + "\", " + 
+         class_name + ".lisp_is_class = true)");
 }

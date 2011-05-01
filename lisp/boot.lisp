@@ -203,7 +203,7 @@
   (let ((superclass (if (compound-empty? supers) #f (compound-elt supers 0))))
     #`(progn
         (defvar (class ,class-name) (make-class))
-        (%set-class-name (class ,class-name)
+        (set-class-name (class ,class-name)
                         ,(string-to-form (symbol-name class-name)))
         ,(if superclass 
              #`(set-superclass (class ,class-name) (class ,superclass))
@@ -242,7 +242,7 @@
 (defmacro define-builtin-class (name superclass)
   #`(progn
       (set-superclass (class ,name) (class ,superclass))
-      (%set-class-name (class ,name) ,(string-to-form (symbol-name name)))))
+      (set-class-name (class ,name) ,(string-to-form (symbol-name name)))))
 
 (define-builtin-class big-integer integer)
 (define-builtin-class boolean literal)
@@ -267,11 +267,6 @@
 (define-builtin-class string-form form)
 (define-builtin-class symbol-form form)
 
-;;;; Import built-in functions
-
-(defun class-name ((c class)) (%class-name c))
-(defun set-class-name ((c class) (s string)) (%set-class-name c s))
-
 ;;;; Equality
 
 (defgeneric = (a b))
@@ -284,7 +279,7 @@
 (defgeneric show (object))
 
 (defmethod show ((a object))
-  (string-concat "#[" (%class-name (type-of a)) " " (show-object a) "]"))
+  (string-concat "#[" (class-name (type-of a)) " " (show-object a) "]"))
 
 (defmethod show ((a literal))
   (show-object a))
@@ -308,6 +303,9 @@
 
 (defmethod show-object ((a function))
   #{ (~a).toString() #})
+
+(defmethod show-object ((a class))
+  (class-name a))
 
 ;;;; Numbers
 
