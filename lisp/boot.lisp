@@ -240,9 +240,7 @@
 ;;;; Fixup class hierarchy
 
 (defmacro define-builtin-class (name superclass)
-  #`(progn
-      (set-superclass (class ,name) (class ,superclass))
-      (set-class-name (class ,name) ,(string-to-form (symbol-name name)))))
+  #`(set-superclass (class ,name) (class ,superclass)))
 
 (define-builtin-class big-integer integer)
 (define-builtin-class boolean literal)
