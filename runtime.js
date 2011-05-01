@@ -690,6 +690,10 @@ function lisp_bif_subtypep(_key_, type1, type2)
 
 function Lisp_class()
 {
+    /* Classes set this property, which identifies them to TYPE-OF as
+       such.  The rationale is that we don't want to go ahead and muck
+       with the prototype structure of non-Lisp, built-in classes.
+       Lest they completely fall apart. */
     this.lisp_is_class = true;
 }
 
