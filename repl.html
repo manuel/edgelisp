@@ -76,13 +76,13 @@ function lisp_repl()
 
 function lisp_repl_eval(input)
 {
-//    try {
+    try {
       lisp_repl_input(input);
-      lisp_repl_output(lisp_eval(lisp_repl_prepare(input)));
+      lisp_repl_output(_lisp_function_web_repl_eval(null, lisp_repl_prepare(input)));
       document.getElementById("input").value = "";
-//    } catch(error) {
-//      lisp_repl_error(error);
-//    }
+    } catch(error) {
+      lisp_repl_error(error);
+    }
     window.scrollTo(0, document.body.scrollHeight);
 }
 
@@ -107,8 +107,7 @@ function lisp_repl_onload()
 {
     document.getElementById("input").focus();
     lisp_load_file("lisp/boot.lisp");
-//    lisp_load_file("lisp/vals.lisp");
-//    lisp_load_file("lisp/web-repl.lisp");
+    lisp_load_file("lisp/web-repl.lisp");
     if(location.hash) {
         var code = location.hash.slice(1);
         lisp_repl_log("Evaluating URL fragment:");

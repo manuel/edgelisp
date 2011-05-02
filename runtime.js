@@ -127,6 +127,11 @@ function Lisp_comment_form(contents)
 
 function lisp_undefined_identifier(name, namespace)
 {
+    return _lisp_function_undefined_identifier(null, name, namespace);
+}
+
+function _lisp_function_undefined_identifier(_key_, name, namespace)
+{
     return lisp_error("Undefined " + namespace, name);
 }
 
@@ -1013,6 +1018,7 @@ lisp_export_function("type-of", "lisp_bif_type_of");
 // - signal
 // - no-applicable-method
 // - no-most-specific-method
+// - undefined-identifier
 
 /*** Utilities ***/
 

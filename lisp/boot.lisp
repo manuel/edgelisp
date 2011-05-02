@@ -343,6 +343,7 @@
 (defclass warning (condition))
 
 ;; Specific errors
+(defclass unbound-variable (error))
 (defclass simple-error (error))
 (defmethod show-object ((s simple-error))
   (string-concat (simple-error-message s) ": " (simple-error-arg s)))
@@ -485,6 +486,15 @@
           (.handlers f))
     (lisp:compute-restarts c l (.parent-frame f)))
   l)
+
+(defun undefined-identifier ((name string) (namespace string))
+  "Called by the runtime."
+  (block return
+    (let ((c (make unbound-variable)))
+      (restart-bind ((use-value (lambda (r)
+                                  (return-from return (prompt "Use value")))
+                       c))
+        (signal c)))))
 
 ;;;; Debugger
 
@@ -669,4 +679,3 @@ can be used to supply a different collection to hold the results."
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
 
-(print "Lisp loaded")
