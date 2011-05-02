@@ -113,13 +113,22 @@
 
 (defmacro or (&rest forms)
   (if (list-empty? forms) ; heck, need destructuring-bind
-      #'#t ; heck, need to rethink #' syntax
+      #'#f ; heck, need to rethink #' syntax
       #`(let ((%%or-res ,(list-elt forms 0))) ; heck, need hygiene
           (if %%or-res
               %%or-res
               (or ,@(list-slice forms 1))))))
 
-(defun not (x)
+(defmacro and (&rest forms)
+  ;; same hecks as above apply
+  ;; fixme: should return value of last subform
+  (if (list-empty? forms)
+      #'#t
+      #`(if (not ,(list-elt forms 0))
+            #f
+            (and ,@(list-slice forms 1)))))
+
+(defun not ((x object))
   (if x #f #t))
 
 ;;;; (Slightly) Generalized references
@@ -143,7 +152,7 @@
 
 ;;;; Stuff
 
-(defun nil? (x)
+(defun nil? ((x object))
   (if (eq nil x) #t #f))
 
 (defmacro assert (test &optional (msg #'"assertion failed"))
@@ -321,22 +330,34 @@
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
 
+(defgeneric to-number (object))
+
+(defmethod to-number ((s string))
+  (string-to-number s))
+
 ;;;; Condition system
 
 (defclass condition)
 (defclass serious-condition (condition))
 (defclass error (serious-condition))
 (defclass warning (condition))
-(defclass restart (condition)
-  (.associated-condition))
 
+;; Specific errors
 (defclass simple-error (error))
 (defmethod show-object ((s simple-error))
   (string-concat (simple-error-message s) ": " (simple-error-arg s)))
-
 (defclass control-error (error))
 
+(defclass restart (condition)
+  (.associated-condition))
+
+;; Specific restarts
 (defclass abort (restart))
+(defclass continue (restart))
+(defclass use-value (restart)
+  (.value))
+(defclass store-value (restart)
+  (.value))
 
 (defgeneric default-handler (condition))
 (defmethod default-handler ((c condition))
@@ -352,6 +373,9 @@
   (.handler-class
    .handler-function
    .associated-condition))
+
+(defmethod show ((h handler))
+  (show-object (.handler-class h)))
 
 (defun make-handler ((handler-class class) (handler-function function)
                      &optional (associated-condition nil))
@@ -404,7 +428,7 @@
       ,@body))
 
 (defun invoke-restart ((r restart))
-  (signal-condition c (dynamic restart-frame)))
+  (signal-condition r (dynamic restart-frame)))
 
 (defun signal-condition ((c condition) f)
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
@@ -431,7 +455,7 @@
   (subtype? (type-of c) (.handler-class h)))
 
 (defmethod condition-applicable? ((r restart) (h handler))
-  (and (subtype? (type-of c) (.handler-class h))
+  (and (subtype? (type-of r) (.handler-class h))
        (or (nil? (.associated-condition r))
            (nil? (.associated-condition h))
            (eq (.associated-condition r) (.associated-condition h)))))
@@ -448,10 +472,43 @@
 (defparameter \error \signal)
 (defparameter \warn \signal)
 
+(defun compute-restarts ((c condition))
+  (lisp:compute-restarts c))
+
+(defun lisp:compute-restarts ((c condition)
+                              &optional (l (list)) (f (dynamic restart-frame)))
+  (when f
+    (each (lambda (h)
+            (when (or (nil? (.associated-condition h))
+                      (eq c (.associated-condition h)))
+              (add l h)))
+          (.handlers f))
+    (lisp:compute-restarts c l (.parent-frame f)))
+  l)
+
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
+  (print "Debugger for condition:")
+  (print c)
+  (print "Restarts:")
+  (let ((restarts (compute-restarts c)) (i 0))
+    (each (lambda (r)
+            (print (string-concat i ": " (show r)))
+            (incf i))
+          restarts)
+    (let ((s (prompt "Enter a restart number, or cancel to abort:")))
+      (if (nil? s)
+          (lisp:hard-abort c)
+          (let ((n (to-number s)))
+            (invoke-restart (make-instance (.handler-class (elt restarts n)))))))))
+
+(defun lisp:hard-abort ((c condition))
   (native-body #{ throw ~c #}))
+
+(defun prompt (&optional (s "Lisp prompt"))
+  "Returns user-entered string or nil."
+  #{ prompt(~s) #})
 
 (defparameter \original-no-applicable-method \no-applicable-method)
 (defun no-applicable-method (generic arguments)

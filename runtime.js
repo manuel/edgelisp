@@ -38,18 +38,16 @@ function Lisp_nil()
 {
 }
 
-/*** Strings ***/
-
-function Lisp_string(s)
-{
-    this.s = s;
-}
-
 /*** Numbers ***/
 
 function lisp_number(numrepr)
 {
     return jsnums.fromString(numrepr);
+}
+
+function lisp_bif_string_to_number(_key_, s)
+{
+    return lisp_number(s);
 }
 
 function Lisp_number()
@@ -639,7 +637,9 @@ function lisp_bif_set_class_name(_key_, klass, name)
 
 function lisp_type_of(obj)
 {
-    if (obj === null)
+    if (obj === undefined)
+        return lisp_error("that can never happen");
+    else if (obj === null)
         return Lisp_nil.prototype;
     else if (obj.hasOwnProperty("lisp_is_class"))
         return Lisp_class.prototype;
@@ -734,7 +734,8 @@ function lisp_bif_make_instance(_key_, cls)
 function lisp_bif_slot_value(_key_, obj, name)
 {
     lisp_assert_string(name);
-    return obj[lisp_mangle_slot(name)];
+    var value = obj[lisp_mangle_slot(name)];
+    return value !== undefined ? value : null;
 }
 
 function lisp_bif_set_slot_value(_key_, obj, name, value)
@@ -999,6 +1000,7 @@ lisp_export_function("string-dict-get", "lisp_bif_string_dict_get");
 lisp_export_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
 lisp_export_function("string-dict-put", "lisp_bif_string_dict_put");
 lisp_export_function("string-to-form", "lisp_bif_string_to_form");
+lisp_export_function("string-to-number", "lisp_bif_string_to_number");
 lisp_export_function("string-to-symbol", "lisp_bif_string_to_symbol");
 lisp_export_function("subtype?", "lisp_bif_subtypep");
 lisp_export_function("superclass", "lisp_bif_superclass");
