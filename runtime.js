@@ -1,13 +1,13 @@
-/* CyberLisp: A Lisp that compiles to JavaScript 1.5.
+/* EdgeLisp: A Lisp that compiles to JavaScript 1.5.
    
    Copyright (C) 2008, 2011 by Manuel Simoni.
    
-   CyberLisp is free software; you can redistribute it and/or modify
+   EdgeLisp is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published
    by the Free Software Foundation; either version 2, or (at your
    option) any later version.
    
-   CyberLisp is distributed in the hope that it will be useful, but
+   EdgeLisp is distributed in the hope that it will be useful, but
    WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
@@ -20,7 +20,7 @@
 /* Lisp runtime: this file contains all types and functions needed to
    run compiled Lisp code.
 
-   Lisp code that uses `eval' will need to include the compiler too. */
+   Lisp code that uses `eval' will need to include the compiler, too. */
 
 function Lisp_object()
 {
@@ -892,7 +892,7 @@ function lisp_is_true(obj) // T
 /* Lisp symbols may contain additional characters beyond those
    supported by JavaScript names.  These special characters are
    translated to uppercase characters, which are not allowed in
-   CyberLisp symbols. */
+   EdgeLisp symbols. */
 
 // Needs to be in sync with `lisp_symbol_special_char'.
 var lisp_mangle_table =
