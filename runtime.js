@@ -251,7 +251,6 @@ function lisp_assert_not_null(value, message, arg)
 
 function lisp_assert_number(value, message, arg)
 {
-    // fixme
     lisp_assert(typeof value === "number", message, arg);
     return value;
 }
@@ -275,11 +274,35 @@ function lisp_assert_function(value, message, arg)
     return value;
 }
 
+function lisp_assert_list(value, message, arg)
+{
+    lisp_assert(value.length !== undefined, message, arg);
+    return value;
+}
+
 function lisp_assert_symbol_form(value, message, arg)
 {
     lisp_assert(typeof value === "object", message, arg);
     lisp_assert(value.formt === "symbol", message, arg);
     lisp_assert_nonempty_string(value.name, message, arg);
+    return value;
+}
+
+function lisp_assert_string_form(value, message, arg)
+{
+    lisp_assert(typeof value === "object", message, arg);
+    lisp_assert(value.formt === "string", message, arg);
+    lisp_assert_string(value.s, message, arg);
+    return value;
+}
+
+function lisp_assert_number_form(value, message, arg)
+{
+    lisp_assert(typeof value === "object", message, arg);
+    lisp_assert(value.formt === "number", message, arg);
+    lisp_assert_string(value.sign, message, arg);
+    lisp_assert_string(value.integral_digits, message, arg);
+    lisp_assert_string(value.fractional_digits, message, arg);
     return value;
 }
 

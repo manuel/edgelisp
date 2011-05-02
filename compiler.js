@@ -1,13 +1,13 @@
-/* CyberLisp: A Lisp that compiles to JavaScript 1.5.
+/* EdgeLisp: A Lisp that compiles to JavaScript 1.5.
    
    Copyright (C) 2008, 2011 by Manuel Simoni.
    
-   CyberLisp is free software; you can redistribute it and/or modify
+   EdgeLisp is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published
    by the Free Software Foundation; either version 2, or (at your
    option) any later version.
    
-   CyberLisp is distributed in the hope that it will be useful, but
+   EdgeLisp is distributed in the hope that it will be useful, but
    WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
@@ -35,7 +35,6 @@ function lisp_eval(form)
 
 function lisp_compile(form)
 {
-    //    lisp_print("compiling " + form.toString());
     switch(form.formt) {
     case "number":
         return { vopt: "number",
@@ -159,22 +158,25 @@ function lisp_special_function(name)
 /**** List of special forms ****/
 
 /* Contains a mixture of ordinary forms and NATIVE-SNIPPET forms.
-   (%%native &rest forms) */
-function lisp_compile_special_native(form) {
+   (%%native &rest forms -> result) */
+function lisp_compile_special_native(form)
+{
     return { vopt: "native",
              stuff: form.elts.slice(1).map(lisp_compile) };
 }
 
 /* A piece of JS text to directly emit.  Must appear inside NATIVE.
-   (%%native-snippet text) */
-function lisp_compile_special_native_snippet(form) {
+   (%%native-snippet js-string) */
+function lisp_compile_special_native_snippet(form)
+{
+    var js_string = lisp_assert_string_form(form.elts[1]);
     return{ vopt: "native-snippet",
-            text: form.elts[1].s };
+            text: js_string.s };
 }
 
 /* Returns true if `name' is defined (unlike Common Lisp's `boundp',
    name is not evaluated).  
-   (%%defined? identifier) */
+   (%%defined? identifier) -> boolean */
 function lisp_compile_special_definedp(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -183,7 +185,7 @@ function lisp_compile_special_definedp(form)
 }
 
 /* Assigns the `value' to the global variable named `name'.
-   (%%defparameter name value) */
+   (%%defparameter name value) -> value */
 function lisp_compile_special_defparameter(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -194,27 +196,27 @@ function lisp_compile_special_defparameter(form)
 }
 
 /* Executes body-form during compilation, not during evaluation.
-   (%%eval-when-compile body-form) */
+   (%%eval-when-compile body-form) -> nil */
 function lisp_compile_special_eval_when_compile(form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     lisp_eval(body_form);
-    return { vopt: "identifier", name: "#f", namespace: "variable" };
+    return { vopt: "identifier", name: "nil", namespace: "variable" };
 }
 
 /* Registers a macro expander function.  An expander function takes a
    form as input and must return a form.
-   (%%defsyntax name expander-function) */
+   (%%defsyntax name expander-function) -> nil */
 function lisp_compile_special_defsyntax(form)
 {
     var name_form = lisp_assert_symbol_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
-    return { vopt: "identifier", name: "#f", namespace: "variable" };
+    return { vopt: "identifier", name: "nil", namespace: "variable" };
 }
 
 /* Calls a function passed as argument.
-   (%%funcall fun &rest args &all-keys keys) => result */
+   (%%funcall fun &rest args &all-keys keys) -> result */
 function lisp_compile_special_funcall(form)
 {
     var fun = lisp_assert_not_null(form.elts[1]);
@@ -225,8 +227,9 @@ function lisp_compile_special_funcall(form)
 }
 
 /* Accesses a binding.  Name and namespace are not evaluated.
-   (%%identifier name namespace) */
-function lisp_compile_special_identifier(form) {
+   (%%identifier name namespace) -> value */
+function lisp_compile_special_identifier(form)
+{
     var name = lisp_assert_symbol_form(form.elts[1],
                                        "Bad identifier name", form);
     var namespace = lisp_assert_symbol_form(form.elts[2],
@@ -236,32 +239,38 @@ function lisp_compile_special_identifier(form) {
              namespace: namespace.name };
 }
 
-/* (%%symbol-form symbol) */
-function lisp_compile_special_symbol_form(form) {
+/* Produces a symbol form.
+   (%%symbol-form symbol) -> symbol-form */
+function lisp_compile_special_symbol_form(form)
+{
     var symbol = lisp_assert_symbol_form(form.elts[1], "Bad symbol");
     return { vopt: "symbol-form",
              name: symbol.name };
 }
 
-/* (%%number-form form) */
-function lisp_compile_special_number_form(form) {
-    var numform = form.elts[1];
+/* Produces a number form.
+   (%%number-form form) -> number-form */
+function lisp_compile_special_number_form(form)
+{
+    var numform = lisp_assert_number_form(form.elts[1]);
     return { vopt: "number-form",
              sign: numform.sign, 
              integral_digits: numform.integral_digits,
              fractional_digits: numform.fractional_digits };
 }
 
-/* (%%string-form form) */
-function lisp_compile_special_string_form(form) {
-    var strform = form.elts[1];
+/* Produces a string form.
+   (%%string-form form) -> string-form */
+function lisp_compile_special_string_form(form)
+{
+    var strform = lisp_assert_string_form(form.elts[1]);
     return { vopt: "string-form",
              s: strform.s };
 }
 
-/* In CyberLisp `false' and `null' are considered false, all other
+/* In EdgeLisp `false' and `null' are considered false, all other
    objects (including the number zero) are true.  
-   (%%if test consequent alternative) */
+   (%%if test consequent alternative) -> result */
 function lisp_compile_special_if(form)
 {
     var test = lisp_assert_not_null(form.elts[1]);
@@ -274,7 +283,7 @@ function lisp_compile_special_if(form)
 }
 
 /* Returns a lexical closure.  See heading ``Functions''.
-   (%%lambda sig body) */
+   (%%lambda sig body) -> function */
 function lisp_compile_special_lambda(form)
 {
     lisp_assert_compound_form(form.elts[1]);
@@ -286,7 +295,8 @@ function lisp_compile_special_lambda(form)
 }
 
 /* Evaluates a number of forms in sequence and returns the value of the last.
-   (%%progn &rest forms) */
+   (%%progn &rest forms) -> value
+   (%%progn) -> nil */
 function lisp_compile_special_progn(form)
 {
     var forms = form.elts.slice(1);
@@ -294,8 +304,8 @@ function lisp_compile_special_progn(form)
              vops: forms.map(lisp_compile) };
 }
 
-/* Updates the value of a binding.
-   (setq name value) */
+/* Updates the value of a global or local lexical binding.
+   (%%setq name value) -> value */
 function lisp_compile_special_setq(form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
@@ -306,13 +316,14 @@ function lisp_compile_special_setq(form)
 }
 
 /* See heading ``Quasiquotation''.
-   (%%quasiquote form) */
+   (%%quasiquote form) -> form */
 function lisp_compile_special_quasiquote(form)
 {
     return lisp_compile(lisp_qq(form));
 }
 
-/* (%%quote form) */
+/* See heading ``Quasiquotation''.
+   (%%quote form) -> form */
 function lisp_compile_special_quote(form)
 {
     return lisp_compile_special_quasiquote(form);
@@ -345,7 +356,7 @@ function lisp_compile_special_quote(form)
    containing all keyword arguments, even those already bound to
    keyword parameters.
 
-   In contrast to JavaScript, CyberLisp does not allow a function to
+   In contrast to JavaScript, EdgeLisp does not allow a function to
    be called with less positional arguments than there are required
    parameters in its signature.  Likewise, a function can only be
    called with more positional arguments than positional parameters
@@ -353,7 +364,7 @@ function lisp_compile_special_quote(form)
    parameter.
 
    On the other hand, keyword parameters are always optional.
-   Furthermore, CyberLisp does not constrain the allowable keywords
+   Furthermore, EdgeLisp does not constrain the allowable keywords
    supplied to a function: even if a function's signature does not
    contain keyword parameters, the caller may still supply keyword
    arguments to the function, or, in case a function defines keyword
@@ -744,17 +755,21 @@ function lisp_vop_function(vopt)
 
 /**** List of VOPs ****/
 
-/* { vopt: "native", stuff: <vops> } */
+/* { vopt: "native", stuff: <vops> }
+   stuff: list of VOPs. */
 function lisp_emit_vop_native(vop)
 {
+    lisp_assert_list(vop.stuff, "Bad native", vop);
     // Note that subforms of NATIVE are not separated by commas, as is
-    // usually the case.
+    // usually the case.  This whole area is still rather unclear.
     return vop.stuff.map(lisp_emit).join("");
 }
 
-/* { vopt: "native-snippet", text: <vops> } */
+/* { vopt: "native-snippet", text: <string> }
+   text: JS text */
 function lisp_emit_vop_native_snippet(vop)
 {
+    lisp_assert_string(vop.text, "Bad native-snippet", vop);
     return vop.text;
 }
 
@@ -763,7 +778,7 @@ function lisp_emit_vop_native_snippet(vop)
    vops: list of VOPs. */
 function lisp_emit_vop_progn(vop)
 {
-    lisp_assert_not_null(vop.vops, "Bad PROGN", vop);
+    lisp_assert_list(vop.vops, "Bad progn", vop);
     if (vop.vops.length > 0)
         return "(" + vop.vops.map(lisp_emit).join(", ") + ")";
     else
@@ -778,8 +793,8 @@ function lisp_emit_vop_identifier(vop)
     lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
     lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
     var mname = lisp_mangle(vop.name, vop.namespace);
-    var args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
-    return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + args + "))";
+    var error_args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
+    return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + error_args + "))";
 }
 
 /* Assigns a value to a variable.
@@ -788,16 +803,20 @@ function lisp_emit_vop_identifier(vop)
    value: VOP for the value. */
 function lisp_emit_vop_setq(vop)
 {
-    var value = lisp_emit(vop.value);
+    lisp_assert(vop.name.vopt === "identifier", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    var value = lisp_emit(vop.value);
     return "(" + mname + " = " + value + ")";
 }
 
-/* { vopt: "defined?", name: <vop> } */
+/* Checks whether variable is defined.
+   { vopt: "defined?", name: <vop> }
+   name: the "identifier" VOP of the variable. */
 function lisp_emit_vop_definedp(vop)
 {
+    lisp_assert(vop.name.vopt === "identifier", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
@@ -820,6 +839,9 @@ function lisp_emit_vop_if(vop)
      fractional_digits: <string> } */
 function lisp_emit_vop_number(vop)
 {
+    lisp_assert_string(vop.sign, "Bad sign", vop);
+    lisp_assert_string(vop.integral_digits, "Bad integral digits", vop);
+    lisp_assert_string(vop.fractional_digits, "Bad fractional digits", vop);
     var num_repr = vop.sign + vop.integral_digits + vop.fractional_digits;
     return "(lisp_number(\"" + num_repr + "\"))";
 }
@@ -831,6 +853,9 @@ function lisp_emit_vop_number(vop)
      fractional_digits: <string> } */
 function lisp_emit_vop_number_form(vop)
 {
+    lisp_assert_string(vop.sign, "Bad sign", vop);
+    lisp_assert_string(vop.integral_digits, "Bad integral digits", vop);
+    lisp_assert_string(vop.fractional_digits, "Bad fractional digits", vop);
     return "(new Lisp_number_form("+JSON.stringify(vop.sign)+","+JSON.stringify(vop.integral_digits)+","+JSON.stringify(vop.fractional_digits)+"))";
 }
 
@@ -839,7 +864,7 @@ function lisp_emit_vop_number_form(vop)
    s: the string in JavaScript syntax. */
 function lisp_emit_vop_string(vop)
 {
-    lisp_assert_string(vop.s, "Bad .s", vop);
+    lisp_assert_string(vop.s, "Bad string", vop);
     return JSON.stringify(vop.s);
 }
 
@@ -847,7 +872,7 @@ function lisp_emit_vop_string(vop)
    { vopt: "string-form", s: <string> } */
 function lisp_emit_vop_string_form(vop)
 {
-    lisp_assert_string(vop.s, "Bad .s", vop);
+    lisp_assert_string(vop.s, "Bad string form", vop);
     return "(new Lisp_string_form(" + JSON.stringify(vop.s) + "))";
 }
 
@@ -855,7 +880,7 @@ function lisp_emit_vop_string_form(vop)
    { vopt: "symbol-form", name: <string> } */
 function lisp_emit_vop_symbol_form(vop)
 {
-    lisp_assert_string(vop.name, "Bad .name", vop);
+    lisp_assert_string(vop.name, "Bad symbol name", vop);
     return "(new Lisp_symbol_form(" + JSON.stringify(vop.name) + "))";
 }
 
@@ -1003,5 +1028,3 @@ function lisp_emit_vop_lambda(vop)
 
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
 }
-
-
