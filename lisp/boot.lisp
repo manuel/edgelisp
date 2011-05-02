@@ -342,7 +342,7 @@
 (defclass error (serious-condition))
 (defclass warning (condition))
 
-;; Specific errors
+;;; Specific errors
 (defclass unbound-variable (error))
 (defclass simple-error (error))
 (defmethod show-object ((s simple-error))
@@ -352,7 +352,7 @@
 (defclass restart (condition)
   (.associated-condition))
 
-;; Specific restarts
+;;; Specific restarts
 (defclass abort (restart))
 (defclass continue (restart))
 (defclass use-value (restart)
@@ -494,7 +494,7 @@
       (restart-bind ((use-value (lambda (r)
                                   (return-from return (prompt "Use value")))
                        c))
-        (signal c)))))
+        (error c)))))
 
 ;;;; Debugger
 
