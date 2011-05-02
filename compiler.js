@@ -25,13 +25,13 @@ function lisp_eval(form)
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
-   symbols evaluate to the value of the binding they name.  A compound
-   form is evaluated differently depending on whether its first
-   element names a special form, a macro, or a function: special form
-   calls are evaluated with special evaluation rules; macro calls are
-   first expanded and then compiled recursively; function calls are
-   evaluated by applying the named function to the supplied
-   arguments. */
+   symbols evaluate to the value of the variable binding they name.  A
+   compound form is evaluated differently depending on whether its
+   operator (first element) names a special form, a macro, or a
+   function: special form calls are evaluated with built-in evaluation
+   rules; macro calls are first expanded and then compiled
+   recursively; function calls are evaluated by applying the named
+   function to the supplied arguments. */
 
 function lisp_compile(form)
 {
