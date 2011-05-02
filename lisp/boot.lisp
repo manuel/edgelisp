@@ -351,10 +351,10 @@
     (setf (.name e) name)
     (setf (.namespace e) namespace)
     e))
-(defmethod show-object ((e unbound-variable))
-  (string-concat "Unbound " (.namespace e) ": " (.name e)))
+(defmethod show ((e unbound-variable))
+  (string-concat "The " (.namespace e) " " (.name e) " is unbound."))
 (defclass simple-error (error))
-(defmethod show-object ((e simple-error))
+(defmethod show ((e simple-error))
   (string-concat (simple-error-message e) ": " (simple-error-arg e)))
 (defclass control-error (error))
 
