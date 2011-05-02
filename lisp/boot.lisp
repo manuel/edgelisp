@@ -343,10 +343,19 @@
 (defclass warning (condition))
 
 ;;; Specific errors
-(defclass unbound-variable (error))
+(defclass unbound-variable (error)
+  (.name
+   .namespace))
+(defun make-unbound-variable ((name string) (namespace string))
+  (let ((e (make unbound-variable)))
+    (setf (.name e) name)
+    (setf (.namespace e) namespace)
+    e))
+(defmethod show-object ((e unbound-variable))
+  (string-concat "Unbound " (.namespace e) ": " (.name e)))
 (defclass simple-error (error))
-(defmethod show-object ((s simple-error))
-  (string-concat (simple-error-message s) ": " (simple-error-arg s)))
+(defmethod show-object ((e simple-error))
+  (string-concat (simple-error-message e) ": " (simple-error-arg e)))
 (defclass control-error (error))
 
 (defclass restart (condition)
@@ -490,7 +499,7 @@
 (defun undefined-identifier ((name string) (namespace string))
   "Called by the runtime."
   (block return
-    (let ((c (make unbound-variable)))
+    (let ((c (make-unbound-variable name namespace)))
       (restart-bind ((use-value (lambda (r)
                                   (return-from return (prompt "Use value")))
                        c))
