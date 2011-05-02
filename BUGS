@@ -5,4 +5,6 @@
 
 * QUOTE allows UNQUOTE.
 
+* Calling a non-function produces a JS, not a Lisp error
+
 * Probably many more...
