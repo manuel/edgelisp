@@ -384,7 +384,7 @@
    .handler-function
    .associated-condition))
 
-(defmethod show ((h handler))
+(defmethod show-object ((h handler))
   (show-object (.handler-class h)))
 
 (defun make-handler ((handler-class class) (handler-function function)
@@ -416,7 +416,8 @@
                                 #`(make-handler
                                    (class ,(compound-elt spec 0))
                                    ,(compound-elt spec 1)))
-                              specs)))))
+                              specs))
+                     (dynamic handler-frame))))
       ,@body))
 
 (defun signal ((c condition))
@@ -434,7 +435,8 @@
                                    (class ,(compound-elt spec 0))
                                    ,(compound-elt spec 1)
                                    ,(compound-elt spec 2)))
-                              specs)))))
+                              specs))
+                     (dynamic restart-frame))))
       ,@body))
 
 (defun invoke-restart ((r restart))
@@ -494,7 +496,6 @@
               (add l h)))
           (.handlers f))
     (lisp:compute-restarts c l (.parent-frame f)))
-  (print l)
   l)
 
 (defun undefined-identifier ((name string) (namespace string))
