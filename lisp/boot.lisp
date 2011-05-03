@@ -508,7 +508,6 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (print "Debugger for condition:")
   (print c)
   (print "Restarts:")
   (let ((restarts (compute-restarts c)) (i 0))
@@ -688,3 +687,4 @@ can be used to supply a different collection to hold the results."
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
 
+(print "Lisp bootstrapped")

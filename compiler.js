@@ -105,7 +105,7 @@ function lisp_set_macro_function(name, expander)
 
 /*** Special forms ***/
 
-/* Special forms are built-in forms with special evaluation rules
+/* Special forms are forms with built-in evaluation rules
    (e.g. `%%if').  The names of special forms are prefixed with "%%",
    so more comfortable wrappers around them can be defined later
    (e.g. `if' with an optional alternative). */
@@ -130,25 +130,6 @@ var lisp_specials_table = {
     "%%symbol-form": lisp_compile_special_symbol_form
 };
 
-/* VOPs (virtual operations) correspond roughly to special forms. */
-
-var lisp_vop_table = {
-    "defined?": lisp_emit_vop_definedp,
-    "funcall": lisp_emit_vop_funcall,
-    "identifier": lisp_emit_vop_identifier,
-    "if": lisp_emit_vop_if,
-    "lambda": lisp_emit_vop_lambda,
-    "native": lisp_emit_vop_native,
-    "native-snippet": lisp_emit_vop_native_snippet,
-    "number": lisp_emit_vop_number,
-    "number-form": lisp_emit_vop_number_form,
-    "progn": lisp_emit_vop_progn,
-    "setq": lisp_emit_vop_setq,
-    "string": lisp_emit_vop_string,
-    "string-form": lisp_emit_vop_string_form,
-    "symbol-form": lisp_emit_vop_symbol_form
-};
-
 function lisp_special_function(name)
 {
     lisp_assert_nonempty_string(name, "Bad special form name", name);
@@ -157,76 +138,8 @@ function lisp_special_function(name)
 
 /**** List of special forms ****/
 
-/* Contains a mixture of ordinary forms and NATIVE-SNIPPET forms.
-   (%%native &rest forms -> result) */
-function lisp_compile_special_native(form)
-{
-    return { vopt: "native",
-             stuff: form.elts.slice(1).map(lisp_compile) };
-}
-
-/* A piece of JS text to directly emit.  Must appear inside NATIVE.
-   (%%native-snippet js-string) */
-function lisp_compile_special_native_snippet(form)
-{
-    var js_string = lisp_assert_string_form(form.elts[1]);
-    return{ vopt: "native-snippet",
-            text: js_string.s };
-}
-
-/* Returns true if `name' is defined (unlike Common Lisp's `boundp',
-   name is not evaluated).  
-   (%%defined? identifier) -> boolean */
-function lisp_compile_special_definedp(form)
-{
-    var name_form = lisp_assert_not_null(form.elts[1]);
-    return { vopt: "defined?",
-             name: lisp_compile(name_form) };
-}
-
-/* Assigns the `value' to the global variable named `name'.
-   (%%defparameter name value) -> value */
-function lisp_compile_special_defparameter(form)
-{
-    var name_form = lisp_assert_not_null(form.elts[1]);
-    var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "setq", 
-             name: lisp_compile(name_form),
-             value: lisp_compile(value_form) };
-}
-
-/* Executes body-form during compilation, not during evaluation.
-   (%%eval-when-compile body-form) -> nil */
-function lisp_compile_special_eval_when_compile(form)
-{
-    var body_form = lisp_assert_not_null(form.elts[1]);
-    lisp_eval(body_form);
-    return { vopt: "identifier", name: "nil", namespace: "variable" };
-}
-
-/* Registers a macro expander function.  An expander function takes a
-   form as input and must return a form.
-   (%%defsyntax name expander-function) -> nil */
-function lisp_compile_special_defsyntax(form)
-{
-    var name_form = lisp_assert_symbol_form(form.elts[1], "Bad syntax name", form);
-    var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
-    lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
-    return { vopt: "identifier", name: "nil", namespace: "variable" };
-}
-
-/* Calls a function passed as argument.
-   (%%funcall fun &rest args &all-keys keys) -> result */
-function lisp_compile_special_funcall(form)
-{
-    var fun = lisp_assert_not_null(form.elts[1]);
-    var call_site = lisp_assert_not_null(form.elts.slice(2), "Bad call-site", form);
-    return { vopt: "funcall",
-             fun: lisp_compile(fun),
-             call_site: lisp_compile_call_site(call_site) };
-}
-
-/* Accesses a binding.  Name and namespace are not evaluated.
+/* Accesses the value of a global or local variable.
+   Name and namespace are not evaluated.
    (%%identifier name namespace) -> value */
 function lisp_compile_special_identifier(form)
 {
@@ -239,7 +152,122 @@ function lisp_compile_special_identifier(form)
              namespace: namespace.name };
 }
 
-/* Produces a symbol form.
+/* Updates the value of a global variable.
+   Defines the global variable if it doesn't exist yet.
+   (%%defparameter identifier value) -> value */
+function lisp_compile_special_defparameter(form)
+{
+    var name_form = lisp_assert_not_null(form.elts[1]);
+    var value_form = lisp_assert_not_null(form.elts[2]);
+    return { vopt: "setq", 
+             name: lisp_compile(name_form),
+             value: lisp_compile(value_form) };
+}
+
+/* Updates the value of a global or local variable.
+   (%%setq name value) -> value */
+function lisp_compile_special_setq(form)
+{
+    var name_form = lisp_assert_not_null(form.elts[1]);
+    var value_form = lisp_assert_not_null(form.elts[2]);
+    return { vopt: "setq",
+             name: lisp_compile(name_form),
+             value: lisp_compile(value_form) };
+}
+
+/* Returns true if a local or global variable is defined (unlike
+   Common Lisp's `boundp', the identifier is not evaluated).
+   (%%defined? identifier) -> boolean */
+function lisp_compile_special_definedp(form)
+{
+    var name_form = lisp_assert_not_null(form.elts[1]);
+    return { vopt: "defined?",
+             name: lisp_compile(name_form) };
+}
+
+/* Evaluates a number of forms in sequence and returns the value of the last.
+   (%%progn &rest forms) -> value
+   (%%progn) -> nil */
+function lisp_compile_special_progn(form)
+{
+    var forms = form.elts.slice(1);
+    return { vopt: "progn", 
+             vops: forms.map(lisp_compile) };
+}
+
+/* In EdgeLisp #f and nil are considered false, all other
+   objects (including the number zero) are true.
+   (%%if test consequent alternative) -> result */
+function lisp_compile_special_if(form)
+{
+    var test = lisp_assert_not_null(form.elts[1]);
+    var consequent = lisp_assert_not_null(form.elts[2]);
+    var alternative = lisp_assert_not_null(form.elts[3]);
+    return { vopt: "if",
+             test: lisp_compile(test),
+             consequent: lisp_compile(consequent),
+             alternative: lisp_compile(alternative) };
+}
+
+/* Creates a function.  See heading ``Functions''.
+   (%%lambda sig body) -> function */
+function lisp_compile_special_lambda(form)
+{
+    lisp_assert_compound_form(form.elts[1]);
+    var sig = form.elts[1].elts;
+    var body = form.elts[2];
+    return { vopt: "lambda", 
+             sig: lisp_compile_sig(sig),
+             body: lisp_compile(body) };
+}
+
+/* Calls a function.
+   (%%funcall fun &rest args &all-keys keys) -> result */
+function lisp_compile_special_funcall(form)
+{
+    var fun = lisp_assert_not_null(form.elts[1]);
+    var call_site = lisp_assert_not_null(form.elts.slice(2), "Bad call-site", form);
+    return { vopt: "funcall",
+             fun: lisp_compile(fun),
+             call_site: lisp_compile_call_site(call_site) };
+}
+
+/* Registers a macro expander function.  An expander function takes a
+   form as input and returns a form.  The expander-function argument
+   is evaluated at compile-time.
+   (%%defsyntax name expander-function) -> nil */
+function lisp_compile_special_defsyntax(form)
+{
+    var name_form = lisp_assert_symbol_form(form.elts[1], "Bad syntax name", form);
+    var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
+    lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
+    return { vopt: "identifier", name: "nil", namespace: "variable" };
+}
+
+/* Executes body-form at compile-time, not at runtime.
+   (%%eval-when-compile body-form) -> nil */
+function lisp_compile_special_eval_when_compile(form)
+{
+    var body_form = lisp_assert_not_null(form.elts[1]);
+    lisp_eval(body_form);
+    return { vopt: "identifier", name: "nil", namespace: "variable" };
+}
+
+/* See heading ``Quasiquotation''.
+   (%%quasiquote form) -> form */
+function lisp_compile_special_quasiquote(form)
+{
+    return lisp_compile(lisp_qq(form));
+}
+
+/* See heading ``Quasiquotation''.
+   (%%quote form) -> form */
+function lisp_compile_special_quote(form)
+{
+    return lisp_compile_special_quasiquote(form);
+}
+
+/* Produces  a symbol form.
    (%%symbol-form symbol) -> symbol-form */
 function lisp_compile_special_symbol_form(form)
 {
@@ -268,67 +296,22 @@ function lisp_compile_special_string_form(form)
              s: strform.s };
 }
 
-/* In EdgeLisp `false' and `null' are considered false, all other
-   objects (including the number zero) are true.  
-   (%%if test consequent alternative) -> result */
-function lisp_compile_special_if(form)
+/* Contains a mixture of ordinary forms and NATIVE-SNIPPET forms.
+   (%%native &rest forms -> result) */
+function lisp_compile_special_native(form)
 {
-    var test = lisp_assert_not_null(form.elts[1]);
-    var consequent = lisp_assert_not_null(form.elts[2]);
-    var alternative = lisp_assert_not_null(form.elts[3]);
-    return { vopt: "if",
-             test: lisp_compile(test),
-             consequent: lisp_compile(consequent),
-             alternative: lisp_compile(alternative) };
+    return { vopt: "native",
+             stuff: form.elts.slice(1).map(lisp_compile) };
 }
 
-/* Returns a lexical closure.  See heading ``Functions''.
-   (%%lambda sig body) -> function */
-function lisp_compile_special_lambda(form)
+/* A piece of JS text to directly emit.  Must appear inside NATIVE.
+   (%%native-snippet js-string) */
+function lisp_compile_special_native_snippet(form)
 {
-    lisp_assert_compound_form(form.elts[1]);
-    var sig = form.elts[1].elts;
-    var body = form.elts[2];
-    return { vopt: "lambda", 
-             sig: lisp_compile_sig(sig),
-             body: lisp_compile(body) };
+    var js_string = lisp_assert_string_form(form.elts[1]);
+    return{ vopt: "native-snippet",
+            text: js_string.s };
 }
-
-/* Evaluates a number of forms in sequence and returns the value of the last.
-   (%%progn &rest forms) -> value
-   (%%progn) -> nil */
-function lisp_compile_special_progn(form)
-{
-    var forms = form.elts.slice(1);
-    return { vopt: "progn", 
-             vops: forms.map(lisp_compile) };
-}
-
-/* Updates the value of a global or local lexical binding.
-   (%%setq name value) -> value */
-function lisp_compile_special_setq(form)
-{
-    var name_form = lisp_assert_not_null(form.elts[1]);
-    var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "setq",
-             name: lisp_compile(name_form),
-             value: lisp_compile(value_form) };
-}
-
-/* See heading ``Quasiquotation''.
-   (%%quasiquote form) -> form */
-function lisp_compile_special_quasiquote(form)
-{
-    return lisp_compile(lisp_qq(form));
-}
-
-/* See heading ``Quasiquotation''.
-   (%%quote form) -> form */
-function lisp_compile_special_quote(form)
-{
-    return lisp_compile_special_quasiquote(form);
-}
-
 
 /*** Functions ***/
 
@@ -645,7 +628,6 @@ function lisp_compile_call_site(args)
 // Name of the calling convention parameter.
 var lisp_keywords_dict = "_key_";
 
-
 /*** Quasiquotation ***/
 
 // These rules are from the Fargo language.
@@ -732,15 +714,33 @@ function lisp_qq(form)
     }
 }
 
-
 /*** Virtual Operations ***/
 
 /* Virtual operations (VOPs) are low-level operations that are emitted
-   to JavaScript. */
+   to JavaScript.  Note that there are no macro- and
+   quasiquotation-related VOPs, as these special forms are expanded
+   away or rewritten during compilation. */
 
+var lisp_vop_table = {
+    "defined?": lisp_emit_vop_definedp,
+    "funcall": lisp_emit_vop_funcall,
+    "identifier": lisp_emit_vop_identifier,
+    "if": lisp_emit_vop_if,
+    "lambda": lisp_emit_vop_lambda,
+    "native": lisp_emit_vop_native,
+    "native-snippet": lisp_emit_vop_native_snippet,
+    "number": lisp_emit_vop_number,
+    "number-form": lisp_emit_vop_number_form,
+    "progn": lisp_emit_vop_progn,
+    "setq": lisp_emit_vop_setq,
+    "string": lisp_emit_vop_string,
+    "string-form": lisp_emit_vop_string_form,
+    "symbol-form": lisp_emit_vop_symbol_form
+};
+
+// Emits a VOP to JavaScript.
 function lisp_emit(vop)
 {
-    // Emits a VOP to JavaScript.
     lisp_assert_string(vop.vopt, "Bad .vopt", vop);
     var vop_function = lisp_vop_function(vop.vopt);
     lisp_assert_not_null(vop_function, "No VOP emitter function", vop);
@@ -749,32 +749,13 @@ function lisp_emit(vop)
 
 function lisp_vop_function(vopt)
 {
-    // Returns the VOP emitter function for a VOP, or null.
     return lisp_vop_table[vopt];
 }
 
 /**** List of VOPs ****/
 
-/* { vopt: "native", stuff: <vops> }
-   stuff: list of VOPs. */
-function lisp_emit_vop_native(vop)
-{
-    lisp_assert_list(vop.stuff, "Bad native", vop);
-    // Note that subforms of NATIVE are not separated by commas, as is
-    // usually the case.  This whole area is still rather unclear.
-    return vop.stuff.map(lisp_emit).join("");
-}
-
-/* { vopt: "native-snippet", text: <string> }
-   text: JS text */
-function lisp_emit_vop_native_snippet(vop)
-{
-    lisp_assert_string(vop.text, "Bad native-snippet", vop);
-    return vop.text;
-}
-
 /* Evaluates a number of VOPs in sequence and returns the value of the last.
-   { vopt: "progn", vops: <list> } 
+   { vopt: "progn", vops: <list> }
    vops: list of VOPs. */
 function lisp_emit_vop_progn(vop)
 {
@@ -882,35 +863,6 @@ function lisp_emit_vop_symbol_form(vop)
 {
     lisp_assert_string(vop.name, "Bad symbol name", vop);
     return "(new Lisp_symbol_form(" + JSON.stringify(vop.name) + "))";
-}
-
-/* Calls a function.
-   { vopt: "funcall", fun: <vop>, call_site: <call_site> }
-   fun: VOP of the function;
-   call_site: positional and keyword argument VOPs (see above). */
-function lisp_emit_vop_funcall(vop)
-{
-    var fun = lisp_assert_not_null(vop.fun, "Bad function", vop);
-    var call_site = lisp_assert_not_null(vop.call_site, "Bad call site", vop);
-    var key_args = call_site.key_args;
-
-    // Generate dictionary of keyword arguments
-    var s = "";
-    lisp_iter_dict(key_args, function(k) {
-        lisp_assert(lisp_is_string_dict_key(k), "Bad keyword argument", k);
-        var v = lisp_assert_not_null(key_args[k]);
-        s += "\"" + k + "\": " + lisp_emit(v) + ", ";
-    });
-    if (s !== "") {
-        var keywords_dict = "lisp_fast_string_dict({ " + s + " })";
-    } else {
-        var keywords_dict = "null";
-    }
-    
-    var pos_args = call_site.pos_args.map(lisp_emit);
-    var args = [ keywords_dict ].concat(pos_args).join(", ");
-
-    return "(" + lisp_emit(fun) + "(" + args + "))";
 }
 
 /* Creates a lexical closure.
@@ -1027,4 +979,51 @@ function lisp_emit_vop_lambda(vop)
     var body = lisp_emit(vop.body);
 
     return "(function(" + sig + "){ " + preamble + "return (" + body + "); })";
+}
+
+/* Calls a function.
+   { vopt: "funcall", fun: <vop>, call_site: <call_site> }
+   fun: VOP of the function;
+   call_site: positional and keyword argument VOPs (see above). */
+function lisp_emit_vop_funcall(vop)
+{
+    var fun = lisp_assert_not_null(vop.fun, "Bad function", vop);
+    var call_site = lisp_assert_not_null(vop.call_site, "Bad call site", vop);
+    var key_args = call_site.key_args;
+
+    // Generate dictionary of keyword arguments
+    var s = "";
+    lisp_iter_dict(key_args, function(k) {
+        lisp_assert(lisp_is_string_dict_key(k), "Bad keyword argument", k);
+        var v = lisp_assert_not_null(key_args[k]);
+        s += "\"" + k + "\": " + lisp_emit(v) + ", ";
+    });
+    if (s !== "") {
+        var keywords_dict = "lisp_fast_string_dict({ " + s + " })";
+    } else {
+        var keywords_dict = "null";
+    }
+    
+    var pos_args = call_site.pos_args.map(lisp_emit);
+    var args = [ keywords_dict ].concat(pos_args).join(", ");
+
+    return "(" + lisp_emit(fun) + "(" + args + "))";
+}
+
+/* { vopt: "native", stuff: <vops> }
+   stuff: list of VOPs. */
+function lisp_emit_vop_native(vop)
+{
+    lisp_assert_list(vop.stuff, "Bad native", vop);
+    // Note that subforms of NATIVE are not separated by commas, as is
+    // usually the case.  This whole area is still rather unclear.
+    return vop.stuff.map(lisp_emit).join("");
+}
+
+/* { vopt: "native-snippet", text: <string> }
+   text: JS text */
+function lisp_emit_vop_native_snippet(vop)
+{
+    lisp_assert_string(vop.text, "Bad native-snippet", vop);
+    return vop.text;
 }
