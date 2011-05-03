@@ -576,6 +576,9 @@
 
 (defclass list)
 
+(defmethod show ((a list))
+  (string-concat "(" (string-join-list " " (map \show a)) ")"))
+
 (defmethod iter ((list list))
   (list-iter list))
 
