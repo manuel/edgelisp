@@ -494,6 +494,7 @@
               (add l h)))
           (.handlers f))
     (lisp:compute-restarts c l (.parent-frame f)))
+  (print l)
   l)
 
 (defun undefined-identifier ((name string) (namespace string))
@@ -661,6 +662,9 @@ can be used to supply a different collection to hold the results."
   into)
 
 (defun string-join ((separator string) &rest strings)
+  (string-join-list separator strings))
+
+(defun string-join-list ((separator string) (strings list))
   (let ((iter (iter strings)))
     (if (has-next iter)
         (let ((result (now iter)))
