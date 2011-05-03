@@ -660,6 +660,17 @@ can be used to supply a different collection to hold the results."
           (each \next iters))))
   into)
 
+(defun string-join ((separator string) &rest strings)
+  (let ((iter (iter strings)))
+    (if (has-next iter)
+        (let ((result (now iter)))
+          (next iter)
+          (while (has-next iter)
+            (setq result (string-concat result separator (now iter)))
+            (next iter))
+          result)
+        "")))
+
 (defclass number-iter (iter)
   (.i
    .max))
