@@ -514,10 +514,7 @@
   (name
    namespace))
 (defun make-unbound-variable ((name string) (namespace string))
-  (let ((e (make unbound-variable)))
-    (setf (.name e) name)
-    (setf (.namespace e) namespace)
-    e))
+  (make unbound-variable :name name :namespace namespace))
 (defmethod show ((e unbound-variable))
   (string-concat "The " (.namespace e) " " (.name e) " is unbound."))
 (defclass simple-error (error))
@@ -550,9 +547,7 @@
 (defmethod default-handler ((c serious-condition))
   (invoke-debugger c))
 (defmethod default-handler ((r restart))
-  (let ((e (make restart-control-error)))
-    (setf (.restart e) r)
-    (error e)))
+  (error (make restart-control-error :restart r)))
 
 (defclass handler ()
   (handler-class
@@ -562,23 +557,19 @@
 (defmethod show-object ((h handler))
   (show-object (.handler-class h)))
 
-(defun make-handler ((handler-class class) (handler-function function)
+(defun make-handler ((c class) (f function)
                      &optional (associated-condition nil))
-  (let ((h (make handler)))
-    (setf (.handler-class h) handler-class)
-    (setf (.handler-function h) handler-function)
-    (setf (.associated-condition h) associated-condition)
-    h))
+  (make handler
+        :handler-class c
+        :handler-function f
+        :associated-condition associated-condition))
 
 (defclass handler-frame ()
   (handlers
    parent-frame))
 
 (defun make-handler-frame ((handlers list) &optional (parent-frame nil))
-  (let ((f (make handler-frame)))
-    (setf (.handlers f) handlers)
-    (setf (.parent-frame f) parent-frame)
-    f))
+  (make handler-frame :handlers handlers :parent-frame parent-frame))
 
 (defdynamic handler-frame)
 
@@ -804,10 +795,7 @@
    i))
 
 (defun list-iter ((list list))
-  (let ((iter (make list-iter)))
-    (setf (.list iter) list)
-    (setf (.i iter) 0)
-    iter))
+  (make list-iter :list list :i 0))
 
 (defmethod has-next ((iter list-iter))
   (< (.i iter) (len (.list iter))))
@@ -886,10 +874,7 @@ can be used to supply a different collection to hold the results."
    max))
 
 (defun make-number-iter (max)
-  (let ((iter (make number-iter)))
-    (setf (.i iter) 0)
-    (setf (.max iter) max)
-    iter))
+  (make number-iter :i 0 :max max))
 
 (defmethod iter ((max number))
   (make-number-iter max))
