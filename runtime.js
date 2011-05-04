@@ -80,7 +80,8 @@ function Lisp_number_form(sign, integral_digits, fractional_digits)
 }
 
 Lisp_number_form.prototype.toString = function() {
-    return this.sign + this.integral_digits + this.fractional_digits;
+    var sign_str = this.sign === "+" ? "" : "-";
+    return sign_str + this.integral_digits + this.fractional_digits;
 }
 
 function Lisp_string_form(s)
@@ -446,7 +447,8 @@ function lisp_fast_string_dict(js_dict)
 
 function lisp_bif_string_dict_get(_key_, dict, key)
 {
-    return dict[lisp_mangle_string_dict_key(key)];
+    var val = dict[lisp_mangle_string_dict_key(key)];
+    return val !== undefined ? val : "null";
 }
 
 function lisp_bif_string_dict_put(_key_, dict, key, value)
@@ -666,7 +668,7 @@ function lisp_bif_set_class_name(_key_, klass, name)
 function lisp_type_of(obj)
 {
     if (obj === undefined)
-        return lisp_error("that can never happen");
+        return lisp_error("segfault");
     else if (obj === null)
         return Lisp_nil.prototype;
     else if (obj.hasOwnProperty("lisp_is_class"))
