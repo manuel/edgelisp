@@ -1,50 +1,50 @@
 ;;; defined?
 
-(assert (not (defined? boot-test:the-undefined-variable)))
-(assert (not (defined? (identifier boot-test:the-undefined-identifier testns))))
+(assert (not (defined? test-boot:the-undefined-variable)))
+(assert (not (defined? (identifier test-boot:the-undefined-identifier testns))))
 (assert (defined? \show))
 (assert (defined? (dynamic handler-frame)))
 
 ;;; defparameter
 
-(defparameter boot-test:var1 "foo")
-(assert (defined? boot-test:var1))
-(assert (= boot-test:var1 "foo"))
+(defparameter test-boot:var1 "foo")
+(assert (defined? test-boot:var1))
+(assert (= test-boot:var1 "foo"))
 
-(defparameter (identifier boot-test:var2 testns) "bar")
-(assert (not (defined? boot-test:var2)))
-(assert (defined? (identifier boot-test:var2 testns)))
-(assert (= (identifier boot-test:var2 testns) "bar"))
+(defparameter (identifier test-boot:var2 testns) "bar")
+(assert (not (defined? test-boot:var2)))
+(assert (defined? (identifier test-boot:var2 testns)))
+(assert (= (identifier test-boot:var2 testns) "bar"))
 
 ;;; defsyntax
 
-(defsyntax boot-test:defsyntax-test 
+(defsyntax test-boot:defsyntax-test 
   (lambda ((form form)) (compound-elt form 1)))
 
 (let ((foo #`foo))
-  (assert (eq (macroexpand-1 #`(boot-test:defsyntax-test ,foo))
+  (assert (eq (macroexpand-1 #`(test-boot:defsyntax-test ,foo))
               foo)))
 
 ;;; eval-when-compile
 
-(eval-when-compile (defvar boot-test:compile-var "quux"))
-(defmacro boot-test:eval-when-compile-test ()
-  (assert (= boot-test:compile-var "quux"))
+(eval-when-compile (defvar test-boot:compile-var "quux"))
+(defmacro test-boot:eval-when-compile-test ()
+  (assert (= test-boot:compile-var "quux"))
   #'nil)
-(boot-test:eval-when-compile-test)
+(test-boot:eval-when-compile-test)
 
 ;;; eval-and-compile
 
-(eval-and-compile (defvar boot-test:compile-var2 "quux"))
-(assert (= boot-test:compile-var2 "quux"))
-(defmacro boot-test:eval-and-compile-test ()
-  (assert (= boot-test:compile-var2 "quux"))
+(eval-and-compile (defvar test-boot:compile-var2 "quux"))
+(assert (= test-boot:compile-var2 "quux"))
+(defmacro test-boot:eval-and-compile-test ()
+  (assert (= test-boot:compile-var2 "quux"))
   #'nil)
-(boot-test:eval-and-compile-test)
+(test-boot:eval-and-compile-test)
 
 ;;; fdefined?
 
-(assert (not (fdefined? boot-test:just-a-random-function)))
+(assert (not (fdefined? test-boot:just-a-random-function)))
 (assert (fdefined? show))
 
 ;;; funcall
@@ -87,4 +87,4 @@
 (assert (= (funcall (lambda (a &key (k 3) (j k)) j) 10 :j 1) 1))
 (assert (= (funcall (lambda (a &key (k 3) (j k)) j) 10) 3))
 
-(provide "boot-test")
+(provide "test-boot")

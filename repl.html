@@ -106,7 +106,7 @@ function lisp_repl_onload()
 {
     document.getElementById("input").focus();
     lisp_load_file("lisp/boot.lisp");
-    lisp_load_file("lisp/boot-test.lisp");
+    lisp_load_file("lisp/test-boot.lisp");
     lisp_load_file("lisp/web-repl.lisp");
     if(location.hash) {
         var code = location.hash.slice(1);
