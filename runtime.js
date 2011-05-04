@@ -792,6 +792,12 @@ function lisp_bif_print(_key_, object)
     return null;
 }
 
+function lisp_bif_note(_key_, object)
+{
+    lisp_note(object); // defined in REPL
+    return null;
+}
+
 function lisp_bif_read_from_string(_key_, string)
 {
     return lisp_read_from_string(string);
@@ -1015,6 +1021,7 @@ lisp_export_function("make-class", "lisp_bif_make_class");
 lisp_export_function("make-compound", "lisp_bif_make_compound");
 lisp_export_function("make-generic", "lisp_bif_make_generic");
 lisp_export_function("make-instance", "lisp_bif_make_instance");
+lisp_export_function("note", "lisp_bif_note");
 lisp_export_function("params-specializers", "lisp_bif_params_specializers");
 lisp_export_function("print", "lisp_bif_print");
 lisp_export_function("put-method", "lisp_bif_put_method");

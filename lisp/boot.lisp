@@ -351,7 +351,7 @@
     (setf (.name e) name)
     (setf (.namespace e) namespace)
     e))
-(defmethod show ((e unbound-variable))
+(defmethod show-object ((e unbound-variable))
   (string-concat "The " (.namespace e) " " (.name e) " is unbound."))
 (defclass simple-error (error))
 (defmethod show ((e simple-error))
@@ -525,11 +525,11 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (print c)
-  (print "Restarts:")
+  (note c)
+  (note "Restarts:")
   (let ((restarts (compute-restarts c)) (i 0))
     (each (lambda (r)
-            (print (string-concat i ": " (show r)))
+            (note (string-concat i ": " (show r)))
             (incf i))
           restarts)
     (let ((s (prompt "Enter a restart number, or cancel to abort:")))
@@ -724,6 +724,6 @@ can be used to supply a different collection to hold the results."
 
 (defun provide ((what string))
   "This is really a joke atm as there is no module system."
-  (print (string-concat "Loaded " what)))
+  (note (string-concat "Loaded " what)))
 
 (provide "boot")
