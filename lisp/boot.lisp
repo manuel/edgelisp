@@ -662,17 +662,17 @@
   (invoke-restart (make abort)))
 
 (defun compute-restarts ((c condition))
-  (lisp:compute-restarts c))
+  (do-compute-restarts c))
 
-(defun lisp:compute-restarts ((c condition)
-                              &optional (l (list)) (f (dynamic restart-frame)))
+(defun do-compute-restarts ((c condition)
+                            &optional (l (list)) (f (dynamic restart-frame)))
   (when f
     (each (lambda (h)
             (when (or (nil? (.associated-condition h))
                       (eq c (.associated-condition h)))
               (add l h)))
           (.handlers f))
-    (lisp:compute-restarts c l (.parent-frame f)))
+    (compute-restarts c l (.parent-frame f)))
   l)
 
 (defun undefined-identifier ((name string) (namespace string))
@@ -703,9 +703,9 @@
                   (let ((n (string-to-number s)))
                     (invoke-restart-interactively
                      (make-instance (.handler-class (elt restarts (- n 1))))))))))
-        (lisp:hard-abort c))))
+        (hard-abort c))))
 
-(defun lisp:hard-abort ((c condition))
+(defun hard-abort ((c condition))
   (note "Aborting hard")
   (native-body #{ throw ~c #}))
 
