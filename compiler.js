@@ -33,6 +33,20 @@ function lisp_eval(form)
    recursively; function calls are evaluated by applying the named
    function to the supplied arguments. */
 
+/* A note about identifiers in EdgeLisp:
+   
+   EdgeLisp is a Lisp-Omega, meaning it supports the principled use of
+   an unlimited number of namespaces.
+
+   EdgeLisp is a Lisp-2 insofar as identifiers in the operator
+   position of a call form are looked in the function namespace, not
+   the ordinary variable namespace.
+
+   EdgeLisp uses additional namespaces for other types of objects,
+   such as classes and generics.
+
+   See the `%%identifier' form. */
+
 function lisp_compile(form)
 {
     switch(form.formt) {
