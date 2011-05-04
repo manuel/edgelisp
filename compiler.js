@@ -518,7 +518,7 @@ function lisp_compile_sig(params)
                    ((cur === opt) || (cur === key))) {
             // Optional or keyword parameter with init form
             var name_form = lisp_assert_symbol_form(param.elts[0]);
-           var init_form = lisp_assert_not_null(param.elts[1]);
+            var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
                      init: lisp_compile(init_form) };
         } else {
