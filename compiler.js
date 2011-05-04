@@ -372,7 +372,8 @@ function lisp_compile_special_native_snippet(form)
 /**** Signature syntax ****/
 
 /* The different kinds of parameters in a function signature are
-   introduced by signature keywords: &optional, &key, &rest, and &all-keys.
+   introduced by signature keywords: &optional, &key, &rest,
+   &all-keys, and &aux.
 
    For example, a signature with 2 required, 1 optional, and 1 keyword
    argument may look like this:
@@ -395,7 +396,11 @@ function lisp_compile_special_native_snippet(form)
    the leftmost one is used, e.g. in the signature (&rest a b
    &all-keys c d), the parameter `a' is bound to the sequence of
    remaining positional arguments, and the parameter `c' is bound to
-   the dictionary of supplied keyword arguments. */
+   the dictionary of supplied keyword arguments.
+
+   &aux parameters are not really parameters, but define new variables
+   in the function.  For example, (funcall (lambda (&aux (x 1)) x))
+   yields 1. */
 
 /**** Typed parameter syntax ****/
 
@@ -426,10 +431,11 @@ function lisp_compile_special_native_snippet(form)
      key_params: <list>,
      rest_param: <param>,
      all_keys_param: <param>,
+     aux_params: <list>,
      fast_param: <param> }
 
-   req_params, opt_params, key_params: lists of required, optional,
-   and keyword parameters, respectively.
+   req_params, opt_params, key_params, aux_params: lists of required,
+   optional, keyword, and aux parameters, respectively.
    
    rest_param, all_keys_param: the rest and all-keys parameters, or
    null.
@@ -483,12 +489,14 @@ var lisp_optional_sig_keyword = "&optional";
 var lisp_key_sig_keyword = "&key";
 var lisp_rest_sig_keyword = "&rest";
 var lisp_all_keys_sig_keyword = "&all-keys";
+var lisp_aux_sig_keyword = "&aux";
 var lisp_fast_sig_keyword = "&fast";
 var lisp_sig_keywords = 
     [lisp_optional_sig_keyword,
      lisp_key_sig_keyword,
      lisp_rest_sig_keyword,
      lisp_all_keys_sig_keyword,
+     lisp_aux_sig_keyword,
      lisp_fast_sig_keyword];
 
 function lisp_is_sig_keyword(string)
@@ -499,7 +507,7 @@ function lisp_is_sig_keyword(string)
 /* Given a list of parameter forms, return a signature. */
 function lisp_compile_sig(params)
 {
-    var req = [], opt = [], key = [], rest = [], all_keys = [], fast = [];
+    var req = [], opt = [], key = [], rest = [], all_keys = [], aux = [], fast = [];
     var cur = req;
 
     function compile_parameter(param)
@@ -515,14 +523,16 @@ function lisp_compile_sig(params)
             return { name: name_form.name,
                      specializer: specializer_form.name };
         } else if ((param.formt === "compound") &&
-                   ((cur === opt) || (cur === key))) {
+                   ((cur === opt) ||
+                    (cur === key) ||
+                    (cur === aux))) {
             // Optional or keyword parameter with init form
             var name_form = lisp_assert_symbol_form(param.elts[0]);
             var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
                      init: lisp_compile(init_form) };
         } else {
-            lisp_error("Bad parameter: " + uneval(param), params);
+            lisp_error("Bad parameter: " + JSON.stringify(param), params);
         }
     }
 
@@ -540,6 +550,8 @@ function lisp_compile_sig(params)
                     cur = rest; continue;
                 case lisp_all_keys_sig_keyword: 
                     cur = all_keys; continue;
+                case lisp_aux_sig_keyword: 
+                    cur = aux; continue;
                 case lisp_fast_sig_keyword:
                     cur = fast; continue;
                 }
@@ -554,6 +566,7 @@ function lisp_compile_sig(params)
              key_params: key, 
              rest_param: rest[0],
              all_keys_param: all_keys[0],
+             aux_params: aux,
              fast_param: fast[0] };
 }
 
@@ -890,6 +903,7 @@ function lisp_emit_vop_lambda(vop)
     var key_params = lisp_assert_not_null(vop.sig.key_params);
     var rest_param = vop.sig.rest_param;
     var all_keys_param = vop.sig.all_keys_param;
+    var aux_params = lisp_assert_not_null(vop.sig.aux_params);
     var fast_param = vop.sig.fast_param;
 
     // Signature (calling convention keywords dict + positional parameters)
@@ -972,6 +986,19 @@ function lisp_emit_vop_lambda(vop)
             lisp_keywords_dict + " ? " + lisp_keywords_dict + " : lisp_fast_string_dict({}); ";
     }
 
+    // Aux parameters
+    var init_aux_params = "";
+    if (aux_params.length > 0) {
+        var s = "";
+        for (var i = 0; i < aux_params.length; i++) {
+            var param = aux_params[i];
+            var name = lisp_mangled_param_name(param);
+            var value = param.init ? lisp_emit(param.init) : "null";
+            s += "var " + name + " = " + value + "; ";
+        }
+        init_aux_params = s;
+    }
+
     // Fast parameter
     var setup_fast_param = "";
     if (fast_param) {
@@ -988,6 +1015,7 @@ function lisp_emit_vop_lambda(vop)
         init_key_params +
         setup_rest_param +
         setup_all_keys_param +
+        init_aux_params +
         setup_fast_param;
 
     var body = lisp_emit(vop.body);
