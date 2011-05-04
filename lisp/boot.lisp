@@ -199,9 +199,6 @@
 (defun make-generic ((name string))
   (%make-generic name))
 
-(defun make-instance ((c class))
-  (%make-instance c))
-
 (defun note ((a object))
   (%note a))
 
@@ -240,10 +237,13 @@
   (apply \%string-concat arguments))
 
 (defun string-dict-get ((d string-dict) (key string))
-  (%string-dict-get d k))
+  (%string-dict-get d key))
 
 (defun string-dict-has-key ((d string-dict) (key string))
   (%string-dict-has-key d key))
+
+(defun string-dict-map ((f function) (d string-dict))
+  (%string-dict-map f d))
 
 (defun string-dict-put ((d string-dict) (key string) (value object))
   (%string-dict-put d key value))
@@ -381,10 +381,18 @@
 (defmacro generic (name)
   #`(identifier ,name generic))
 
-(defmacro make (class-name)
-  #`(make-instance (class ,class-name)))
+(defun make-instance (class &all-keys init-args)
+  (let ((obj (%make-instance class)))
+    (string-dict-map (lambda (slot-name)
+                       (set-slot-value obj slot-name (string-dict-get init-args slot-name)))
+                     init-args)
+    obj))
 
-(defmacro defclass (class-name &optional (supers #'()) (slot-descriptors #'()))
+(defmacro make (class-name &rest init-args)
+  #`(make-instance (class ,class-name) ,@init-args))
+
+(defmacro defclass (class-name &optional (supers #'()) (slot-descriptors #'())
+                    &rest ignored)
   (let ((superclass (if (compound-empty? supers) #f (compound-elt supers 0))))
     #`(progn
         (defvar (class ,class-name) (make-class))
