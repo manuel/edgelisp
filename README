@@ -25,7 +25,7 @@ Features
 * (Slightly) Generalized references
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
 * Dynamic variables
-* Everything-is-an-object, including null
+* Everything-is-an-object
 * In-browser REPL
 * Scheme numerical tower
 
