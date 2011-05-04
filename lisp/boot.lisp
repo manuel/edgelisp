@@ -238,10 +238,12 @@
       #',name))
 
 (defmacro defslot (slot class)
-  (let ((setter-name (setter-name (symbol-name slot)))
-        (slot-name-form (string-to-form (symbol-name slot))))
+  (let* ((slot-name (symbol-name slot))
+         (accessor-name (string-concat "." slot-name))
+         (setter-name (setter-name accessor-name))
+         (slot-name-form (string-to-form slot-name)))
     #`(progn
-        (defmethod ,slot ((obj ,class))
+        (defmethod ,(string-to-symbol accessor-name) ((obj ,class))
           (slot-value obj ,slot-name-form))
         (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
@@ -344,8 +346,8 @@
 
 ;;; Specific errors
 (defclass unbound-variable (error)
-  (.name
-   .namespace))
+  (name
+   namespace))
 (defun make-unbound-variable ((name string) (namespace string))
   (let ((e (make unbound-variable)))
     (setf (.name e) name)
@@ -359,15 +361,15 @@
 (defclass control-error (error))
 
 (defclass restart (condition)
-  (.associated-condition))
+  (associated-condition))
 
 ;;; Specific restarts
 (defclass abort (restart))
 (defclass continue (restart))
 (defclass use-value (restart)
-  (.value))
+  (value))
 (defclass store-value (restart)
-  (.value))
+  (value))
 
 (defgeneric default-handler (condition))
 (defmethod default-handler ((c condition))
@@ -380,9 +382,9 @@
   (error (make control-error)))
 
 (defclass handler ()
-  (.handler-class
-   .handler-function
-   .associated-condition))
+  (handler-class
+   handler-function
+   associated-condition))
 
 (defmethod show-object ((h handler))
   (show-object (.handler-class h)))
@@ -396,8 +398,8 @@
     h))
 
 (defclass handler-frame ()
-  (.handlers
-   .parent-frame))
+  (handlers
+   parent-frame))
 
 (defun make-handler-frame ((handlers list) &optional (parent-frame nil))
   (let ((f (make handler-frame)))
@@ -614,8 +616,8 @@
   iter)
 
 (defclass list-iter (iter)
-  (.list
-   .i))
+  (list
+   i))
 
 (defun list-iter ((list list))
   (let ((iter (make list-iter)))
@@ -696,8 +698,8 @@ can be used to supply a different collection to hold the results."
         "")))
 
 (defclass number-iter (iter)
-  (.i
-   .max))
+  (i
+   max))
 
 (defun make-number-iter (max)
   (let ((iter (make number-iter)))
