@@ -283,8 +283,8 @@
 (defmacro catch (tag &rest body)
   #`(call-with-catch-tag ,tag (lambda () ,@body)))
 
-(defun throw ((tag object))
-  (%throw tag))
+(defun throw ((tag object) &optional (value nil))
+  (%throw tag value))
 
 (defmacro block (bname &rest forms)
   #`(let ((,bname (list)))

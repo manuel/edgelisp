@@ -22,6 +22,9 @@
 
    Lisp code that uses `eval' will need to include the compiler, too. */
 
+/* Nonstandard stuff of which I'd like to get rid of:
+   __proto__, <function>.caller */
+
 /*** Literal ***/
 
 function Lisp_literal()
@@ -135,14 +138,14 @@ function _lisp_function_undefined_identifier(_key_, name, namespace)
 function lisp_arity_min(length, min)
 {
     if (length < min)
-        return lisp_error("Too few arguments ");
+        return lisp_error("Too few arguments", lisp_arity_min.caller);
 }
 
 function lisp_arity_min_max(length, min, max)
 {
     lisp_arity_min(length, min);
     if (length > max)
-        return lisp_error("Too many arguments ");
+        return lisp_error("Too many arguments", lisp_arity_min_max.caller);
 }
 
 /* Returns the sequence of arguments to which the rest parameter is
@@ -472,7 +475,7 @@ function lisp_bif_call_with_catch_tag(_key_, tag, body_fun)
 
 function lisp_bif_throw(_key_, tag, value)
 {
-    throw { lisp_tag: tag, lisp_value: (value ? value : null) };
+    throw { lisp_tag: tag, lisp_value: (value !== undefined ? value : null) };
 }
 
 function lisp_bif_call_unwind_protected(_key_, protected_fun, cleanup_fun)
