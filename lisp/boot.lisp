@@ -204,8 +204,8 @@
 (defun params-specializers ((cf compound-form))
   (%params-specializers cf))
 
-(defun print ((a object)
-  (%print a)))
+(defun print ((a object))
+  (%print a))
 
 (defun put-method ((g generic) (specializers list) (m function))
   (%put-method g specializers m))
