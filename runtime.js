@@ -382,6 +382,7 @@ function lisp_bif_compound_map(_key_, fun, compound)
 function lisp_bif_compound_elt(_key_, compound, i)
 {
     lisp_assert_compound_form(compound, "compound-elt", compound);
+    lisp_assert(i < compound.elts.length, "index too large", [compound, i]);
     var elt = compound.elts[i];
     return elt;
 }
@@ -860,6 +861,7 @@ function lisp_bif_list(_key_)
 
 function lisp_bif_list_elt(_key_, list, i)
 {
+    lisp_assert(i < list.length, "index too large", [list, i]);
     return list[i];
 }
 
