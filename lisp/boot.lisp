@@ -687,7 +687,7 @@
 ;;;; Debugger
 
 (defun invoke-debugger ((c condition))
-  (note c)
+  (note (string-concat "Condition: " (show c)))
   (let ((restarts (compute-restarts c)))
     (if (> (list-len restarts) 0)
         (progn
