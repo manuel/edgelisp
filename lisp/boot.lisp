@@ -442,10 +442,11 @@
 (defmethod show ((a literal))
   (show-object a))
 
-(defgeneric show-object (object))
+(defmethod show ((a form))
+  (string-concat "#'" #{ (~a).toString() #}))
 
-(defun show-raw ((a object))
-  #{ JSON.stringify(~a) #})
+
+(defgeneric show-object (object))
 
 (defmethod show-object ((a object))
   (show-raw a))
@@ -459,14 +460,15 @@
 (defmethod show-object ((a number))
   #{ (~a).toString() #})
 
-(defmethod show-object ((a form))
-  #{ (~a).toString() #})
-
 (defmethod show-object ((a function))
   #{ (~a).toString() #})
 
 (defmethod show-object ((a class))
   (class-name a))
+
+
+(defun show-raw ((a object))
+  #{ JSON.stringify(~a) #})
 
 ;;;; Numbers
 
