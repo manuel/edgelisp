@@ -442,6 +442,18 @@
 (defun invoke-restart ((r restart))
   (signal-condition r (dynamic restart-frame)))
 
+(defgeneric invoke-restart-interactively (restart))
+
+(defmethod invoke-restart-interactively ((r use-value))
+  (loop (block in-loop
+          (let* ((res (prompt "Enter value to use, or cancel to abort:")))
+            (if (nil? res)
+                (abort)
+                (handler-bind ((error (lambda (e)
+                                        (return-from in-loop))))
+                  (setf (.value r) (eval (read-from-string res)))
+                  (invoke-restart r)))))))
+
 (defun signal-condition ((c condition) f)
   (let* ((handler-and-frame (find-applicable-handler-and-frame c f)))
     (if (nil? handler-and-frame)
@@ -484,6 +496,9 @@
 (defparameter \error \signal)
 (defparameter \warn \signal)
 
+(defun abort ()
+  (invoke-restart (make abort)))
+
 (defun compute-restarts ((c condition))
   (lisp:compute-restarts c))
 
@@ -503,7 +518,7 @@
   (block return
     (let ((c (make-unbound-variable name namespace)))
       (restart-bind ((use-value (lambda (r)
-                                  (return-from return (prompt "Use value")))
+                                  (return-from return (.value r)))
                        c))
         (error c)))))
 
@@ -519,9 +534,10 @@
           restarts)
     (let ((s (prompt "Enter a restart number, or cancel to abort:")))
       (if (nil? s)
-          (lisp:hard-abort c)
+          (abort)
           (let ((n (to-number s)))
-            (invoke-restart (make-instance (.handler-class (elt restarts n)))))))))
+            (invoke-restart-interactively
+             (make-instance (.handler-class (elt restarts n)))))))))
 
 (defun lisp:hard-abort ((c condition))
   (native-body #{ throw ~c #}))
