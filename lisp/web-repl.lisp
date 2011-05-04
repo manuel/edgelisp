@@ -5,3 +5,5 @@
                             (return-from abort))
                      nil))
       (eval form))))
+
+(provide "web-repl")

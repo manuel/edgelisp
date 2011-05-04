@@ -722,4 +722,8 @@ can be used to supply a different collection to hold the results."
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
 
-(print "Lisp bootstrapped")
+(defun provide ((what string))
+  "This is really a joke atm as there is no module system."
+  (print (string-concat "Loaded " what)))
+
+(provide "boot")
