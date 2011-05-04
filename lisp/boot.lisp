@@ -243,6 +243,9 @@
 (defun string-dict-put ((d string-dict) (key string) (value object))
   (%string-dict-put d key value))
 
+(defun string-len ((s string))
+  (%string-len s))
+
 (defun string-to-form ((s string))
   (%string-to-form s))
 
@@ -428,15 +431,24 @@
 (defgeneric show (object))
 
 (defmethod show ((a object))
-  (string-concat "#[" (class-name (type-of a)) " " (show-object a) "]"))
+  (let ((details (show-object a)))
+    (string-concat "#["
+                   (class-name (type-of a)) 
+                   (if (> (string-len details) 0) " [" "")
+                   details
+                   (if (> (string-len details) 0) "]" "")
+                   "]")))
 
 (defmethod show ((a literal))
   (show-object a))
 
 (defgeneric show-object (object))
 
-(defmethod show-object ((a object))
+(defun show-raw ((a object))
   #{ JSON.stringify(~a) #})
+
+(defmethod show-object ((a object))
+  (show-raw a))
 
 (defmethod show-object ((a nil))
   "nil")
@@ -488,15 +500,21 @@
     (setf (.name e) name)
     (setf (.namespace e) namespace)
     e))
-(defmethod show-object ((e unbound-variable))
+(defmethod show ((e unbound-variable))
   (string-concat "The " (.namespace e) " " (.name e) " is unbound."))
 (defclass simple-error (error))
-(defmethod show ((e simple-error))
+(defmethod show-object ((e simple-error))
   (string-concat (simple-error-message e) ": " (simple-error-arg e)))
 (defclass control-error (error))
+(defclass restart-control-error (control-error)
+  (restart))
+(defmethod show-object ((e restart-control-error))
+  (string-concat "No restart handler for " (show (.restart e))))
 
 (defclass restart (condition)
   (associated-condition))
+(defmethod show-object ((r restart))
+  "")
 
 ;;; Specific restarts
 (defclass abort (restart))
@@ -513,8 +531,10 @@
   (print c))
 (defmethod default-handler ((c serious-condition))
   (invoke-debugger c))
-(defmethod default-handler ((c restart))
-  (error (make control-error)))
+(defmethod default-handler ((r restart))
+  (let ((e (make restart-control-error)))
+    (setf (.restart e) r)
+    (error e)))
 
 (defclass handler ()
   (handler-class
@@ -580,6 +600,9 @@
   (signal-condition r (dynamic restart-frame)))
 
 (defgeneric invoke-restart-interactively (restart))
+
+(defmethod invoke-restart-interactively ((r restart))
+  (invoke-restart r))
 
 (defmethod invoke-restart-interactively ((r use-value))
   (loop (block in-loop
@@ -663,21 +686,29 @@
 
 (defun invoke-debugger ((c condition))
   (note c)
-  (note "Restarts:")
-  (let ((restarts (compute-restarts c)) (i 0))
-    (each (lambda (r)
-            (note (string-concat i ": " (show r)))
-            (incf i))
-          restarts)
-    (let ((s (prompt "Enter a restart number, or cancel to abort:")))
-      (if (nil? s)
-          (abort)
-          (let ((n (string-to-number s)))
-            (invoke-restart-interactively
-             (make-instance (.handler-class (elt restarts n)))))))))
+  (let ((restarts (compute-restarts c)))
+    (if (> (list-len restarts) 0)
+        (progn
+          (note "Restarts:")
+          (let ((i 1))
+            (each (lambda (r)
+                    (note (string-concat i ": " (show r)))
+                    (incf i))
+                  restarts)
+            (let ((s (prompt "Enter a restart number, or cancel to abort:")))
+              (if (nil? s)
+                  (abort)
+                  (let ((n (string-to-number s)))
+                    (invoke-restart-interactively
+                     (make-instance (.handler-class (elt restarts (- n 1))))))))))
+        (lisp:hard-abort c))))
 
 (defun lisp:hard-abort ((c condition))
+  (note "Aborting hard")
   (native-body #{ throw ~c #}))
+
+(defun alert (&optional (s "Lisp alert"))
+  #{ alert(~s) #})
 
 (defun prompt (&optional (s "Lisp prompt"))
   "Returns user-entered string or nil."

@@ -422,7 +422,7 @@ function lisp_bif_compound_emptyp(_key_, compound)
 
 function lisp_mangle_string_dict_key(name)
 {
-    lisp_assert_string(name);
+    lisp_assert_string(name, "bad string dict key", name);
     return "%" + name;
 }
 
@@ -876,6 +876,11 @@ function lisp_bif_string_concat(_key_)
     return s;
 }
 
+function lisp_bif_string_len(_key_, string)
+{
+    return string.length;
+}
+
 function lisp_bif_string_to_form(_key_, string)
 {
     return new Lisp_string_form(string);
@@ -1063,6 +1068,7 @@ lisp_export_function("%string-concat", "lisp_bif_string_concat");
 lisp_export_function("%string-dict-get", "lisp_bif_string_dict_get");
 lisp_export_function("%string-dict-has-key", "lisp_bif_string_dict_has_key");
 lisp_export_function("%string-dict-put", "lisp_bif_string_dict_put");
+lisp_export_function("%string-len", "lisp_bif_string_len");
 lisp_export_function("%string-to-form", "lisp_bif_string_to_form");
 lisp_export_function("%string-to-number", "lisp_bif_string_to_number");
 lisp_export_function("%string-to-symbol", "lisp_bif_string_to_symbol");

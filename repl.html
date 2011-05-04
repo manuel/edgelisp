@@ -87,7 +87,7 @@ function lisp_repl_eval(input)
 
 function lisp_load_file(path)
 {
-    try {
+//    try {
       lisp_note("Loading " + path, path);
       var req = new XMLHttpRequest();
       req.open("GET", path, false);
@@ -97,9 +97,9 @@ function lisp_load_file(path)
       } else {
         lisp_error("XHR error", req.status);
       }
-    } catch(error) {
-      lisp_repl_error(error);
-    }
+//    } catch(error) {
+//      lisp_repl_error(error);
+//    }
 }
 
 function lisp_repl_onload()
