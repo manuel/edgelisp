@@ -34,6 +34,7 @@ Planned Features
 
 * Multiple inheritance
 * Hygienic defmacro, based on SRFI 72
+* Sequence protocol based on D's ranges
 
 Compatibility
 -------------
