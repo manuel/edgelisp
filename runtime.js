@@ -22,10 +22,6 @@
 
    Lisp code that uses `eval' will need to include the compiler, too. */
 
-function Lisp_object()
-{
-}
-
 /*** Literal ***/
 
 function Lisp_literal()
