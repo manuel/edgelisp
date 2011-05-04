@@ -58,6 +58,7 @@ function lisp_repl_insert(input, className, optionalUrl)
     }
     textElement.innerHTML = input.toString();
     document.getElementById("output").appendChild(element);
+    lisp_update_repl();
 }
 
 function lisp_repl_prepare(string)
@@ -82,6 +83,10 @@ function lisp_repl_eval(input)
     } catch(error) {
       lisp_repl_error(error);
     }
+}
+
+function lisp_update_repl()
+{
     window.scrollTo(0, document.body.scrollHeight);
 }
 
