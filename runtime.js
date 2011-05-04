@@ -792,6 +792,11 @@ function lisp_bif_print(_key_, object)
     return null;
 }
 
+function lisp_bif_read_from_string(_key_, string)
+{
+    return lisp_read_from_string(string);
+}
+
 function lisp_bif_eq(_key_, a, b)
 {
     return a === b;
@@ -1013,6 +1018,7 @@ lisp_export_function("make-instance", "lisp_bif_make_instance");
 lisp_export_function("params-specializers", "lisp_bif_params_specializers");
 lisp_export_function("print", "lisp_bif_print");
 lisp_export_function("put-method", "lisp_bif_put_method");
+lisp_export_function("read-from-string", "lisp_bif_read_from_string");
 lisp_export_function("set-class-name", "lisp_bif_set_class_name");
 lisp_export_function("set-slot-value", "lisp_bif_set_slot_value");
 lisp_export_function("set-superclass", "lisp_bif_set_superclass");

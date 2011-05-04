@@ -221,3 +221,14 @@ function lisp_remove_comment_forms(forms)
     return res;
 
 }
+
+// Reads a single form from string.
+function lisp_read_from_string(string)
+{
+    var result = lisp_expression_syntax(ps(string));
+    if (result.ast) {
+        return result.ast;
+    } else {
+        return lisp_error("Reader error", string);
+    }
+}
