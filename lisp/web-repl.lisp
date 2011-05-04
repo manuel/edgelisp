@@ -1,7 +1,7 @@
 (defun web-repl-eval (form)
   (block abort
     (restart-bind ((abort (lambda (r)
-                            (note "Evaluation aborted")
+                            (note "Aborting")
                             (return-from abort))
                      nil))
       (eval form))))

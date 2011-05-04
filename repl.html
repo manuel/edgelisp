@@ -76,13 +76,13 @@ function lisp_repl()
 
 function lisp_repl_eval(input)
 {
-    try {
+//    try {
       lisp_repl_input(input);
       lisp_repl_output(_lisp_function_web_repl_eval(null, lisp_repl_prepare(input)));
       document.getElementById("input").value = "";
-    } catch(error) {
-      lisp_repl_error(error);
-    }
+//    } catch(error) {
+//      lisp_repl_error(error);
+//    }
 }
 
 function lisp_update_repl()
