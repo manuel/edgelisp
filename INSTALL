@@ -1,0 +1,6 @@
+If you want to use EdgeLisp from your own computer, serve it with a
+HTTP server.
+
+I use annyong, a simple Ruby HTTPD that serves a single directory.
+
+https://github.com/remiprev/annyong
