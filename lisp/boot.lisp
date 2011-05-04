@@ -54,13 +54,6 @@
 (defmacro setq (name value)
   #`(%%setq ,name ,value))
 
-;;;;
-
-(defmacro eval-and-compile (&rest forms)
-  #`(progn
-      (eval-when-compile ,@forms)
-      ,@forms))
-
 ;;;; Lexical variables
 
 (defmacro defvar (name &optional (value #'nil))
@@ -86,6 +79,27 @@
                          #`(setq ,(%compound-elt b 0) ,(%compound-elt b 1)))
                        bindings)
       ,@forms))
+
+;;;; Utilities
+
+(defmacro eval-and-compile (&rest forms)
+  #`(progn
+      (eval-when-compile ,@forms)
+      ,@forms))
+
+(defmacro assert (test &optional (msg #'"assertion failed"))
+  #`(let ((result ,test))
+     (if result
+         result
+         (progn
+           (print ,msg)
+           (print #',test)))))
+
+(defmacro native-body (&rest stuff)
+  #`#{ (function(){ ~,@stuff })() #})
+
+(defun nil? ((a object))
+  (if (eq nil a) #t #f))
 
 ;;;; Wrap built-in functions
 
@@ -327,25 +341,6 @@
 
 (defmacro decf (place &optional (delta #'1))
   #`(setf ,place (- ,place ,delta)))
-
-;;;; Stuff
-
-(defun nil? ((x object))
-  (if (eq nil x) #t #f))
-
-(defmacro assert (test &optional (msg #'"assertion failed"))
-  #`(let ((result ,test))
-     (if result
-         result
-         (progn
-           (print ,msg)
-           (print #',test)))))
-
-(defmacro assert-eq (a b)
-  #`(assert (eq ,a ,b)))
-
-(defmacro native-body (&rest stuff)
-  #`#{ (function(){ ~,@stuff })() #})
 
 ;;;; Dynamic variables
 
