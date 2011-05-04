@@ -143,7 +143,8 @@ function lisp_arity_min(length, min)
 
 function lisp_arity_min_max(length, min, max)
 {
-    lisp_arity_min(length, min);
+    if (length < min)
+        return lisp_error("Too few arguments", lisp_arity_min_max.caller);
     if (length > max)
         return lisp_error("Too many arguments", lisp_arity_min_max.caller);
 }
