@@ -2,13 +2,13 @@
 
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
-    #`(%%defsyntax ,(compound-elt defmacro-form 1)
+    #`(%%defsyntax ,(%compound-elt defmacro-form 1)
         (%%lambda (%%form)
-          (compound-apply
-            (%%lambda ,(compound-elt defmacro-form 2)
-              (%%progn
-                ,@(compound-slice defmacro-form 3)))
-            (compound-slice %%form 1))))))
+          (%compound-apply
+           (%%lambda ,(%compound-elt defmacro-form 2)
+             (%%progn
+               ,@(%compound-slice defmacro-form 3)))
+           (%compound-slice %%form 1))))))
 
 ;;;; Wrap special forms
 
@@ -54,6 +54,13 @@
 (defmacro setq (name value)
   #`(%%setq ,name ,value))
 
+;;;;
+
+(defmacro eval-and-compile (&rest forms)
+  #`(progn
+      (eval-when-compile ,@forms)
+      ,@forms))
+
 ;;;; Lexical variables
 
 (defmacro defvar (name &optional (value #'nil))
@@ -63,22 +70,190 @@
   #`(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro let (bindings &rest body)
-  #`(funcall (lambda ,(compound-map (lambda (b) 
-                                     (compound-elt b 0))
-                                   bindings)
-              ,@body)
-            ,@(compound-map (lambda (b) 
-                              (compound-elt b 1)) 
-                            bindings)))
+  #`(funcall (lambda ,(%compound-map (lambda (b) 
+                                       (%compound-elt b 0))
+                                     bindings)
+               ,@body)
+              ,@(%compound-map (lambda (b) 
+                                 (%compound-elt b 1)) 
+                               bindings)))
 
 (defmacro let* (bindings &rest forms) ;; Scheme's letrec*
-  #`(let ,(compound-map (lambda (b)
-                          #`(,(compound-elt b 0) #{ undefined #}))
-                        bindings)
-      ,@(compound-map (lambda (b)
-                        #`(setq ,(compound-elt b 0) ,(compound-elt b 1)))
-                      bindings)
+  #`(let ,(%compound-map (lambda (b)
+                           #`(,(%compound-elt b 0) #{ undefined #}))
+                         bindings)
+      ,@(%compound-map (lambda (b)
+                         #`(setq ,(%compound-elt b 0) ,(%compound-elt b 1)))
+                       bindings)
       ,@forms))
+
+;;;; Wrap built-in functions
+
+(eval-and-compile
+
+(defun append-compounds (&rest arguments)
+  (apply \%append-compounds arguments))
+
+(defun apply ((f function) (args list) &optional (keys nil))
+  (%apply f args keys))
+
+(defun call-unwind-protected ((protected function) (cleanup function))
+  (%call-unwind-protected protected cleanup))
+
+(defun call-with-catch-tag ((tag object) (body function))
+  (%call-with-catch-tag tag body))
+
+(defun call-forever ((f function))
+  (%call-forever f))
+
+(defun class-name ((c class))
+  (%class-name c))
+
+(defun compound-apply ((f function) (cf compound-form))
+  (%compound-apply f cf))
+
+(defun compound-add ((cf compound-form) (f form))
+  (%compound-add cf f))
+
+(defun compound-elt ((cf compound-form) (i small-integer))
+  (%compound-elt cf i))
+
+(defun compound-elts ((cf compound-form))
+  (%compound-elts cf))
+
+(defun compound-empty? ((cf compound-form))
+  (%compound-empty? cf))
+
+(defun compound-len ((cf compound-form))
+  (%compound-len cf))
+
+(defun compound-map ((f function) (cf compound-form))
+  (%compound-map f cf))
+
+(defun compound-slice ((cf compound-form) (start small-integer)
+                       &optional (end (compound-len cf)))
+  (%compound-slice cf start end))
+
+(defun compound? ((a object))
+  (%compound? cf))
+
+(defun eq ((a object) (b object))
+  (%eq a b))
+
+(defun eval ((form form))
+  (%eval form))
+
+(defparameter \fast-apply \%fast-apply) ; fishy?
+
+(defparameter \find-method \%find-method) ; fishy
+
+(defun has-slot ((a object) (slot-name string))
+  (%has-slot a slot-name))
+
+(defun list (&rest arguments)
+  (apply \%list arguments))
+
+(defun list-add ((l list) (a object))
+  (%list-add l a))
+
+(defun list-elt ((l list) (i small-integer))
+  (%list-elt l i))
+
+(defun list-empty? ((l list))
+  (%list-empty? l))
+
+(defun list-len ((l list))
+  (%list-len l))
+
+(defun list-slice ((l list) (start small-integer)
+                   &optional (end (list-len l)))
+  (%list-slice l start end))
+
+(defun macroexpand-1 ((form form))
+  (%macroexpand-1 form))
+
+(defun make-class ()
+  (%make-class))
+
+(defun make-compound (&rest arguments)
+  (apply \%make-compound arguments))
+
+(defun make-generic ((name string))
+  (%make-generic name))
+
+(defun make-instance ((c class))
+  (%make-instance c))
+
+(defun note ((a object))
+  (%note a))
+
+(defun params-specializers ((cf compound-form))
+  (%params-specializers cf))
+
+(defun print ((a object)
+  (%print a)))
+
+(defun put-method ((g generic) (specializers list) (m function))
+  (%put-method g specializers m))
+
+(defun read-from-string ((s string))
+  (%read-from-string s))
+
+(defun set-class-name ((c class) (s string))
+  (%set-class-name c s))
+
+(defun set-slot-value ((a object) (slot-name string) (value object))
+  (%set-slot-value a slot-name value))
+
+(defun set-superclass ((class class) (superclass class))
+  (%set-superclass class superclass))
+
+(defun simple-error-message ((e simple-error))
+  (%simple-error-message e))
+
+(defun simple-error-arg ((e simple-error))
+  (%simple-error-arg e))
+
+(defun slot-value ((a object) (slot-name string))
+  (%slot-value a slot-name))
+
+(defun string-concat (&rest arguments)
+  (apply \%string-concat arguments))
+
+(defun string-dict-get ((d string-dict) (key string))
+  (%string-dict-get d k))
+
+(defun string-dict-has-key ((d string-dict) (key string))
+  (%string-dict-has-key d key))
+
+(defun string-dict-put ((d string-dict) (key string) (value object))
+  (%string-dict-put d key value))
+
+(defun string-to-form ((s string))
+  (%string-to-form s))
+
+(defun string-to-number ((s string))
+  (%string-to-number s))
+
+(defun string-to-symbol ((s string))
+  (%string-to-symbol s))
+
+(defun subtype? ((class class) (possible-superclass class))
+  (%subtype? class possible-superclass))
+
+(defun superclass ((c class))
+  (%superclass c))
+
+(defun symbol-name ((s symbol-form))
+  (%symbol-name s))
+
+(defun symbol? ((a object))
+  (%symbol? a))
+
+(defun type-of ((a object))
+  (%type-of a))
+
+) ; eval-and-compile
 
 ;;;; Control flow
 
@@ -93,6 +268,9 @@
 
 (defmacro catch (tag &rest body)
   #`(call-with-catch-tag ,tag (lambda () ,@body)))
+
+(defun throw ((tag object))
+  (%throw tag))
 
 (defmacro block (bname &rest forms)
   #`(let ((,bname (list)))
@@ -165,11 +343,6 @@
 
 (defmacro assert-eq (a b)
   #`(assert (eq ,a ,b)))
-
-(defmacro eval-and-compile (&rest forms)
-  #`(progn
-     (eval-when-compile ,@forms)
-     ,@forms))
 
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
@@ -247,34 +420,6 @@
           (slot-value obj ,slot-name-form))
         (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
-
-;;;; Fixup class hierarchy
-
-(defmacro define-builtin-class (name superclass)
-  #`(set-superclass (class ,name) (class ,superclass)))
-
-(define-builtin-class big-integer integer)
-(define-builtin-class boolean literal)
-(define-builtin-class class object)
-(define-builtin-class compound-form form)
-(define-builtin-class error object)
-(define-builtin-class form object)
-(define-builtin-class function object)
-(define-builtin-class generic object)
-(define-builtin-class integer rational)
-(define-builtin-class list object)
-(define-builtin-class literal object)
-(define-builtin-class nil literal)
-(define-builtin-class number literal)
-(define-builtin-class number-form form)
-(define-builtin-class rational real)
-(define-builtin-class real number)
-(define-builtin-class simple-error error)
-(define-builtin-class small-integer integer)
-(define-builtin-class string literal)
-(define-builtin-class string-dict object)
-(define-builtin-class string-form form)
-(define-builtin-class symbol-form form)
 
 ;;;; Equality
 

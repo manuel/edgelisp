@@ -990,69 +990,90 @@ lisp_export_class("string-dict", "Lisp_string_dict.prototype");
 lisp_export_class("string-form", "Lisp_string_form.prototype");
 lisp_export_class("symbol-form", "Lisp_symbol_form.prototype");
 
-lisp_export_function("append-compounds", "lisp_bif_append_compounds");
-lisp_export_function("apply", "lisp_bif_apply");
-lisp_export_function("call-unwind-protected", "lisp_bif_call_unwind_protected");
-lisp_export_function("call-with-catch-tag", "lisp_bif_call_with_catch_tag");
-lisp_export_function("call-forever", "lisp_bif_call_forever");
-lisp_export_function("class-name", "lisp_bif_class_name");
-lisp_export_function("compound-apply", "lisp_bif_compound_apply");
-lisp_export_function("compound-add", "lisp_bif_compound_add");
-lisp_export_function("compound-elt", "lisp_bif_compound_elt");
-lisp_export_function("compound-elts", "lisp_bif_compound_elts");
-lisp_export_function("compound-empty?", "lisp_bif_compound_emptyp");
-lisp_export_function("compound-len", "lisp_bif_compound_len");
-lisp_export_function("compound-map", "lisp_bif_compound_map");
-lisp_export_function("compound-slice", "lisp_bif_compound_slice");
-lisp_export_function("compound?", "lisp_bif_compoundp");
-lisp_export_function("eq", "lisp_bif_eq");
-lisp_export_function("eval", "lisp_bif_eval");
-lisp_export_function("fast-apply", "lisp_bif_fast_apply");
-lisp_export_function("find-method", "lisp_bif_find_method");
-lisp_export_function("has-slot", "lisp_bif_has_slot");
-lisp_export_function("list", "lisp_bif_list");
-lisp_export_function("list-add", "lisp_bif_list_add");
-lisp_export_function("list-elt", "lisp_bif_list_elt");
-lisp_export_function("list-empty?", "lisp_bif_list_emptyp");
-lisp_export_function("list-len", "lisp_bif_list_len");
-lisp_export_function("list-slice", "lisp_bif_list_slice");
-lisp_export_function("macroexpand-1", "lisp_bif_macroexpand_1");
-lisp_export_function("make-class", "lisp_bif_make_class");
-lisp_export_function("make-compound", "lisp_bif_make_compound");
-lisp_export_function("make-generic", "lisp_bif_make_generic");
-lisp_export_function("make-instance", "lisp_bif_make_instance");
-lisp_export_function("note", "lisp_bif_note");
-lisp_export_function("params-specializers", "lisp_bif_params_specializers");
-lisp_export_function("print", "lisp_bif_print");
-lisp_export_function("put-method", "lisp_bif_put_method");
-lisp_export_function("read-from-string", "lisp_bif_read_from_string");
-lisp_export_function("set-class-name", "lisp_bif_set_class_name");
-lisp_export_function("set-slot-value", "lisp_bif_set_slot_value");
-lisp_export_function("set-superclass", "lisp_bif_set_superclass");
-lisp_export_function("simple-error-message", "lisp_bif_simple_error_message");
-lisp_export_function("simple-error-arg", "lisp_bif_simple_error_arg");
-lisp_export_function("slot-value", "lisp_bif_slot_value");
-lisp_export_function("string-concat", "lisp_bif_string_concat");
-lisp_export_function("string-dict-get", "lisp_bif_string_dict_get");
-lisp_export_function("string-dict-has-key", "lisp_bif_string_dict_has_key");
-lisp_export_function("string-dict-put", "lisp_bif_string_dict_put");
-lisp_export_function("string-to-form", "lisp_bif_string_to_form");
-lisp_export_function("string-to-number", "lisp_bif_string_to_number");
-lisp_export_function("string-to-symbol", "lisp_bif_string_to_symbol");
-lisp_export_function("subtype?", "lisp_bif_subtypep");
-lisp_export_function("superclass", "lisp_bif_superclass");
-lisp_export_function("symbol-name", "lisp_bif_symbol_name");
-lisp_export_function("symbol?", "lisp_bif_symbolp");
-lisp_export_function("throw", "lisp_bif_throw");
-lisp_export_function("type-of", "lisp_bif_type_of");
+lisp_export_set_superclass("big-integer", "integer");
+lisp_export_set_superclass("boolean", "literal");
+lisp_export_set_superclass("class", "object");
+lisp_export_set_superclass("compound-form", "form");
+lisp_export_set_superclass("error", "object");
+lisp_export_set_superclass("form", "object");
+lisp_export_set_superclass("function", "object");
+lisp_export_set_superclass("generic", "object");
+lisp_export_set_superclass("integer", "rational");
+lisp_export_set_superclass("list", "object");
+lisp_export_set_superclass("literal", "object");
+lisp_export_set_superclass("nil", "literal");
+lisp_export_set_superclass("number", "literal");
+lisp_export_set_superclass("number-form", "form");
+lisp_export_set_superclass("rational", "real");
+lisp_export_set_superclass("real", "number");
+lisp_export_set_superclass("simple-error", "error");
+lisp_export_set_superclass("small-integer", "integer");
+lisp_export_set_superclass("string", "literal");
+lisp_export_set_superclass("string-dict", "object");
+lisp_export_set_superclass("string-form", "form");
+lisp_export_set_superclass("symbol-form", "form");
+
+lisp_export_function("%append-compounds", "lisp_bif_append_compounds");
+lisp_export_function("%apply", "lisp_bif_apply");
+lisp_export_function("%call-unwind-protected", "lisp_bif_call_unwind_protected");
+lisp_export_function("%call-with-catch-tag", "lisp_bif_call_with_catch_tag");
+lisp_export_function("%call-forever", "lisp_bif_call_forever");
+lisp_export_function("%class-name", "lisp_bif_class_name");
+lisp_export_function("%compound-apply", "lisp_bif_compound_apply");
+lisp_export_function("%compound-add", "lisp_bif_compound_add");
+lisp_export_function("%compound-elt", "lisp_bif_compound_elt");
+lisp_export_function("%compound-elts", "lisp_bif_compound_elts");
+lisp_export_function("%compound-empty?", "lisp_bif_compound_emptyp");
+lisp_export_function("%compound-len", "lisp_bif_compound_len");
+lisp_export_function("%compound-map", "lisp_bif_compound_map");
+lisp_export_function("%compound-slice", "lisp_bif_compound_slice");
+lisp_export_function("%compound?", "lisp_bif_compoundp");
+lisp_export_function("%eq", "lisp_bif_eq");
+lisp_export_function("%eval", "lisp_bif_eval");
+lisp_export_function("%fast-apply", "lisp_bif_fast_apply");
+lisp_export_function("%find-method", "lisp_bif_find_method");
+lisp_export_function("%has-slot", "lisp_bif_has_slot");
+lisp_export_function("%list", "lisp_bif_list");
+lisp_export_function("%list-add", "lisp_bif_list_add");
+lisp_export_function("%list-elt", "lisp_bif_list_elt");
+lisp_export_function("%list-empty?", "lisp_bif_list_emptyp");
+lisp_export_function("%list-len", "lisp_bif_list_len");
+lisp_export_function("%list-slice", "lisp_bif_list_slice");
+lisp_export_function("%macroexpand-1", "lisp_bif_macroexpand_1");
+lisp_export_function("%make-class", "lisp_bif_make_class");
+lisp_export_function("%make-compound", "lisp_bif_make_compound");
+lisp_export_function("%make-generic", "lisp_bif_make_generic");
+lisp_export_function("%make-instance", "lisp_bif_make_instance");
+lisp_export_function("%note", "lisp_bif_note");
+lisp_export_function("%params-specializers", "lisp_bif_params_specializers");
+lisp_export_function("%print", "lisp_bif_print");
+lisp_export_function("%put-method", "lisp_bif_put_method");
+lisp_export_function("%read-from-string", "lisp_bif_read_from_string");
+lisp_export_function("%set-class-name", "lisp_bif_set_class_name");
+lisp_export_function("%set-slot-value", "lisp_bif_set_slot_value");
+lisp_export_function("%set-superclass", "lisp_bif_set_superclass");
+lisp_export_function("%simple-error-message", "lisp_bif_simple_error_message");
+lisp_export_function("%simple-error-arg", "lisp_bif_simple_error_arg");
+lisp_export_function("%slot-value", "lisp_bif_slot_value");
+lisp_export_function("%string-concat", "lisp_bif_string_concat");
+lisp_export_function("%string-dict-get", "lisp_bif_string_dict_get");
+lisp_export_function("%string-dict-has-key", "lisp_bif_string_dict_has_key");
+lisp_export_function("%string-dict-put", "lisp_bif_string_dict_put");
+lisp_export_function("%string-to-form", "lisp_bif_string_to_form");
+lisp_export_function("%string-to-number", "lisp_bif_string_to_number");
+lisp_export_function("%string-to-symbol", "lisp_bif_string_to_symbol");
+lisp_export_function("%subtype?", "lisp_bif_subtypep");
+lisp_export_function("%superclass", "lisp_bif_superclass");
+lisp_export_function("%symbol-name", "lisp_bif_symbol_name");
+lisp_export_function("%symbol?", "lisp_bif_symbolp");
+lisp_export_function("%throw", "lisp_bif_throw");
+lisp_export_function("%type-of", "lisp_bif_type_of");
 
 // Additional functions:
 // - signal
 // - no-applicable-method
 // - no-most-specific-method
 // - undefined-identifier
-
-/*** Utilities ***/
 
 function lisp_export(lisp_name, js_object)
 {
@@ -1070,4 +1091,11 @@ function lisp_export_class(lisp_name, js_class)
     eval("(" + class_name + " = " + js_class + ", " +
          class_name + ".lisp_name = \"" + lisp_name + "\", " + 
          class_name + ".lisp_is_class = true)");
+}
+
+function lisp_export_set_superclass(class_name, super_name)
+{
+    var mclass = lisp_mangle_class(class_name);
+    var msuper = lisp_mangle_class(super_name);
+    eval("lisp_set_superclass(" + mclass + ", " + msuper + ")");
 }

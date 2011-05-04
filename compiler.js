@@ -658,12 +658,12 @@ var lisp_qq_rules =
      [["%%quasiquote", ["%%unquote", {"?":"expr"}]],
       {"!":"expr"}],
      [["%%quasiquote", [["%%unquote-splicing", {"?":"first"}], {"?*":"rest"}]],
-      ["append-compounds", {"!":"first"}, ["%%quasiquote", {"!":"rest"}]]],
+      ["%append-compounds", {"!":"first"}, ["%%quasiquote", {"!":"rest"}]]],
      [["%%quasiquote", [{"?":"first"}, {"?*":"rest"}]],
-      ["append-compounds", ["make-compound", ["%%quasiquote", {"!":"first"}]],
+      ["%append-compounds", ["%make-compound", ["%%quasiquote", {"!":"first"}]],
        ["%%quasiquote", {"!":"rest"}]]],
      [["%%quasiquote", []],
-      ["make-compound"]]
+      ["%make-compound"]]
      ];
 
 function lisp_qq(form)
