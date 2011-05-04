@@ -9,7 +9,8 @@ a:hover { text-decoration: underline; }
 .lisp-version { color: gray; font-size: x-small; }
 .lisp-repl-input { font-weight: bold; }
 .lisp-repl-error { color: red; }
-.lisp-repl-log { font-style: italic; }
+.lisp-repl-note { font-style: italic; }
+.lisp-repl-print { }
 .lisp-repl-output { color: blue; }
 </style>
 <script type="text/javascript" src="lib/json2.js"></script>
@@ -21,7 +22,12 @@ a:hover { text-decoration: underline; }
 <script type="text/javascript">
 function lisp_print(output)
 {
-    lisp_repl_insert(lisp_show(output), "lisp-repl-note");
+    lisp_repl_insert(lisp_show(output), "lisp-repl-print");
+}
+
+function lisp_note(input, url)
+{
+    lisp_repl_insert(lisp_show(input), "lisp-repl-note", url);
 }
 
 function lisp_repl_input(input)
@@ -37,11 +43,6 @@ function lisp_repl_output(input)
 function lisp_repl_error(msg)
 {
     lisp_repl_insert(lisp_show(msg), "lisp-repl-error");
-}
-
-function lisp_repl_log(input, url)
-{
-    lisp_repl_insert(input, "lisp-repl-log", url);
 }
 
 function lisp_repl_insert(input, className, optionalUrl)
@@ -87,7 +88,7 @@ function lisp_repl_eval(input)
 function lisp_load_file(path)
 {
     try {
-      lisp_repl_log("Loading " + path, path);
+      lisp_note("Loading " + path, path);
       var req = new XMLHttpRequest();
       req.open("GET", path, false);
       req.send(null);
@@ -108,7 +109,7 @@ function lisp_repl_onload()
     lisp_load_file("lisp/web-repl.lisp");
     if(location.hash) {
         var code = location.hash.slice(1);
-        lisp_repl_log("Evaluating URL fragment:");
+        lisp_note("Evaluating URL fragment:");
         lisp_repl_eval(code);
     }
     window.scrollTo(0, document.body.scrollHeight);
