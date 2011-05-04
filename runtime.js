@@ -427,10 +427,24 @@ function lisp_mangle_string_dict_key(name)
     return "%" + name;
 }
 
+function lisp_unmangle_string_dict_key(name)
+{
+    return name.slice(1);
+}
+
 function lisp_is_string_dict_key(k)
 {
     return k[0] === "%";
 }
+
+function lisp_bif_string_dict_map(_key_, fun, dict)
+{
+    lisp_iter_dict(dict, function(k) {
+            fun(null, lisp_unmangle_string_dict_key(k));
+        });
+    return null;
+}
+
 
 function Lisp_string_dict()
 {
@@ -1069,6 +1083,7 @@ lisp_export_function("%slot-value", "lisp_bif_slot_value");
 lisp_export_function("%string-concat", "lisp_bif_string_concat");
 lisp_export_function("%string-dict-get", "lisp_bif_string_dict_get");
 lisp_export_function("%string-dict-has-key", "lisp_bif_string_dict_has_key");
+lisp_export_function("%string-dict-map", "lisp_bif_string_dict_map");
 lisp_export_function("%string-dict-put", "lisp_bif_string_dict_put");
 lisp_export_function("%string-len", "lisp_bif_string_len");
 lisp_export_function("%string-to-form", "lisp_bif_string_to_form");
