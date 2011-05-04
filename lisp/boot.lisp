@@ -477,11 +477,6 @@
 (define-jsnums-binop + "add")
 (define-jsnums-binop - "subtract")
 
-(defgeneric to-number (object))
-
-(defmethod to-number ((s string))
-  (string-to-number s))
-
 ;;;; Condition system
 
 (defclass condition)
@@ -682,7 +677,7 @@
     (let ((s (prompt "Enter a restart number, or cancel to abort:")))
       (if (nil? s)
           (abort)
-          (let ((n (to-number s)))
+          (let ((n (string-to-number s)))
             (invoke-restart-interactively
              (make-instance (.handler-class (elt restarts n)))))))))
 
