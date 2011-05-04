@@ -672,7 +672,7 @@
                       (eq c (.associated-condition h)))
               (add l h)))
           (.handlers f))
-    (compute-restarts c l (.parent-frame f)))
+    (do-compute-restarts c l (.parent-frame f)))
   l)
 
 (defun undefined-identifier ((name string) (namespace string))
