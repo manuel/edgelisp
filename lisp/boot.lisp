@@ -63,13 +63,17 @@
   #`(defparameter (function ,name) (lambda ,sig ,@body)))
 
 (defmacro let (bindings &rest body)
-  #`(funcall (lambda ,(%compound-map (lambda (b) 
-                                       (%compound-elt b 0))
+  #`(funcall (lambda ,(%compound-map (lambda (b)
+                                       (if (%compound? b)
+                                           (%compound-elt b 0)
+                                           b))
                                      bindings)
                ,@body)
-              ,@(%compound-map (lambda (b) 
-                                 (%compound-elt b 1)) 
-                               bindings)))
+             ,@(%compound-map (lambda (b) 
+                                (if (%compound? b)
+                                    (%compound-elt b 1)
+                                    #'nil))
+                              bindings)))
 
 (defmacro let* (bindings &rest forms) ;; Scheme's letrec*
   #`(let ,(%compound-map (lambda (b)
@@ -149,7 +153,7 @@
   (%compound-slice cf start end))
 
 (defun compound? ((a object))
-  (%compound? cf))
+  (%compound? a))
 
 (defun eq ((a object) (b object))
   (%eq a b))
@@ -217,6 +221,7 @@
   (%set-class-name c s))
 
 (defun set-slot-value ((a object) (slot-name string) (value object))
+  "Caution: bypasses slot type check"
   (%set-slot-value a slot-name value))
 
 (defun set-superclass ((class class) (superclass class))
@@ -379,7 +384,7 @@
 (defmacro make (class-name)
   #`(make-instance (class ,class-name)))
 
-(defmacro defclass (class-name &optional (supers #'()) (slots #'()))
+(defmacro defclass (class-name &optional (supers #'()) (slot-descriptors #'()))
   (let ((superclass (if (compound-empty? supers) #f (compound-elt supers 0))))
     #`(progn
         (defvar (class ,class-name) (make-class))
@@ -388,9 +393,9 @@
         ,(if superclass 
              #`(set-superclass (class ,class-name) (class ,superclass))
              #`(set-superclass (class ,class-name) (class object)))
-        ,@(compound-map (lambda (slot)
-                          #`(defslot ,slot ,class-name))
-                        slots)
+        ,@(compound-map (lambda (slot-descriptor)
+                          #`(defslot ,slot-descriptor ,class-name))
+                        slot-descriptors)
         (class ,class-name))))
 
 (defmacro defgeneric (name &rest args)
@@ -408,8 +413,11 @@
                   (lambda ,params ,@body))
       #',name))
 
-(defmacro defslot (slot class)
-  (let* ((slot-name (symbol-name slot))
+(defmacro defslot (slot-descriptor class)
+  (let* ((slot-name
+          (if (compound? slot-descriptor)
+              (symbol-name (compound-elt slot-descriptor 0))
+              (symbol-name slot-descriptor)))
          (accessor-name (string-concat "." slot-name))
          (setter-name (setter-name accessor-name))
          (slot-name-form (string-to-form slot-name)))
