@@ -919,7 +919,7 @@ function lisp_qq(st, form)
 var lisp_vop_table = {
     "defined?": lisp_emit_vop_definedp,
     "funcall": lisp_emit_vop_funcall,
-    "ref": lisp_emit_vop_identifier,
+    "ref": lisp_emit_vop_ref,
     "identifier-form": lisp_emit_vop_identifier_form,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
@@ -968,7 +968,7 @@ function lisp_emit_vop_progn(st, vop)
 
 /* Variable reference.
    { vopt: "ref", cid: <cid> } */
-function lisp_emit_vop_identifier(st, vop)
+function lisp_emit_vop_ref(st, vop)
 {
     var mname = lisp_mangle_cid(vop.cid);
     // todo: pass CID's hygiene context to lisp_undefined_identifier
