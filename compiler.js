@@ -159,7 +159,7 @@ function lisp_define_global(cid)
 
 function lisp_global_defined(cid)
 {
-    return lisp_globals_set[lisp_mangle_cid(cid)] == true;
+    return lisp_globals_set[lisp_mangle_cid(cid)] === true;
 }
 
 /*** Special forms ***/
