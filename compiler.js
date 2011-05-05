@@ -282,9 +282,8 @@ function lisp_compile_special_identifier(st, form)
    (%%defparameter generalized-identifier value) -> value */
 function lisp_compile_special_defparameter(st, form)
 {
-    //    lisp_print(form.toString());
     var value_form = lisp_assert_not_null(form.elts[2]);
-    return { vopt: "setq", 
+    return { vopt: "defparameter", 
              cid: lisp_generalized_identifier_to_cid(form.elts[1]),
              value: lisp_compile(st, value_form) };
 }
@@ -932,6 +931,7 @@ function lisp_qq(st, form)
 
 var lisp_vop_table = {
     "defined?": lisp_emit_vop_definedp,
+    "defparameter": lisp_emit_vop_defparameter,
     "funcall": lisp_emit_vop_funcall,
     "ref": lisp_emit_vop_ref,
     "identifier-form": lisp_emit_vop_identifier_form,
@@ -993,6 +993,15 @@ function lisp_emit_vop_ref(st, vop)
         + JSON.stringify(vop.cid.namespace) + ", "
         + JSON.stringify(vop.cid.hygiene_context);
     return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + error_args + "))";
+}
+
+/* Define global variable.
+   { vopt: "defparameter", cid: <cid>, value: <vop> } */
+function lisp_emit_vop_defparameter(st, vop)
+{
+    var mname = lisp_mangle_cid(vop.cid);
+    var value = lisp_emit(st, vop.value);
+    return "(" + mname + " = " + value + ")";
 }
 
 /* Assigns a value to a variable.
