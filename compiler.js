@@ -67,7 +67,7 @@ function lisp_compile(st, form)
         return { vopt: "string", s: form.s };
     case "identifier":
         lisp_assert_identifier_form(form, "Bad identifier form", form);
-        return { vopt: "ref", name: form.name, namespace: "variable" };
+        return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(st, form);
@@ -96,9 +96,7 @@ function lisp_compile_compound_form(st, form)
 
 function lisp_compile_function_application(st, form)
 {
-    var op = lisp_assert_identifier_form(form.elts[0], "Bad function call", form);
-    var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "ref", name: name, namespace: "function" };
+    var fun = { vopt: "ref", cid: lisp_function_identifier_to_cid(form) };
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -139,6 +137,38 @@ function Lisp_cid(name, namespace, hygiene_context)
     this.name = name;
     this.namespace = namespace;
     this.hygiene_context = hygiene_context;
+}
+
+function lisp_variable_identifier_to_cid(form)
+{
+    lisp_assert_identifier_form(form, "bad variable identifier", form);
+    return new Lisp_cid(form.name, "variable", form.hygiene_context);
+}
+
+function lisp_function_identifier_to_cid(form)
+{
+    lisp_assert_identifier_form(form, "bad variable identifier", form);
+    return new Lisp_cid(form.name, "function", form.hygiene_context);
+}
+
+/* Turns a plain identifier like #'foo, or a compound identifier like
+   #'(%%identifier foo variable), or a macro like #'(function foo)
+   into a CID. */
+function lisp_generalized_identifier_to_cid(form, default_namespace)
+{
+    var ns = default_namespace ? default_namespace : "variable";
+    switch(form.formt) {
+    case "identifier":
+        return new Lisp_cid(form.name, ns, form.hygiene_context);
+    case "compound":
+        var exp = lisp_macroexpand(form);
+        lisp_assert_identifier_form(form.elts[0]);
+        lisp_assert(form.elts[0].name, "%%identifier");
+        var name = lisp_assert_identifier_form(form.elts[1]);
+        var namespace = lisp_assert_identifier_form(form.elts[2]);
+        return new Lisp_cid(name.name, namespace.name, name.hygiene_context);
+    }
+    lisp_error("Bad generalized identifier form", form);
 }
 
 function lisp_mangle_cid(cid)
@@ -207,8 +237,7 @@ function lisp_compile_special_identifier(st, form)
     var namespace = lisp_assert_identifier_form(form.elts[2],
                                                 "Bad identifier namespace", form);
     return { vopt: "ref",
-             name: name.name,
-             namespace: namespace.name };
+             cid: new Lisp_cid(name.name, namespace.name, name.hygiene_context) };
 }
 
 /* Updates the value of a global variable.
@@ -300,7 +329,7 @@ function lisp_compile_special_defsyntax(st, form)
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
-    return { vopt: "ref", name: "nil", namespace: "variable" };
+    return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
 }
 
 /* Executes body-form at compile-time, not at runtime.
@@ -309,7 +338,7 @@ function lisp_compile_special_eval_when_compile(st, form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     lisp_eval(body_form);
-    return { vopt: "ref", name: "nil", namespace: "variable" };
+    return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
 }
 
 /* See heading ``Quasiquotation''.
@@ -886,40 +915,33 @@ function lisp_emit_vop_progn(st, vop)
 }
 
 /* Variable reference.
-   { vopt: "ref", name: <string>, namespace: <string> }
-   name: the name of the variable. */
+   { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_identifier(st, vop)
 {
-    lisp_assert_nonempty_string(vop.name, "Bad variable name", vop);
-    lisp_assert_nonempty_string(vop.namespace, "Bad variable namespace", vop);
-    var mname = lisp_mangle(vop.name, vop.namespace);
-    var error_args = JSON.stringify(vop.name) + ", " + JSON.stringify(vop.namespace);
+    var mname = lisp_mangle_cid(vop.cid);
+    // todo: pass CID's hygiene context to lisp_undefined_identifier
+    var error_args = JSON.stringify(vop.cid.name) + ", " + JSON.stringify(vop.cid.namespace);
     return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + error_args + "))";
 }
 
 /* Assigns a value to a variable.
-   { vopt: "setq", name: <vop>, value: <vop> }
-   name: the "ref" VOP of the variable;
-   value: VOP for the value. */
+   { vopt: "setq", cid: <cid>, value: <vop> } */
 function lisp_emit_vop_setq(st, vop)
 {
-    lisp_assert(vop.name.vopt === "ref", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
-    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    var mname = lisp_mangle_cid(vop.cid);
     var value = lisp_emit(st, vop.value);
     return "(" + mname + " = " + value + ")";
 }
 
 /* Checks whether variable is defined.
-   { vopt: "defined?", name: <vop> }
-   name: the "ref" VOP of the variable. */
+   { vopt: "defined?", cid: <cid> } */
 function lisp_emit_vop_definedp(st, vop)
 {
-    lisp_assert(vop.name.vopt === "ref", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
-    var mname = lisp_mangle(vop.name.name, vop.name.namespace);
+    var mname = lisp_mangle_cid(vop.cid);
     return "(typeof " + mname + " !== \"undefined\")";
 }
 
