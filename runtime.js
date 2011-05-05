@@ -126,14 +126,16 @@ function Lisp_comment_form(contents)
 
 /*** Utilities for generated code. ***/
 
-function lisp_undefined_identifier(name, namespace)
+function lisp_undefined_identifier(name, namespace, hygiene_context)
 {
-    return _lisp_function_undefined_identifier(null, name, namespace);
+    return _lisp_function_undefined_identifier(null, name, namespace,
+                                               (hygiene_context ? hygiene_context : null));
 }
 
-function _lisp_function_undefined_identifier(_key_, name, namespace)
+function _lisp_function_undefined_identifier(_key_, name, namespace, hygiene_context)
 {
-    return lisp_error("Undefined " + namespace, name);
+    return lisp_error("Undefined " + namespace, name +
+                      (hygiene_context ? ("\\"+hygiene_context) : ""));
 }
 
 /* Used inside lambdas. */
