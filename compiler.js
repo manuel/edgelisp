@@ -80,22 +80,27 @@ function lisp_compile_compound_form(st, form)
         // Call to a locally bound function
         return lisp_compile_function_application(st, form);
     } else {
+        var res = lisp_compile_special_or_macro();
+        if (res) return res;
+        if (lisp_global_defined(op_cid))
+            return lisp_compile_function_application(st, form);
+        op_cid.hygiene_context = null;
+        return lisp_compile_function_application(st, form);        
+    }
+
+    function lisp_compile_special_or_macro()
+    {
         var special = lisp_special_function(op_cid.name);
-        if (special) {
-            // Special form call
+        if (special)
             return special(st, form);
-        } else {
-            var macro = lisp_macro_function(op_cid.name);
-            if (macro) {
-                // Macro call
-                // The macro function is a Lisp function, so the calling
-                // convention argument must be supplied.
-                return lisp_compile(st, macro(null, form));
-            } else {
-                // Global function call
-                return lisp_compile_function_application(st, form);
-            }
-        }
+
+        var macro = lisp_macro_function(op_cid.name);
+        if (macro)
+            // The macro function is a Lisp function, so the calling
+            // convention argument must be supplied.
+            return lisp_compile(st, macro(null, form));
+
+        return null;
     }
 }
 
