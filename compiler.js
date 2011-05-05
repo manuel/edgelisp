@@ -75,29 +75,34 @@ function lisp_compile(st, form)
 
 function lisp_compile_compound_form(st, form)
 {
-    var cid = lisp_function_identifier_to_cid(form.elts[0]);
+    var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
+    var cid = lisp_function_identifier_to_cid(op);
     if (lisp_local_defined(st.contour, cid)) {
         return lisp_compile_function_application(st, form);
     } else {
-        return global_call(st, form);
+        return global_call(st, form, cid);
     }
 
-    function global_call(st, form)
+    function global_call(st, form, cid)
     {
-        var special_function = lisp_special_function(cid.name);
-        if (special_function) {
-            return special_function(st, form);
-        } else {
-            var macro_function = lisp_macro_function(cid.name);
-            if (macro_function) {
-                return lisp_compile_compound_form(st, macro_function(null, form));
+        if (!cid.hygiene_context) {
+            var special_function = lisp_special_function(cid.name);
+            if (special_function) {
+                return special_function(st, form);
             } else {
-                if (lisp_global_defined(cid))
+                var macro_function = lisp_macro_function(cid.name);
+                if (macro_function) {
+                    return lisp_compile(st, macro_function(null, form));
+                } else {
                     return lisp_compile_function_application(st, form);
-                if (cid.hygiene_context) {
-                    cid.hygiene_context = null;
-                    return global_call(st, form);
                 }
+            }
+        } else {
+            if (lisp_global_defined(cid)) {
+                return lisp_compile_function_application(st, form);
+            } else {
+                cid.hygiene_context = null;
+                return global_call(st, form, cid);
             }
         }
     }
@@ -171,10 +176,10 @@ function lisp_generalized_identifier_to_cid(form, default_namespace)
         return new Lisp_cid(form.name, ns, form.hygiene_context);
     case "compound":
         var exp = lisp_macroexpand(form);
-        lisp_assert_identifier_form(form.elts[0]);
-        lisp_assert(form.elts[0].name, "%%identifier");
-        var name = lisp_assert_identifier_form(form.elts[1]);
-        var namespace = lisp_assert_identifier_form(form.elts[2]);
+        lisp_assert_identifier_form(exp.elts[0]);
+        lisp_assert(exp.elts[0].name, "%%identifier");
+        var name = lisp_assert_identifier_form(exp.elts[1]);
+        var namespace = lisp_assert_identifier_form(exp.elts[2]);
         return new Lisp_cid(name.name, namespace.name, name.hygiene_context);
     }
     lisp_error("Bad generalized identifier form", form);
@@ -277,6 +282,7 @@ function lisp_compile_special_identifier(st, form)
    (%%defparameter generalized-identifier value) -> value */
 function lisp_compile_special_defparameter(st, form)
 {
+    //    lisp_print(form.toString());
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "setq", 
              cid: lisp_generalized_identifier_to_cid(form.elts[1]),
@@ -356,6 +362,7 @@ function lisp_compile_special_funcall(st, form)
    (%%defsyntax name expander-function) -> nil */
 function lisp_compile_special_defsyntax(st, form)
 {
+    //    lisp_print(form.toString());
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
@@ -943,6 +950,7 @@ var lisp_vop_table = {
 // Emits a VOP to JavaScript.
 function lisp_emit(st, vop)
 {
+    //    lisp_print(vop);
     lisp_assert_string(vop.vopt, "Bad .vopt", vop);
     var vop_function = lisp_vop_function(vop.vopt);
     lisp_assert_not_null(vop_function, "No VOP emitter function", vop);

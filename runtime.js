@@ -814,19 +814,17 @@ var lisp_macros_table = {};
 function lisp_macroexpand(form)
 {
     var exp = lisp_macroexpand_1(form);
-    if (exp === form)
-        return exp;
-    else
-        return lisp_macroexpand(form);
+    return exp;
 }
 
 function lisp_macroexpand_1(form)
 {
     var macro = lisp_macro_function(form.elts[0].name);
-    if (macro)
+    if (macro) {
         return macro(null, form);
-    else
+    } else {
         return form;
+    }
 }
 
 function lisp_bif_macroexpand(_key_, form)
