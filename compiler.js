@@ -154,7 +154,12 @@ var lisp_globals_set = {};
 
 function lisp_define_global(cid)
 {
-    
+    lisp_globals_set[lisp_mangle_cid(cid)] = true;
+}
+
+function lisp_global_defined(cid)
+{
+    return lisp_globals_set[lisp_mangle_cid(cid)] == true;
 }
 
 /*** Special forms ***/
