@@ -65,12 +65,32 @@ function lisp_compile(st, form)
         return { vopt: "string", s: form.s };
     case "identifier":
         lisp_assert_identifier_form(form, "Bad identifier form", form);
-        return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
+        return lisp_compile_identifier_form(st, form);
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(st, form);
     }
     lisp_error("Bad form", form);
+}
+
+function lisp_compile_identifier_form(st, form)
+{
+    var cid = lisp_variable_identifier_to_cid(form);
+    if (lisp_local_defined(st.contour, cid)) {
+        return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
+    } else {
+        return global_ref(st, form, cid);
+    }
+
+    function global_ref(st, form, cid)
+    {
+        if (!cid.hygiene_context) {
+            return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
+        } else {
+            cid.hygiene_context = null;
+            return global_ref(st, form, cid);
+        }
+    }
 }
 
 function lisp_compile_compound_form(st, form)
