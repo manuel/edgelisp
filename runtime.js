@@ -559,6 +559,9 @@ function lisp_bif_put_method(_key_, generic, specializers, method)
 
 function lisp_bif_params_specializers(_key_, params)
 {
+    if (!lisp_compile_sig)
+        lisp_error("Compiler not loaded");
+
     var specializers = [];
     // This empty compilation state is a HACK, but it doesn't matter,
     // as we're only interested in the specializers, which are a
