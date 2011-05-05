@@ -974,8 +974,10 @@ function lisp_emit_vop_progn(st, vop)
    { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_ref(st, vop)
 {
+    if (!lisp_global_defined(st.contour, vop.cid)) {
+        vop.cid.hygiene_context = null;
+    }
     var mname = lisp_mangle_cid(vop.cid);
-    // todo: pass CID's hygiene context to lisp_undefined_identifier
     var error_args = JSON.stringify(vop.cid.name) + ", "
         + JSON.stringify(vop.cid.namespace) + ", "
         + JSON.stringify(vop.cid.hygiene_context);
@@ -988,6 +990,9 @@ function lisp_emit_vop_setq(st, vop)
 {
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
+    if (!lisp_global_defined(st.contour, vop.cid)) {
+        vop.cid.hygiene_context = null;
+    }
     var mname = lisp_mangle_cid(vop.cid);
     var value = lisp_emit(st, vop.value);
     return "(" + mname + " = " + value + ")";
@@ -999,6 +1004,9 @@ function lisp_emit_vop_definedp(st, vop)
 {
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
+    if (!lisp_global_defined(st.contour, vop.cid)) {
+        vop.cid.hygiene_context = null;
+    }
     var mname = lisp_mangle_cid(vop.cid);
     return "(typeof " + mname + " !== \"undefined\")";
 }
