@@ -94,14 +94,15 @@ Lisp_string_form.prototype.toString = function() {
     return "\"" + this.s + "\"";
 }
 
-function Lisp_identifier_form(name)
+function Lisp_identifier_form(name, hygiene_context)
 {
     this.formt = "identifier";
     this.name = name;
+    this.hygiene_context = hygiene_context;
 }
 
 Lisp_identifier_form.prototype.toString = function() {
-    return this.name;
+    return this.name + (this.hygiene_context ? "\\" + this.hygiene_context : "");
 }
 
 function Lisp_compound_form(elts)
