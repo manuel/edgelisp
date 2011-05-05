@@ -25,7 +25,7 @@ function lisp_eval(form)
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
-   symbols evaluate to the value of the variable binding they name.  A
+   identifiers evaluate to the value of the variable binding they name.  A
    compound form is evaluated differently depending on whether its
    operator (first element) names a special form, a macro, or a
    function: special form calls are evaluated with built-in evaluation
@@ -58,8 +58,8 @@ function lisp_compile(form)
     case "string":
         lisp_assert_string(form.s, "Bad .s", form);
         return { vopt: "string", s: form.s };
-    case "symbol":
-        lisp_assert_symbol_form(form, "Bad symbol form", form);
+    case "identifier":
+        lisp_assert_identifier_form(form, "Bad identifier form", form);
         return { vopt: "identifier", name: form.name, namespace: "variable" };
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
@@ -70,7 +70,7 @@ function lisp_compile(form)
 
 function lisp_compile_compound_form(form)
 {
-    var op = lisp_assert_symbol_form(form.elts[0], "Bad operator", form);
+    var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad operator name", form);
     var special = lisp_special_function(name);
     if (special) {
@@ -89,7 +89,7 @@ function lisp_compile_compound_form(form)
 
 function lisp_compile_function_application(form)
 {
-    var op = lisp_assert_symbol_form(form.elts[0], "Bad function call", form);
+    var op = lisp_assert_identifier_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
     var fun = { vopt: "identifier", name: name, namespace: "function" };
     var call_site = lisp_compile_call_site(form.elts.slice(1));
@@ -131,6 +131,7 @@ var lisp_specials_table = {
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "%%funcall": lisp_compile_special_funcall,
     "%%identifier": lisp_compile_special_identifier,
+    "%%identifier-form": lisp_compile_special_identifier_form,
     "%%if": lisp_compile_special_if,
     "%%lambda": lisp_compile_special_lambda,
     "%%native": lisp_compile_special_native,
@@ -140,8 +141,7 @@ var lisp_specials_table = {
     "%%quasiquote": lisp_compile_special_quasiquote,
     "%%quote": lisp_compile_special_quote,
     "%%setq": lisp_compile_special_setq,
-    "%%string-form": lisp_compile_special_string_form,
-    "%%symbol-form": lisp_compile_special_symbol_form
+    "%%string-form": lisp_compile_special_string_form
 };
 
 function lisp_special_function(name)
@@ -157,9 +157,9 @@ function lisp_special_function(name)
    (%%identifier name namespace) -> value */
 function lisp_compile_special_identifier(form)
 {
-    var name = lisp_assert_symbol_form(form.elts[1],
+    var name = lisp_assert_identifier_form(form.elts[1],
                                        "Bad identifier name", form);
-    var namespace = lisp_assert_symbol_form(form.elts[2],
+    var namespace = lisp_assert_identifier_form(form.elts[2],
                                             "Bad identifier namespace", form);
     return { vopt: "identifier",
              name: name.name,
@@ -252,7 +252,7 @@ function lisp_compile_special_funcall(form)
    (%%defsyntax name expander-function) -> nil */
 function lisp_compile_special_defsyntax(form)
 {
-    var name_form = lisp_assert_symbol_form(form.elts[1], "Bad syntax name", form);
+    var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
     return { vopt: "identifier", name: "nil", namespace: "variable" };
@@ -281,13 +281,13 @@ function lisp_compile_special_quote(form)
     return lisp_compile_special_quasiquote(form);
 }
 
-/* Produces  a symbol form.
-   (%%symbol-form symbol) -> symbol-form */
-function lisp_compile_special_symbol_form(form)
+/* Produces  a identifier form.
+   (%%identifier-form identifier) -> identifier-form */
+function lisp_compile_special_identifier_form(form)
 {
-    var symbol = lisp_assert_symbol_form(form.elts[1], "Bad symbol");
-    return { vopt: "symbol-form",
-             name: symbol.name };
+    var identifier = lisp_assert_identifier_form(form.elts[1], "Bad identifier");
+    return { vopt: "identifier-form",
+             name: identifier.name };
 }
 
 /* Produces a number form.
@@ -512,14 +512,14 @@ function lisp_compile_sig(params)
 
     function compile_parameter(param)
     {
-        if (param.formt === "symbol") {
+        if (param.formt === "identifier") {
             // Ordinary parameter (positional or keyword)
             return { name: param.name };
         } else if ((param.formt === "compound") &&
                    (cur === req)) {
             // Typed required parameter
-            var name_form = lisp_assert_symbol_form(param.elts[0]);
-            var specializer_form = lisp_assert_symbol_form(param.elts[1]);
+            var name_form = lisp_assert_identifier_form(param.elts[0]);
+            var specializer_form = lisp_assert_identifier_form(param.elts[1]);
             return { name: name_form.name,
                      specializer: specializer_form.name };
         } else if ((param.formt === "compound") &&
@@ -527,7 +527,7 @@ function lisp_compile_sig(params)
                     (cur === key) ||
                     (cur === aux))) {
             // Optional or keyword parameter with init form
-            var name_form = lisp_assert_symbol_form(param.elts[0]);
+            var name_form = lisp_assert_identifier_form(param.elts[0]);
             var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
                      init: lisp_compile(init_form) };
@@ -539,7 +539,7 @@ function lisp_compile_sig(params)
     for (var i = 0, len = params.length; i < len; i++) {
         var param = params[i];
         lisp_assert_not_null(param, "Bad param", params);
-        if (param.formt === "symbol") {
+        if (param.formt === "identifier") {
             if (lisp_is_sig_keyword(param.name)) {
                 switch (param.name) {
                 case lisp_optional_sig_keyword: 
@@ -619,7 +619,7 @@ function lisp_compile_call_site(args)
     
     for (var i = 0, len = args.length; i < len; i++) {
         var arg = args[i];
-        if (arg.formt === "symbol") {
+        if (arg.formt === "identifier") {
             if (lisp_is_keyword_arg(arg.name)) {
                 var name = lisp_clean_keyword_arg(arg.name);
                 var value = lisp_compile(args[++i]);
@@ -661,8 +661,8 @@ var lisp_keywords_dict = "_key_";
 var lisp_qq_rules =
     [
      // Atoms
-     [["%%quasiquote", {"?": "symbol", "type":"symbol"}],
-      ["%%symbol-form", {"!":"symbol"}]],
+     [["%%quasiquote", {"?": "identifier", "type":"identifier"}],
+      ["%%identifier-form", {"!":"identifier"}]],
      [["%%quasiquote", {"?": "number", "type":"number"}],
       ["%%number-form", {"!":"number"}]],
      [["%%quasiquote", {"?": "string", "type":"string"}],
@@ -697,7 +697,7 @@ function lisp_qq(form)
         if (!form) lisp_error("bad match form");
         var bindings = {};
         if (typeof lhs === "string") {
-            if (form.formt !== "symbol") return false;
+            if (form.formt !== "identifier") return false;
             return (lhs === form.name) ? bindings : false;
         } else if (lhs["?"]) {
             if (lhs.type && !(lhs.type === form.formt)) return false;
@@ -728,7 +728,7 @@ function lisp_qq(form)
 
     function qq_rewrite(rhs, bindings) {
         if (typeof rhs === "string") {
-            return new Lisp_symbol_form(rhs);
+            return new Lisp_identifier_form(rhs);
         } else if (rhs["!"]) {
             return bindings[rhs["!"]];
         } else if (rhs.length !== undefined) {
@@ -752,6 +752,7 @@ var lisp_vop_table = {
     "defined?": lisp_emit_vop_definedp,
     "funcall": lisp_emit_vop_funcall,
     "identifier": lisp_emit_vop_identifier,
+    "identifier-form": lisp_emit_vop_identifier_form,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
     "native": lisp_emit_vop_native,
@@ -761,8 +762,7 @@ var lisp_vop_table = {
     "progn": lisp_emit_vop_progn,
     "setq": lisp_emit_vop_setq,
     "string": lisp_emit_vop_string,
-    "string-form": lisp_emit_vop_string_form,
-    "symbol-form": lisp_emit_vop_symbol_form
+    "string-form": lisp_emit_vop_string_form
 };
 
 // Emits a VOP to JavaScript.
@@ -884,12 +884,12 @@ function lisp_emit_vop_string_form(vop)
     return "(new Lisp_string_form(" + JSON.stringify(vop.s) + "))";
 }
 
-/* Symbol form.
-   { vopt: "symbol-form", name: <string> } */
-function lisp_emit_vop_symbol_form(vop)
+/* Identifier form.
+   { vopt: "identifier-form", name: <string> } */
+function lisp_emit_vop_identifier_form(vop)
 {
-    lisp_assert_string(vop.name, "Bad symbol name", vop);
-    return "(new Lisp_symbol_form(" + JSON.stringify(vop.name) + "))";
+    lisp_assert_string(vop.name, "Bad identifier name", vop);
+    return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + "))";
 }
 
 /* Creates a lexical closure.

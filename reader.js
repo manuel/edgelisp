@@ -11,14 +11,14 @@
    string is simply a string.
 
    There are multiple types of forms; number forms, string forms,
-   symbol forms, and compound forms:
+   identifier forms, and compound forms:
    
    1.2   --> { formt: "number", sign: "+", integral_digits: "1",
                fractional_digits: ".2" }
    "foo" --> { formt: "string", s: "foo" }
-   foo   --> { formt: "symbol", name: "foo" }
+   foo   --> { formt: "identifier", name: "foo" }
    (foo) --> { formt: "compound", 
-               elts: [ { formt: "symbol", name: "foo" } ] } 
+               elts: [ { formt: "identifier", name: "foo" } ] } 
    ; line comments are ignored
 */
 
@@ -88,22 +88,22 @@ function lisp_string_syntax_action(ast)
     return new Lisp_string_form(ast[1]);
 }
 
-/**** Symbols ****/
+/**** Identifiers ****/
 
-var lisp_symbol_special_char =
+var lisp_identifier_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
     choice("-", "&", ":", ".", "=", ">","<", "%", "+", "?", "/", "*", "#");
 
-var lisp_symbol_syntax =
+var lisp_identifier_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
                                       range("0", "9"),
-                                      lisp_symbol_special_char)),
+                                      lisp_identifier_special_char)),
                        ""),
-           lisp_symbol_syntax_action);
+           lisp_identifier_syntax_action);
 
-function lisp_symbol_syntax_action(ast)
+function lisp_identifier_syntax_action(ast)
 {
-    return new Lisp_symbol_form(ast);
+    return new Lisp_identifier_form(ast);
 }
 
 /**** Compounds ****/
@@ -142,13 +142,13 @@ function lisp_native_escape_action(ast)
 
 function lisp_native_snippet_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("native-snippet"),
+    return new Lisp_compound_form([ new Lisp_identifier_form("native-snippet"),
                                     new Lisp_string_form(ast) ]);
 }
 
 function lisp_native_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_symbol_form("native") ]
+    return new Lisp_compound_form([ new Lisp_identifier_form("native") ]
                                   .concat(ast[1]));
 }
 
@@ -171,13 +171,13 @@ var lisp_unquote_splicing_syntax =
            lisp_shortcut_syntax_action("%%unquote-splicing"));
 
 var lisp_function_syntax =
-    action(sequence("\\", lisp_symbol_syntax),
+    action(sequence("\\", lisp_identifier_syntax),
            lisp_shortcut_syntax_action("function"));
 
 function lisp_shortcut_syntax_action(name)
 {
     return function(ast) {
-        return new Lisp_compound_form([ new Lisp_symbol_form(name),
+        return new Lisp_compound_form([ new Lisp_identifier_form(name),
                                         ast[1] ]);
     }
 }
@@ -195,7 +195,7 @@ var lisp_expression_syntax =
                       lisp_unquote_syntax,
                       lisp_unquote_splicing_syntax,
                       lisp_function_syntax,
-                      lisp_symbol_syntax));
+                      lisp_identifier_syntax));
 
 var lisp_program_syntax =
     whitespace(repeat1(lisp_expression_syntax));

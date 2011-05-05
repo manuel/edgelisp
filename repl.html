@@ -65,7 +65,7 @@ function lisp_repl_insert(input, className, optionalUrl)
 function lisp_repl_prepare(string)
 {
   var forms = lisp_read(string);
-  var progn = new Lisp_compound_form([new Lisp_symbol_form("%%progn")].concat(forms));
+  var progn = new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(forms));
   return progn
 }
 

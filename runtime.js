@@ -94,13 +94,13 @@ Lisp_string_form.prototype.toString = function() {
     return "\"" + this.s + "\"";
 }
 
-function Lisp_symbol_form(name)
+function Lisp_identifier_form(name)
 {
-    this.formt = "symbol";
+    this.formt = "identifier";
     this.name = name;
 }
 
-Lisp_symbol_form.prototype.toString = function() {
+Lisp_identifier_form.prototype.toString = function() {
     return this.name;
 }
 
@@ -281,10 +281,10 @@ function lisp_assert_list(value, message, arg)
     return value;
 }
 
-function lisp_assert_symbol_form(value, message, arg)
+function lisp_assert_identifier_form(value, message, arg)
 {
     lisp_assert(typeof value === "object", message, arg);
-    lisp_assert(value.formt === "symbol", message, arg);
+    lisp_assert(value.formt === "identifier", message, arg);
     lisp_assert_nonempty_string(value.name, message, arg);
     return value;
 }
@@ -561,9 +561,9 @@ function lisp_bif_params_specializers(_key_, params)
     for (var i = 0, len = sig.req_params.length; i < len; i++) {
         var param = sig.req_params[i];
         var specializer = param.specializer ? param.specializer : "object";
-        var specs = [ new Lisp_symbol_form("%%identifier"),
-                      new Lisp_symbol_form(specializer),
-                      new Lisp_symbol_form("class") ];
+        var specs = [ new Lisp_identifier_form("%%identifier"),
+                      new Lisp_identifier_form(specializer),
+                      new Lisp_identifier_form("class") ];
         specializers.push(new Lisp_compound_form(specs));
     }
     return new Lisp_compound_form(specializers);
@@ -834,15 +834,15 @@ function lisp_bif_eval(_key_, form)
     return lisp_eval(form);
 }
 
-function lisp_bif_symbol_name(_key_, symbol)
+function lisp_bif_identifier_name(_key_, identifier)
 {
-    lisp_assert_symbol_form(symbol);
-    return symbol.name;
+    lisp_assert_identifier_form(identifier);
+    return identifier.name;
 }
 
-function lisp_bif_symbolp(_key_, form)
+function lisp_bif_identifierp(_key_, form)
 {
-    return form.formt === "symbol";
+    return form.formt === "identifier";
 }
 
 function lisp_bif_compoundp(_key_, form)
@@ -904,9 +904,9 @@ function lisp_bif_string_to_form(_key_, string)
     return new Lisp_string_form(string);
 }
 
-function lisp_bif_string_to_symbol(_key_, string)
+function lisp_bif_string_to_identifier(_key_, string)
 {
-    return new Lisp_symbol_form(string);
+    return new Lisp_identifier_form(string);
 }
 
 function lisp_bif_apply(_key_, fun, args, keys)
@@ -923,12 +923,12 @@ function lisp_is_true(obj) // T
 
 /*** Name Mangling ***/
 
-/* Lisp symbols may contain additional characters beyond those
+/* Lisp identifiers may contain additional characters beyond those
    supported by JavaScript names.  These special characters are
    translated to uppercase characters, which are not allowed in
-   EdgeLisp symbols. */
+   EdgeLisp identifiers. */
 
-// Needs to be in sync with `lisp_symbol_special_char'.
+// Needs to be in sync with `lisp_identifier_special_char'.
 var lisp_mangle_table =
     [
      ["-", "_"],
@@ -1022,7 +1022,7 @@ lisp_export_class("simple-error", "Lisp_simple_error.prototype");
 lisp_export_class("string", "String.prototype");
 lisp_export_class("string-dict", "Lisp_string_dict.prototype");
 lisp_export_class("string-form", "Lisp_string_form.prototype");
-lisp_export_class("symbol-form", "Lisp_symbol_form.prototype");
+lisp_export_class("identifier-form", "Lisp_identifier_form.prototype");
 
 lisp_export_set_superclass("big-integer", "integer");
 lisp_export_set_superclass("boolean", "literal");
@@ -1045,7 +1045,7 @@ lisp_export_set_superclass("small-integer", "integer");
 lisp_export_set_superclass("string", "literal");
 lisp_export_set_superclass("string-dict", "object");
 lisp_export_set_superclass("string-form", "form");
-lisp_export_set_superclass("symbol-form", "form");
+lisp_export_set_superclass("identifier-form", "form");
 
 lisp_export_function("%append-compounds", "lisp_bif_append_compounds");
 lisp_export_function("%apply", "lisp_bif_apply");
@@ -1098,11 +1098,11 @@ lisp_export_function("%string-dict-put", "lisp_bif_string_dict_put");
 lisp_export_function("%string-len", "lisp_bif_string_len");
 lisp_export_function("%string-to-form", "lisp_bif_string_to_form");
 lisp_export_function("%string-to-number", "lisp_bif_string_to_number");
-lisp_export_function("%string-to-symbol", "lisp_bif_string_to_symbol");
+lisp_export_function("%string-to-identifier", "lisp_bif_string_to_identifier");
 lisp_export_function("%subtype?", "lisp_bif_subtypep");
 lisp_export_function("%superclass", "lisp_bif_superclass");
-lisp_export_function("%symbol-name", "lisp_bif_symbol_name");
-lisp_export_function("%symbol?", "lisp_bif_symbolp");
+lisp_export_function("%identifier-name", "lisp_bif_identifier_name");
+lisp_export_function("%identifier?", "lisp_bif_identifierp");
 lisp_export_function("%throw", "lisp_bif_throw");
 lisp_export_function("%type-of", "lisp_bif_type_of");
 

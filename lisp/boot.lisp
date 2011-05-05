@@ -260,8 +260,8 @@
 (defun string-to-number ((s string))
   (%string-to-number s))
 
-(defun string-to-symbol ((s string))
-  (%string-to-symbol s))
+(defun string-to-identifier ((s string))
+  (%string-to-identifier s))
 
 (defun subtype? ((class class) (possible-superclass class))
   (%subtype? class possible-superclass))
@@ -269,11 +269,11 @@
 (defun superclass ((c class))
   (%superclass c))
 
-(defun symbol-name ((s symbol-form))
-  (%symbol-name s))
+(defun identifier-name ((s identifier-form))
+  (%identifier-name s))
 
-(defun symbol? ((a object))
-  (%symbol? a))
+(defun identifier? ((a object))
+  (%identifier? a))
 
 (defun type-of ((a object))
   (%type-of a))
@@ -341,9 +341,9 @@
     (string-concat getter-name "-setter")))
 
 (defmacro setf (place value)
-  (if (symbol? place)
+  (if (identifier? place)
       #`(setq ,place ,value)
-      #`(,(string-to-symbol (setter-name (symbol-name (compound-elt place 0))))
+      #`(,(string-to-identifier (setter-name (identifier-name (compound-elt place 0))))
         ,@(compound-slice place 1)
         ,value)))
 
@@ -400,7 +400,7 @@
     #`(progn
         (defvar (class ,class-name) (make-class))
         (set-class-name (class ,class-name)
-                        ,(string-to-form (symbol-name class-name)))
+                        ,(string-to-form (identifier-name class-name)))
         ,(if superclass 
              #`(set-superclass (class ,class-name) (class ,superclass))
              #`(set-superclass (class ,class-name) (class object)))
@@ -411,7 +411,7 @@
 
 (defmacro defgeneric (name &rest args)
   #`(progn
-      (defvar (generic ,name) (make-generic ,(string-to-form (symbol-name name))))
+      (defvar (generic ,name) (make-generic ,(string-to-form (identifier-name name))))
       (defun ,name (&fast fast-arguments)
         (let ((method (find-method (generic ,name) fast-arguments)))
           (fast-apply method fast-arguments)))))
@@ -427,15 +427,15 @@
 (defmacro defslot (slot-descriptor class)
   (let* ((slot-name
           (if (compound? slot-descriptor)
-              (symbol-name (compound-elt slot-descriptor 0))
-              (symbol-name slot-descriptor)))
+              (identifier-name (compound-elt slot-descriptor 0))
+              (identifier-name slot-descriptor)))
          (accessor-name (string-concat "." slot-name))
          (setter-name (setter-name accessor-name))
          (slot-name-form (string-to-form slot-name)))
     #`(progn
-        (defmethod ,(string-to-symbol accessor-name) ((obj ,class))
+        (defmethod ,(string-to-identifier accessor-name) ((obj ,class))
           (slot-value obj ,slot-name-form))
-        (defmethod ,(string-to-symbol setter-name) ((obj ,class) value)
+        (defmethod ,(string-to-identifier setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
 
 ;;;; Equality
