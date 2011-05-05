@@ -1,9 +1,9 @@
 /*** Syntax ***/
 
-/* CyberLisp does not use a cons-based representation for Lisp source.
+/* EdgeLisp does not use a cons-based representation for Lisp source.
    Instead, forms are represented as objects, which makes it possible
    to attach additional information to forms, e.g. file name and line
-   number.  CyberLisp also has a separation between in-language
+   number.  EdgeLisp also has a separation between in-language
    datatypes (e.g. strings) and their syntactic representations
    (e.g. string forms).  A string form in the Lisp source is not a
    Lisp string: a string in the source (a string form) may have a line
