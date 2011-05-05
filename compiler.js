@@ -67,7 +67,7 @@ function lisp_compile(st, form)
         return { vopt: "string", s: form.s };
     case "identifier":
         lisp_assert_identifier_form(form, "Bad identifier form", form);
-        return { vopt: "identifier", name: form.name, namespace: "variable" };
+        return { vopt: "ref", name: form.name, namespace: "variable" };
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(st, form);
@@ -98,7 +98,7 @@ function lisp_compile_function_application(st, form)
 {
     var op = lisp_assert_identifier_form(form.elts[0], "Bad function call", form);
     var name = lisp_assert_nonempty_string(op.name, "Bad function name", form);
-    var fun = { vopt: "identifier", name: name, namespace: "function" };
+    var fun = { vopt: "ref", name: name, namespace: "function" };
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -201,7 +201,7 @@ function lisp_compile_special_identifier(st, form)
                                            "Bad identifier name", form);
     var namespace = lisp_assert_identifier_form(form.elts[2],
                                                 "Bad identifier namespace", form);
-    return { vopt: "identifier",
+    return { vopt: "ref",
              name: name.name,
              namespace: namespace.name };
 }
@@ -295,7 +295,7 @@ function lisp_compile_special_defsyntax(st, form)
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
-    return { vopt: "identifier", name: "nil", namespace: "variable" };
+    return { vopt: "ref", name: "nil", namespace: "variable" };
 }
 
 /* Executes body-form at compile-time, not at runtime.
@@ -304,7 +304,7 @@ function lisp_compile_special_eval_when_compile(st, form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
     lisp_eval(body_form);
-    return { vopt: "identifier", name: "nil", namespace: "variable" };
+    return { vopt: "ref", name: "nil", namespace: "variable" };
 }
 
 /* See heading ``Quasiquotation''.
@@ -833,7 +833,7 @@ function lisp_qq(st, form)
 var lisp_vop_table = {
     "defined?": lisp_emit_vop_definedp,
     "funcall": lisp_emit_vop_funcall,
-    "identifier": lisp_emit_vop_identifier,
+    "ref": lisp_emit_vop_identifier,
     "identifier-form": lisp_emit_vop_identifier_form,
     "if": lisp_emit_vop_if,
     "lambda": lisp_emit_vop_lambda,
@@ -881,7 +881,7 @@ function lisp_emit_vop_progn(st, vop)
 }
 
 /* Variable reference.
-   { vopt: "identifier", name: <string>, namespace: <string> }
+   { vopt: "ref", name: <string>, namespace: <string> }
    name: the name of the variable. */
 function lisp_emit_vop_identifier(st, vop)
 {
@@ -894,11 +894,11 @@ function lisp_emit_vop_identifier(st, vop)
 
 /* Assigns a value to a variable.
    { vopt: "setq", name: <vop>, value: <vop> }
-   name: the "identifier" VOP of the variable;
+   name: the "ref" VOP of the variable;
    value: VOP for the value. */
 function lisp_emit_vop_setq(st, vop)
 {
-    lisp_assert(vop.name.vopt === "identifier", "Bad place", vop);
+    lisp_assert(vop.name.vopt === "ref", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
@@ -908,10 +908,10 @@ function lisp_emit_vop_setq(st, vop)
 
 /* Checks whether variable is defined.
    { vopt: "defined?", name: <vop> }
-   name: the "identifier" VOP of the variable. */
+   name: the "ref" VOP of the variable. */
 function lisp_emit_vop_definedp(st, vop)
 {
-    lisp_assert(vop.name.vopt === "identifier", "Bad place", vop);
+    lisp_assert(vop.name.vopt === "ref", "Bad place", vop);
     lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
     lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
     var mname = lisp_mangle(vop.name.name, vop.name.namespace);
