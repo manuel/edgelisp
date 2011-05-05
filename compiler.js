@@ -254,7 +254,8 @@ function lisp_special_function(name)
 
 /**** List of special forms ****/
 
-/* Accesses the value of a global or local variable.
+/* Compound identifier.
+   Accesses the value of a global or local variable.
    Name and namespace are not evaluated.
    (%%identifier name namespace) -> value */
 function lisp_compile_special_identifier(st, form)
@@ -269,35 +270,33 @@ function lisp_compile_special_identifier(st, form)
 
 /* Updates the value of a global variable.
    Defines the global variable if it doesn't exist yet.
-   (%%defparameter identifier value) -> value */
+   (%%defparameter generalized-identifier value) -> value */
 function lisp_compile_special_defparameter(st, form)
 {
-    var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "setq", 
-             name: lisp_compile(st, name_form),
+             cid: lisp_generalized_identifier_to_cid(form.elts[1]),
              value: lisp_compile(st, value_form) };
 }
 
 /* Updates the value of a global or local variable.
-   (%%setq name value) -> value */
+   (%%setq generalized-identifier value) -> value */
 function lisp_compile_special_setq(st, form)
 {
     var name_form = lisp_assert_not_null(form.elts[1]);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "setq",
-             name: lisp_compile(st, name_form),
+             cid: lisp_generalized_identifier_to_cid(form.elts[1]),
              value: lisp_compile(st, value_form) };
 }
 
 /* Returns true if a local or global variable is defined (unlike
    Common Lisp's `boundp', the identifier is not evaluated).
-   (%%defined? identifier) -> boolean */
+   (%%defined? generalized-identifier) -> boolean */
 function lisp_compile_special_definedp(st, form)
 {
-    var name_form = lisp_assert_not_null(form.elts[1]);
     return { vopt: "defined?",
-             name: lisp_compile(st, name_form) };
+             cid: lisp_generalized_identifier_to_cid(form.elts[1]) };
 }
 
 /* Evaluates a number of forms in sequence and returns the value of the last.
@@ -588,11 +587,11 @@ function lisp_compile_special_native_snippet(st, form)
    Parameters are also represented as objects:
 
    { name: <string>,
+     namespace: <string>,
+     hygiene_context: <string-or-null>,
      init: <vop>,
      specializer: <string> }
 
-   name: name of the parameter;
-   
    init: VOP for the value to be used when no argument is supplied to
    the parameter (only significant for optional and keyword
    parameters).
@@ -974,7 +973,7 @@ function lisp_emit_vop_progn(st, vop)
    { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_ref(st, vop)
 {
-    if (!lisp_global_defined(st.contour, vop.cid)) {
+    if (!lisp_global_defined(vop.cid)) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -988,9 +987,7 @@ function lisp_emit_vop_ref(st, vop)
    { vopt: "setq", cid: <cid>, value: <vop> } */
 function lisp_emit_vop_setq(st, vop)
 {
-    lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
-    lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
-    if (!lisp_global_defined(st.contour, vop.cid)) {
+    if (!lisp_global_defined(vop.cid)) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -1002,9 +999,7 @@ function lisp_emit_vop_setq(st, vop)
    { vopt: "defined?", cid: <cid> } */
 function lisp_emit_vop_definedp(st, vop)
 {
-    lisp_assert_nonempty_string(vop.name.name, "Bad place name", vop);
-    lisp_assert_nonempty_string(vop.name.namespace, "Bad place namespace", vop);
-    if (!lisp_global_defined(st.contour, vop.cid)) {
+    if (!lisp_global_defined(vop.cid)) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -1064,7 +1059,7 @@ function lisp_emit_vop_string_form(st, vop)
     return "(new Lisp_string_form(" + JSON.stringify(vop.s) + "))";
 }
 
-/* Identifier form.
+/* Quote identifier form.
    { vopt: "identifier-form", name: <string> } */
 function lisp_emit_vop_identifier_form(st, vop)
 {
