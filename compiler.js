@@ -357,11 +357,17 @@ function lisp_compile_special_if(st, form)
 function lisp_compile_special_lambda(st, form)
 {
     lisp_assert_compound_form(form.elts[1]);
-    var sig = form.elts[1].elts;
     var body = form.elts[2];
-    return { vopt: "lambda", 
-             sig: lisp_compile_sig(st, sig),
-             body: lisp_compile(st, body) };
+    var sig = lisp_compile_sig(st, form.elts[1].elts);
+    var contour = new Lisp_contour(sig, st.contour);
+    try {
+        st.contour = contour;
+        return { vopt: "lambda", 
+                 sig: sig,
+                 body: lisp_compile(st, body) };
+    } finally {
+        st.contour = st.contour.parent;
+    }
 }
 
 /* Calls a function.
@@ -775,9 +781,9 @@ function lisp_sig_contains_cid(sig, cid)
         if (param_equals_cid(sig.key_params[i], cid)) return true;
     for (var i = 0; i < sig.aux_params.length; i++)
         if (param_equals_cid(sig.aux_params[i], cid)) return true;
-    if (param_equals_cid(sig.rest_param, cid)) return true;
-    if (param_equals_cid(sig.all_keys_param, cid)) return true;
-    if (param_equals_cid(sig.fast_keys_param, cid)) return true;
+    if (sig.rest_param && param_equals_cid(sig.rest_param, cid)) return true;
+    if (sig.all_keys_param && param_equals_cid(sig.all_keys_param, cid)) return true;
+    if (sig.fast_param && param_equals_cid(sig.fast_param, cid)) return true;
     return false;
 }
 
