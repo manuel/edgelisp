@@ -105,9 +105,6 @@ function lisp_compile_function_application(st, form)
              call_site: call_site };
 }
 
-/* Maps the mangled names of macros to their expander functions. */
-var lisp_macros_table = {};
-
 function lisp_macro_function(name)
 {
     var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
@@ -123,6 +120,42 @@ function lisp_set_macro_function(name, expander)
     return expander;
 }
 
+/*** Persistent compiler state ***/
+
+/* A compiler identifier (CID) is the fully explicit form of
+   identifier used inside the compiler.
+
+   The name is a string.
+
+   The namespace is "variable", "function", "class" or another of the
+   Lisp-Omega namespaces.
+   
+   The hygiene-context is null for user-entered identifiers, and a
+   UUID string for macro-generated identifiers. */ 
+function Lisp_cid(name, namespace, hygiene_context)
+{
+    lisp_assert_string(name, "Bad cid name", name);
+    lisp_assert_string(namespace, "Bad cid namespace", namespace);
+    this.name = name;
+    this.namespace = namespace;
+    this.hygiene_context = hygiene_context;
+}
+
+function lisp_mangle_cid(cid)
+{
+    return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
+}
+
+/* Maps the mangled CIDs of macros to their expander functions. */
+var lisp_macros_table = {};
+
+/* A compile-time set mapping mangled CIDs to true. */
+var lisp_globals_set = {};
+
+function lisp_define_global(cid)
+{
+    
+}
 
 /*** Special forms ***/
 
