@@ -199,6 +199,9 @@
 (defun make-generic ((name string))
   (%make-generic name))
 
+(defun make-uuid ()
+  (%make-uuid))
+
 (defun note ((a object))
   (%note a))
 

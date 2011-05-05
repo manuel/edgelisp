@@ -987,6 +987,13 @@ function lisp_mangle_method(name)
     return lisp_mangle(name, "method");
 }
 
+/*** UUID ***/
+
+function lisp_bif_make_uuid(_key_)
+{
+    return uuid();
+}
+
 /*** Export to Lisp ***/
 
 lisp_export("#t", "true");
@@ -1071,6 +1078,7 @@ lisp_export_function("%make-class", "lisp_bif_make_class");
 lisp_export_function("%make-compound", "lisp_bif_make_compound");
 lisp_export_function("%make-generic", "lisp_bif_make_generic");
 lisp_export_function("%make-instance", "lisp_bif_make_instance");
+lisp_export_function("%make-uuid", "lisp_bif_make_uuid");
 lisp_export_function("%note", "lisp_bif_note");
 lisp_export_function("%params-specializers", "lisp_bif_params_specializers");
 lisp_export_function("%print", "lisp_bif_print");
