@@ -951,16 +951,23 @@ var lisp_mangle_table =
      ["#", "O"],
      ];
 
-function lisp_mangle(name, namespace)
+function lisp_do_mangle(string)
 {
-    lisp_assert_nonempty_string(name, "Bad name", name);
-    lisp_assert_nonempty_string(namespace, "Bad namespace", namespace);
+    var res = string;
     for (var i = 0, len = lisp_mangle_table.length; i < len; i++) {
         var pair = lisp_mangle_table[i];
         var pattern = new RegExp("\\" + pair[0], "g");
-        name = name.replace(pattern, pair[1]);
+        res = res.replace(pattern, pair[1]);
     }
-    return "_lisp_" + namespace + "_" + name;
+    return res;
+}
+
+function lisp_mangle(name, namespace, hygiene_context)
+{
+    lisp_assert_nonempty_string(name, "Bad name", name);
+    lisp_assert_nonempty_string(namespace, "Bad namespace", namespace);
+    return "_lisp_" + lisp_do_mangle(namespace) + "_" + lisp_do_mangle(name) +
+        (hygiene_context ? ("_" + lisp_do_mangle(hygiene_context)) : "");
 }
 
 /* Additionally, the different namespaces (variable, function, slot,
