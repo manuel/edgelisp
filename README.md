@@ -24,7 +24,7 @@ Features
 * Slot access through (overridable) generic functions
 * (Slightly) Generalized references
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
-* Dynamic variables
+* Optional dynamically-scoped variables
 * Everything-is-an-object
 * In-browser REPL
 * Scheme numerical tower
