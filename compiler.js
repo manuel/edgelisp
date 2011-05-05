@@ -75,32 +75,31 @@ function lisp_compile(st, form)
 
 function lisp_compile_compound_form(st, form)
 {
-    var op_cid = lisp_function_identifier_to_cid(form.elts[0]);
-    if (lisp_local_defined(st.contour, op_cid)) {
-        // Call to a locally bound function
+    var cid = lisp_function_identifier_to_cid(form.elts[0]);
+    if (lisp_local_defined(st.contour, cid)) {
         return lisp_compile_function_application(st, form);
     } else {
-        var res = lisp_compile_special_or_macro();
-        if (res) return res;
-        if (lisp_global_defined(op_cid))
-            return lisp_compile_function_application(st, form);
-        op_cid.hygiene_context = null;
-        return lisp_compile_function_application(st, form);        
+        return global_call(st, form);
     }
 
-    function lisp_compile_special_or_macro()
+    function global_call(st, form)
     {
-        var special = lisp_special_function(op_cid.name);
-        if (special)
-            return special(st, form);
-
-        var macro = lisp_macro_function(op_cid.name);
-        if (macro)
-            // The macro function is a Lisp function, so the calling
-            // convention argument must be supplied.
-            return lisp_compile(st, macro(null, form));
-
-        return null;
+        var special_function = lisp_special_function(cid.name);
+        if (special_function) {
+            return special_function(st, form);
+        } else {
+            var macro_function = lisp_macro_function(cid.name);
+            if (macro_function) {
+                return lisp_compile_compound_form(st, macro_function(null, form));
+            } else {
+                if (lisp_global_defined(cid))
+                    return lisp_compile_function_application(st, form);
+                if (cid.hygiene_context) {
+                    cid.hygiene_context = null;
+                    return global_call(st, form);
+                }
+            }
+        }
     }
 }
 
