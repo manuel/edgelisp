@@ -17,6 +17,10 @@
    Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
    Boston, MA 02110-1301, USA. */
 
+// Abbrevs:
+// CID -- compiler identifier, explicit form of identifier used during compilation
+// VOP -- virtual operation, an AST node really
+
 /*** Compilation and Evaluation ***/
 
 function lisp_eval(form)
