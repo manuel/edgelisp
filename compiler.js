@@ -302,9 +302,11 @@ function lisp_compile_special_identifier(st, form)
    (%%defparameter generalized-identifier value) -> value */
 function lisp_compile_special_defparameter(st, form)
 {
+    var cid = lisp_generalized_identifier_to_cid(form.elts[1]);
+    lisp_define_global(cid);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "defparameter", 
-             cid: lisp_generalized_identifier_to_cid(form.elts[1]),
+             cid: cid,
              value: lisp_compile(st, value_form) };
 }
 
