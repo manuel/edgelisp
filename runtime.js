@@ -557,7 +557,11 @@ function lisp_bif_put_method(_key_, generic, specializers, method)
 function lisp_bif_params_specializers(_key_, params)
 {
     var specializers = [];
-    var sig = lisp_compile_sig(params.elts);
+    // This empty compilation state is a HACK, but it doesn't matter,
+    // as we're only interested in the specializers, which are a
+    // purely syntactical matter.
+    var st = new Lisp_compilation_state();
+    var sig = lisp_compile_sig(st, params.elts);
     for (var i = 0, len = sig.req_params.length; i < len; i++) {
         var param = sig.req_params[i];
         var specializer = param.specializer ? param.specializer : "object";
