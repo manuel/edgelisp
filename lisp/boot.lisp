@@ -198,6 +198,9 @@
 (defun macroexpand-1 ((form form))
   (%macroexpand-1 form))
 
+(defun macroexpand ((form form))
+  (%macroexpand form))
+
 (defun make-class ()
   (%make-class))
 

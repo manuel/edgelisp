@@ -803,13 +803,38 @@ function lisp_bif_has_slot(_key_, obj, name)
 
 /*** Utilities ***/
 
-function lisp_bif_macroexpand_1(_key_, form)
+/* Maps the mangled CIDs of macros to their expander functions.
+ 
+   This is defined, but unused in the runtime, so that users calling
+   macroexpand don't get an error. */
+var lisp_macros_table = {};
+
+function lisp_macroexpand(form)
+{
+    var exp = lisp_macroexpand_1(form);
+    if (exp === form)
+        return exp;
+    else
+        return lisp_macroexpand(form);
+}
+
+function lisp_macroexpand_1(form)
 {
     var macro = lisp_macro_function(form.elts[0].name);
     if (macro)
         return macro(null, form);
     else
         return form;
+}
+
+function lisp_bif_macroexpand(_key_, form)
+{
+    return lisp_macroexpand(form);
+}
+
+function lisp_bif_macroexpand_1(_key_, form)
+{
+    return lisp_macroexpand_1(form);
 }
 
 function lisp_bif_print(_key_, object)
@@ -1086,6 +1111,7 @@ lisp_export_function("%list-empty?", "lisp_bif_list_emptyp");
 lisp_export_function("%list-len", "lisp_bif_list_len");
 lisp_export_function("%list-slice", "lisp_bif_list_slice");
 lisp_export_function("%macroexpand-1", "lisp_bif_macroexpand_1");
+lisp_export_function("%macroexpand", "lisp_bif_macroexpand");
 lisp_export_function("%make-class", "lisp_bif_make_class");
 lisp_export_function("%make-compound", "lisp_bif_make_compound");
 lisp_export_function("%make-generic", "lisp_bif_make_generic");

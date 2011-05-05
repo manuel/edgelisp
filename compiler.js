@@ -77,26 +77,33 @@ function lisp_compile(st, form)
 
 function lisp_compile_compound_form(st, form)
 {
-    var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
-    var name = lisp_assert_nonempty_string(op.name, "Bad operator name", form);
-    var special = lisp_special_function(name);
-    if (special) {
-        return special(st, form);
+    var op_cid = lisp_function_identifier_to_cid(form.elts[0]);
+    if (lisp_local_defined(st, op_cid)) {
+        // Call to a locally bound function
+        return lisp_compile_function_application(st, form);
     } else {
-        var macro = lisp_macro_function(op.name);
-        if (macro) {
-            // The macro function is a Lisp function, so the calling
-            // convention argument must be supplied.
-            return lisp_compile(st, macro(null, form));
+        var special = lisp_special_function(op_cid.name);
+        if (special) {
+            // Special form call
+            return special(st, form);
         } else {
-            return lisp_compile_function_application(st, form);
+            var macro = lisp_macro_function(op_cid.name);
+            if (macro) {
+                // Macro call
+                // The macro function is a Lisp function, so the calling
+                // convention argument must be supplied.
+                return lisp_compile(st, macro(null, form));
+            } else {
+                // Global function call
+                return lisp_compile_function_application(st, form);
+            }
         }
     }
 }
 
 function lisp_compile_function_application(st, form)
 {
-    var fun = { vopt: "ref", cid: lisp_function_identifier_to_cid(form) };
+    var fun = { vopt: "ref", cid: lisp_function_identifier_to_cid(form.elts[0]) };
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -175,9 +182,6 @@ function lisp_mangle_cid(cid)
 {
     return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
 }
-
-/* Maps the mangled CIDs of macros to their expander functions. */
-var lisp_macros_table = {};
 
 /* A compile-time set mapping mangled CIDs to true. */
 var lisp_globals_set = {};
