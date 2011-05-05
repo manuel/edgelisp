@@ -168,6 +168,12 @@
 (defun has-slot ((a object) (slot-name string))
   (%has-slot a slot-name))
 
+(defun identifier-name ((s identifier-form))
+  (%identifier-name s))
+
+(defun identifier? ((a object))
+  (%identifier? a))
+
 (defun list (&rest arguments)
   (apply \%list arguments))
 
@@ -257,23 +263,17 @@
 (defun string-to-form ((s string))
   (%string-to-form s))
 
-(defun string-to-number ((s string))
-  (%string-to-number s))
-
 (defun string-to-identifier ((s string))
   (%string-to-identifier s))
+
+(defun string-to-number ((s string))
+  (%string-to-number s))
 
 (defun subtype? ((class class) (possible-superclass class))
   (%subtype? class possible-superclass))
 
 (defun superclass ((c class))
   (%superclass c))
-
-(defun identifier-name ((s identifier-form))
-  (%identifier-name s))
-
-(defun identifier? ((a object))
-  (%identifier? a))
 
 (defun type-of ((a object))
   (%type-of a))

@@ -281,7 +281,7 @@ function lisp_compile_special_quote(form)
     return lisp_compile_special_quasiquote(form);
 }
 
-/* Produces  a identifier form.
+/* Produces a identifier form.
    (%%identifier-form identifier) -> identifier-form */
 function lisp_compile_special_identifier_form(form)
 {
