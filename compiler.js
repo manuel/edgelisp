@@ -19,12 +19,6 @@
 
 /*** Compilation and Evaluation ***/
 
-function Lisp_compilation_state()
-{
-    // Used for hygiene maintenance.
-    this.in_quasiquote = false;
-}
-
 function lisp_eval(form)
 {
     var st = new Lisp_compilation_state();
@@ -78,7 +72,7 @@ function lisp_compile(st, form)
 function lisp_compile_compound_form(st, form)
 {
     var op_cid = lisp_function_identifier_to_cid(form.elts[0]);
-    if (lisp_local_defined(st, op_cid)) {
+    if (lisp_local_defined(st.contour, op_cid)) {
         // Call to a locally bound function
         return lisp_compile_function_application(st, form);
     } else {
@@ -194,6 +188,31 @@ function lisp_define_global(cid)
 function lisp_global_defined(cid)
 {
     return lisp_globals_set[lisp_mangle_cid(cid)] === true;
+}
+
+function Lisp_compilation_state()
+{
+    // Tracks lambdas
+    this.contour = null;
+    // Used for hygiene maintenance.
+    this.in_quasiquote = false;
+}
+
+function Lisp_contour(sig, parent)
+{
+    this.sig = sig;
+    this.parent = parent;
+}
+
+/* Returns true of the CID is lexically bound. */
+function lisp_local_defined(contour, cid)
+{
+    if (contour) {
+        return (lisp_sig_contains_cid(contour.sig, cid))
+            || lisp_local_defined(contour.parent, cid);
+    } else {
+        return false;
+    }
 }
 
 /*** Special forms ***/
@@ -634,13 +653,17 @@ function lisp_compile_sig(st, params)
     {
         if (param.formt === "identifier") {
             // Ordinary parameter (positional or keyword)
-            return { name: param.name };
+            return { name: param.name,
+                     namespace: "variable",
+                     hygiene_context: param.hygiene_context };
         } else if ((param.formt === "compound") &&
                    (cur === req)) {
             // Typed required parameter
             var name_form = lisp_assert_identifier_form(param.elts[0]);
             var specializer_form = lisp_assert_identifier_form(param.elts[1]);
             return { name: name_form.name,
+                     namespace: "variable",
+                     hygiene_context: name_form.hygiene_context,
                      specializer: specializer_form.name };
         } else if ((param.formt === "compound") &&
                    ((cur === opt) ||
@@ -650,6 +673,8 @@ function lisp_compile_sig(st, params)
             var name_form = lisp_assert_identifier_form(param.elts[0]);
             var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
+                     namespace: name_form.namespace,
+                     hygiene_context: name_form.hygiene_context,
                      init: lisp_compile(st, init_form) };
         } else {
             lisp_error("Bad parameter: " + JSON.stringify(param), params);
@@ -698,6 +723,29 @@ function lisp_param_name(param)
 function lisp_mangled_param_name(param)
 {
     return lisp_mangle_var(lisp_param_name(param));
+}
+
+function lisp_sig_contains_cid(sig, cid)
+{
+    function param_equals_cid(param, cid)
+    {
+        return (param.name === cid.name)
+            && (param.namespace === cid.namespace)
+            && (param.hygiene_context === cid.hygiene_context);
+    }
+
+    for (var i = 0; i < sig.req_params.length; i++)
+        if (param_equals_cid(sig.req_params[i], cid)) return true;
+    for (var i = 0; i < sig.opt_params.length; i++)
+        if (param_equals_cid(sig.opt_params[i], cid)) return true;
+    for (var i = 0; i < sig.key_params.length; i++)
+        if (param_equals_cid(sig.key_params[i], cid)) return true;
+    for (var i = 0; i < sig.aux_params.length; i++)
+        if (param_equals_cid(sig.aux_params[i], cid)) return true;
+    if (param_equals_cid(sig.rest_param, cid)) return true;
+    if (param_equals_cid(sig.all_keys_param, cid)) return true;
+    if (param_equals_cid(sig.fast_keys_param, cid)) return true;
+    return false;
 }
 
 /**** Function call sites ****/
@@ -924,7 +972,9 @@ function lisp_emit_vop_identifier(st, vop)
 {
     var mname = lisp_mangle_cid(vop.cid);
     // todo: pass CID's hygiene context to lisp_undefined_identifier
-    var error_args = JSON.stringify(vop.cid.name) + ", " + JSON.stringify(vop.cid.namespace);
+    var error_args = JSON.stringify(vop.cid.name) + ", "
+        + JSON.stringify(vop.cid.namespace) + ", "
+        + JSON.stringify(vop.cid.hygiene_context);
     return "(typeof " + mname + " !== \"undefined\" ? " + mname + " : lisp_undefined_identifier(" + error_args + "))";
 }
 
