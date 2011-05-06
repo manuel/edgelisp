@@ -48,28 +48,60 @@
 (defun repl-scroll-to-bottom ()
   #{ window.scrollTo(0, document.body.scrollHeight), null #})
 
-(dom-append
- (html-div :id "output")
- (html-form :action "javascript:_lisp_function_repl(null)"
-            (html-input :id "input" :type "text")))
-
-(dom-focus (dom-id "input"))
-(note "EdgeLisp 0.1.13")
-
 (unless (and (defined? \local-storage-supported?)
              (local-storage-supported?))
   (warn "Local storage not supported"))
 
 ;;;; History
 
+(defvar *repl-offset* 0)
+
+(defun repl-history-count (-> number)
+  (let ((ct-str (local-storage-get-item "repl-history-count")))
+    (if ct-str
+        (eval (read-from-string ct-str))
+        0)))  
+
+(defun repl-history-item-name ((ct number) -> string)
+  (string-concat "repl-history-item-" (show ct)))
+
 (defun repl-history-add ((input string))
   (when (and (defined? \local-storage-supported?)
              (local-storage-supported?))
-    (let ((ct-str (local-storage-get-item "repl-history-count"))
-          (ct 0))
-      (when ct-str
-        (setq ct (eval (read-from-string ct-str))))
+    (let ((ct (repl-history-count)))
       (local-storage-set-item "repl-history-count" (show (+ 1 ct)))
-      (local-storage-set-item (string-concat "repl-history-item-" (show ct))
-                              input))))
+      (local-storage-set-item (repl-history-item-name ct)
+                              input)
+      (setq *repl-offset* 0))))
 
+(defun repl-history-previous-item ()
+  (when (and (defined? \local-storage-supported?)
+             (local-storage-supported?))
+    (when (< *repl-offset* (repl-history-count))
+      (incf *repl-offset*)
+      (let ((i (- (repl-history-count) *repl-offset*)))
+        (when (and (> i -1) (< i (repl-history-count)))
+          (dom-set-value (dom-id "input")
+                         (local-storage-get-item (repl-history-item-name i))))))))
+
+(defun repl-history-next-item ()
+  (when (and (defined? \local-storage-supported?)
+             (local-storage-supported?))
+    (decf *repl-offset*)
+    (let ((i (- (repl-history-count) *repl-offset*)))
+      (when (and (> i -1) (< i (repl-history-count)))
+        (dom-set-value (dom-id "input")
+                       (local-storage-get-item (repl-history-item-name i)))))))
+
+(dom-append
+ (html-div :id "output")
+ (html-form :action "javascript:_lisp_function_repl(null)"
+            (html-input :id "input" :type "text"))
+ (html-text "History")
+ (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
+              (html-text "previous"))
+ (html-button :onclick "_lisp_function_repl_history_next_item(null)"
+              (html-text "next")))
+
+(dom-focus (dom-id "input"))
+(note "EdgeLisp 0.1.13")
