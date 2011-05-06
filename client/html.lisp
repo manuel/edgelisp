@@ -28,12 +28,14 @@
                 children)
           element))))
 
-(define-html-tag div)
-(define-html-tag input)
 (define-html-tag button)
+(define-html-tag div)
+(define-html-tag form)
+(define-html-tag input)
+(define-html-tag span)
 
-(defun html-text ((s string))
-  (let ((element (dom-create-element "span")))
+(defun html-text ((s string) -> native)
+  (let ((element (dom-create-element "div")))
     (dom-set-inner-html element s)
     element))
 

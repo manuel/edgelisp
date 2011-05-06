@@ -19,14 +19,20 @@
 
 (defun dom-document-body (-> native) #{ document.body #})
 
+(defun dom-id ((id string) -> object)
+  #{ document.getElementById((~id)) #})
+
 (defun dom-append-child ((parent native) (element native) -> nil)
   #{ (~parent).appendChild((~element)), null #})
 
 (defun dom-create-element ((tag string) -> native)
-  #{ ~(dom-document).createElement((~tag)) #})
+  #{ document.createElement((~tag)) #})
 
 (defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
   #{ (~element).setAttribute((~attr-name), (~value)), null #})
+
+(defun dom-value ((element native) -> object)
+  #{ (~element).value #})
 
 (defun dom-set-id ((element native) (id string) -> nil)
   #{ (~element).id = (~id), null #})

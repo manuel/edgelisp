@@ -18,9 +18,6 @@
 (load "client/dom.lisp")
 (load "client/html.lisp")
 
-(defun note ((s string))
-  (dom-append (html-text s)))
-
 (defclass retry-repl-request (restart))
 
 (defun repl-eval (form)
@@ -38,15 +35,15 @@
            (return-from end (eval form)))))))
 
 (dom-append
- (html-div :id "output"
-           (html-text "Hello")))
+ (html-div :id "output")
+ (html-form :action "javascript:_lisp_function_repl(null)"
+            (html-input :id "input" :type "text")))
 
-(dom-append
- (html-input :type "text")
- (html-button :onclick "_lisp_function_repl(null)" (html-text "eval")))
+(defun print ((a object))
+  (dom-append-child (dom-id "output") (html-text (show a))))
 
 (defun repl ()
-  (alert)
-  )
+  (print (repl-eval (read-from-string (dom-value (dom-id "input")))))
+  #f)
 
 (provide "repl")
