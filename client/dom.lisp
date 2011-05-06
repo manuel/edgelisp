@@ -25,6 +25,9 @@
 (defun dom-create-element ((tag string) -> native)
   #{ ~(dom-document).createElement((~tag)) #})
 
+(defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
+  #{ (~element)[(~attr-name)] = (~value), null #})
+
 (defun dom-set-id ((element native) (id string) -> nil)
   #{ (~element).id = (~id), null #})
 

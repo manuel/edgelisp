@@ -15,15 +15,22 @@
 
 ;;;; Hypertext Markup Language
 
-(defun html-div (&key id &rest children)
-  (let ((element (dom-create-element "div")))
-    (when id
-      (dom-set-id element id))
-    (each (lambda (child)
-            (dom-append-child element child))
-          children)
-    element))
-    
+(defmacro define-html-tag (name &optional (prefix #'html-))
+  (let ((fun-name (string-to-identifier 
+                   (string-concat (identifier-name prefix) name))))
+    #`(defun ,fun-name (&all-keys attrs &rest children)
+        (let ((element (dom-create-element ,(string-to-form (identifier-name name)))))
+          (string-dict-map (lambda (attr-name)
+                             (dom-set-attribute element attr-name (get attrs attr-name)))
+                           attrs)
+          (each (lambda (child)
+                  (dom-append-child element child))
+                children)
+          element))))
+
+(define-html-tag div)
+(define-html-tag input)
+
 (defun html-text ((s string))
   (let ((element (dom-create-element "span")))
     (dom-set-inner-html element s)
