@@ -3,8 +3,6 @@ EdgeLisp
 
 EdgeLisp is a Lisp for JavaScript.
 
-<a href="http://manuel.github.com/edgelisp/repl.html">Try the REPL</a>
-
 Contact
 -------
 
@@ -17,7 +15,7 @@ Features
 * Multiple-dispatching generic functions
 * Separate function and variable namespaces (Lisp-2)
 * Optional, keyword, and rest parameters
-* Runtime type-checked function parameters
+* Runtime type-checked function parameters and results
 * Nonlocal exits; stack unwind protection
 * Condition system with restarts
 * `defmacro`
@@ -50,7 +48,7 @@ You choose the license for Lisp code *you write* in EdgeLisp.
 (EdgeLisp-compiled programs are not considered derived works of the
 EdgeLisp compiler, runtime, and included Lisp files.)
 
-If you *modify* EdgeLisp (compiler, runtime, or included Lisp files),
+If you *modify* EdgeLisp itself (the compiler, runtime, or Lisp code),
 you must make the modified version available to your users under the
 AGPL.  See file COPYING.
 

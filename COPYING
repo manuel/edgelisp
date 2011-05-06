@@ -1,3 +1,6 @@
+The AGPL applies to the EdgeLisp compiler, runtime, and Lisp files,
+not to your programs.  See the README.
+
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
