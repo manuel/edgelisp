@@ -15,20 +15,20 @@
 
 ;;;; Document Object Model
 
-(defun dom-document () #{ document #})
+(defun dom-document (-> native) #{ document #})
 
-(defun dom-document-body () #{ document.body #})
+(defun dom-document-body (-> native) #{ document.body #})
 
-(defun dom-append-child (parent element)
+(defun dom-append-child ((parent native) (element native) -> nil)
   #{ (~parent).appendChild((~element)), null #})
 
-(defun dom-create-element ((tag string))
+(defun dom-create-element ((tag string) -> native)
   #{ ~(dom-document).createElement((~tag)) #})
 
-(defun dom-set-id (element (id string))
-  #{ (~element).id = (~id) #})
+(defun dom-set-id ((element native) (id string) -> nil)
+  #{ (~element).id = (~id), null #})
 
-(defun dom-set-inner-html (element (html string))
-  #{ (~element).innerHTML = (~html) #})
+(defun dom-set-inner-html ((element native) (html string) -> nil)
+  #{ (~element).innerHTML = (~html), null #})
 
 (provide "dom")
