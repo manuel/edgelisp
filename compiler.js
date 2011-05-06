@@ -151,7 +151,7 @@ function Lisp_compilation_state()
     // Tracks lambdas
     this.contour = null;
     // Used for hygiene maintenance.
-    this.in_quasiquote = false;
+    this.in_quasiquote = null;
 }
 
 function Lisp_contour(sig, parent)
@@ -340,7 +340,7 @@ function lisp_compile_special_quasiquote(st, form)
     // pick up the outer, enclosing context.
 
     var in_quasiquote = st.in_quasiquote;
-    st.in_quasiquote = true;
+    st.in_quasiquote = uuid();
     try {
         qq_result = lisp_qq(st, form);
         if (in_quasiquote) {
@@ -357,7 +357,7 @@ function lisp_compile_special_quasiquote(st, form)
     function wrap_in_hygiene_context(form)
     {
         // (let ((%%hygiene-context (%make-uuid))) ,form)
-        return make_let(new Lisp_identifier_form("%%hygiene-context"),
+        return make_let(new Lisp_identifier_form("%%hygiene-context", st.in_quasiquote),
                         new Lisp_compound_form([new Lisp_identifier_form("%make-uuid")]),
                         form);
     }
@@ -1035,8 +1035,9 @@ function lisp_emit_vop_identifier_form(st, vop)
     // Hygiene: constructing an identifier form grabs the variable
     // %%hygiene-context, and stores it in the identifier.
     lisp_assert_string(vop.name, "Bad identifier name", vop);
+    var hygiene_context = new Lisp_cid("%%hygiene-context", "variable", st.in_quasiquote);
     return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + ", "
-                                    + "_lisp_variable_NNhygiene_context))";
+        + lisp_mangle_cid(hygiene_context) + "))";
 }
 
 /* Creates a lexical closure.

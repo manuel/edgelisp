@@ -1108,6 +1108,7 @@ function lisp_make_uuid()
 lisp_export("#t", "true");
 lisp_export("#f", "false");
 lisp_export("nil", "null");
+lisp_export("%%hygiene-context", "null");
 
 lisp_export_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_export_class("boolean", "Boolean.prototype");

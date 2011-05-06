@@ -1,7 +1,5 @@
 ;;;; Bootstrap defmacro
 
-(%%defparameter %%hygiene-context nil)
-
 (%%defsyntax defmacro
   (%%lambda (defmacro-form)
     #`(%%defsyntax ,(%compound-elt defmacro-form 1)
