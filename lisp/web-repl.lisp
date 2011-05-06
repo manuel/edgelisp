@@ -16,7 +16,7 @@
 (defclass retry-repl-request (restart))
 
 (defun web-repl-eval (form)
-  (block abort
+  (block end
     (loop
        (block retry
          (restart-bind ((retry-repl-request
@@ -30,6 +30,6 @@
                         (hard-abort
                          (lambda (r)
                            (hard-abort))))
-           (eval form))))))
+           (return-from end (eval form)))))))
 
 (provide "web-repl")
