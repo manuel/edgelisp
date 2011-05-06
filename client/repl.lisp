@@ -40,7 +40,8 @@
             (html-input :id "input" :type "text")))
 
 (defun print ((a object))
-  (dom-append-child (dom-id "output") (html-text (show a))))
+  (dom-append-child (dom-id "output") (html-text (show a)))
+  (repl-scroll-to-bottom))
 
 (defun repl ()
   (let ((input (dom-id "input")))
@@ -50,4 +51,8 @@
     (dom-set-value input ""))
   #f)
 
+(defun repl-scroll-to-bottom ()
+  #{ window.scrollTo(0, document.body.scrollHeight), null #})
+
+(dom-focus (dom-id "input"))
 (note "EdgeLisp 0.1.13")
