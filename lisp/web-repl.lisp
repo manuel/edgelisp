@@ -26,10 +26,7 @@
                         (abort
                          (lambda (r)
                            (note "Aborting")
-                           (return-from abort)))
-                        (hard-abort
-                         (lambda (r)
-                           (hard-abort))))
+                           (return-from end))))
            (return-from end (eval form)))))))
 
 (provide "web-repl")
