@@ -34,4 +34,8 @@
 (defun dom-set-inner-html ((element native) (html string) -> nil)
   #{ (~element).innerHTML = (~html), null #})
 
+
+(defun dom-append ((element native) -> nil)
+  (dom-append-child (dom-document-body) element))
+
 (provide "dom")
