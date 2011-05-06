@@ -636,7 +636,7 @@ function lisp_bif_params_specializers(_key_, params)
         var param = sig.req_params[i];
         var specializer = param.specializer ? param.specializer : "object";
         var specs = [ new Lisp_identifier_form("%%identifier"),
-                      new Lisp_identifier_form(specializer),
+                      new Lisp_identifier_form(specializer, param.hygiene_context),
                       new Lisp_identifier_form("class") ];
         specializers.push(new Lisp_compound_form(specs));
     }
