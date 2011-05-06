@@ -43,6 +43,17 @@ EdgeLisp aspires to compile to EMCAScript, 3rd Edition (JavaScript
 1.5), but currently uses the nonstandard extensions __proto__ (for
 inheritance) and function.caller (for debugging).
 
+License
+-------
+
+You choose the license for Lisp code *you write* in EdgeLisp.
+(EdgeLisp-compiled programs are not considered derived works of the
+EdgeLisp compiler, runtime, and included Lisp files.)
+
+If you *modify* EdgeLisp (compiler, runtime, or included Lisp files),
+you must make the modified version available to your users under the
+AGPL.  See file COPYING.
+
 Thanks
 ------
 

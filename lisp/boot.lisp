@@ -1,3 +1,18 @@
+; EdgeLisp: A Lisp that compiles to JavaScript.
+; Copyright (C) 2008-2011 by Manuel Simoni.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU Affero General Public License as
+; published by the Free Software Foundation, version 3.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU Affero General Public License for more details.
+;
+; You should have received a copy of the GNU Affero General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 ;;;; Bootstrap defmacro
 
 (%%defsyntax defmacro
@@ -504,13 +519,14 @@
       (defmethod ,name ((a number) (b number))
         #{ jsnums.~(native-snippet ,jsnums-name)(~a, ~b) #})))
 
-(define-jsnums-binop = "equals")
-(define-jsnums-binop > "greaterThan")
-(define-jsnums-binop < "lessThan")
-(define-jsnums-binop / "divide")
-(define-jsnums-binop * "multiply")
-(define-jsnums-binop + "add")
-(define-jsnums-binop - "subtract")
+(eval-and-compile
+  (define-jsnums-binop = "equals")
+  (define-jsnums-binop > "greaterThan")
+  (define-jsnums-binop < "lessThan")
+  (define-jsnums-binop / "divide")
+  (define-jsnums-binop * "multiply")
+  (define-jsnums-binop + "add")
+  (define-jsnums-binop - "subtract"))
 
 ;;;; Condition system
 
@@ -618,7 +634,9 @@
                                 #`(make-handler
                                    (class ,(compound-elt spec 0))
                                    ,(compound-elt spec 1)
-                                   ,(compound-elt spec 2)))
+                                   ,(if (> (compound-len spec) 2)
+                                        (compound-elt spec 2)
+                                        #'nil)))
                               specs))
                      (dynamic restart-frame))))
       ,@body))
