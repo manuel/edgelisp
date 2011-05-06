@@ -102,183 +102,184 @@
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
 
-(defun nil? ((a object))
+(defun nil? ((a object) -> boolean)
   (if (eq nil a) #t #f))
 
 ;;;; Wrap built-in functions
 
 (eval-and-compile
 
-(defun append-compounds (&rest arguments)
+(defun append-compounds (&rest arguments -> compound-form)
   (apply \%append-compounds arguments))
 
-(defun apply ((f function) (args list) &optional (keys nil))
+(defun apply ((f function) (args list) &optional (keys nil) -> object)
   (%apply f args keys))
 
-(defun call-unwind-protected ((protected function) (cleanup function))
+(defun call-unwind-protected ((protected function) (cleanup function) -> object)
   (%call-unwind-protected protected cleanup))
 
-(defun call-with-catch-tag ((tag object) (body function))
+(defun call-with-catch-tag ((tag object) (body function) -> object)
   (%call-with-catch-tag tag body))
 
 (defun call-forever ((f function))
   (%call-forever f))
 
-(defun class-name ((c class))
+(defun class-name ((c class) -> string)
   (%class-name c))
 
-(defun compound-apply ((f function) (cf compound-form))
+(defun compound-apply ((f function) (cf compound-form) -> object)
   (%compound-apply f cf))
 
-(defun compound-add ((cf compound-form) (f form))
+(defun compound-add ((cf compound-form) (f form) -> compound-form)
   (%compound-add cf f))
 
-(defun compound-elt ((cf compound-form) (i small-integer))
+(defun compound-elt ((cf compound-form) (i small-integer) -> form)
   (%compound-elt cf i))
 
-(defun compound-elts ((cf compound-form))
+(defun compound-elts ((cf compound-form) -> list)
   (%compound-elts cf))
 
-(defun compound-empty? ((cf compound-form))
+(defun compound-empty? ((cf compound-form) -> boolean)
   (%compound-empty? cf))
 
-(defun compound-len ((cf compound-form))
+(defun compound-len ((cf compound-form) -> small-integer)
   (%compound-len cf))
 
-(defun compound-map ((f function) (cf compound-form))
+(defun compound-map ((f function) (cf compound-form) -> compound-form)
   (%compound-map f cf))
 
 (defun compound-slice ((cf compound-form) (start small-integer)
-                       &optional (end (compound-len cf)))
+                       &optional (end (compound-len cf))
+                       -> compound-form)
   (%compound-slice cf start end))
 
-(defun compound? ((a object))
+(defun compound? ((a object) -> boolean)
   (%compound? a))
 
-(defun eq ((a object) (b object))
+(defun eq ((a object) (b object) -> boolean)
   (%eq a b))
 
-(defun eval ((form form))
+(defun eval ((form form) -> object)
   (%eval form))
 
 (defparameter \fast-apply \%fast-apply) ; fishy?
 
 (defparameter \find-method \%find-method) ; fishy
 
-(defun has-slot ((a object) (slot-name string))
+(defun has-slot ((a object) (slot-name string) -> boolean)
   (%has-slot a slot-name))
 
-(defun identifier-name ((s identifier-form))
+(defun identifier-name ((s identifier-form) -> string)
   (%identifier-name s))
 
-(defun identifier? ((a object))
+(defun identifier? ((a object) -> boolean)
   (%identifier? a))
 
-(defun list (&rest arguments)
+(defun list (&rest arguments -> list)
   (apply \%list arguments))
 
-(defun list-add ((l list) (a object))
+(defun list-add ((l list) (a object) -> list)
   (%list-add l a))
 
-(defun list-elt ((l list) (i small-integer))
+(defun list-elt ((l list) (i small-integer) -> object)
   (%list-elt l i))
 
-(defun list-empty? ((l list))
+(defun list-empty? ((l list) -> boolean)
   (%list-empty? l))
 
-(defun list-len ((l list))
+(defun list-len ((l list) -> small-integer)
   (%list-len l))
 
 (defun list-slice ((l list) (start small-integer)
-                   &optional (end (list-len l)))
+                   &optional (end (list-len l))
+                   -> list)
   (%list-slice l start end))
 
-(defun macroexpand-1 ((form form))
+(defun macroexpand-1 ((form form) -> form)
   (%macroexpand-1 form))
 
-(defun macroexpand ((form form))
+(defun macroexpand ((form form) -> form)
   (%macroexpand form))
 
-(defun make-class ()
+(defun make-class (-> class)
   (%make-class))
 
-(defun make-compound (&rest arguments)
+(defun make-compound (&rest arguments -> compound-form)
   (apply \%make-compound arguments))
 
-(defun make-generic ((name string))
+(defun make-generic ((name string) -> generic)
   (%make-generic name))
 
-(defun make-uuid ()
+(defun make-uuid (-> string)
   (%make-uuid))
 
-(defun note ((a object))
+(defun note ((a object) -> nil)
   (%note a))
 
-(defun params-specializers ((cf compound-form))
+(defun params-specializers ((cf compound-form) -> compound-form)
   (%params-specializers cf))
 
-(defun print ((a object))
+(defun print ((a object) -> nil)
   (%print a))
 
-(defun put-method ((g generic) (specializers list) (m function))
+(defun put-method ((g generic) (specializers list) (m function) -> nil)
   (%put-method g specializers m))
 
-(defun read-from-string ((s string))
+(defun read-from-string ((s string) -> object)
   (%read-from-string s))
 
-(defun set-class-name ((c class) (s string))
+(defun set-class-name ((c class) (s string) -> string)
   (%set-class-name c s))
 
-(defun set-slot-value ((a object) (slot-name string) (value object))
-  "Caution: bypasses slot type check"
+(defun set-slot-value ((a object) (slot-name string) (value object) -> object)
   (%set-slot-value a slot-name value))
 
-(defun set-superclass ((class class) (superclass class))
+(defun set-superclass ((class class) (superclass class) -> class)
   (%set-superclass class superclass))
 
-(defun simple-error-message ((e simple-error))
+(defun simple-error-message ((e simple-error) -> string)
   (%simple-error-message e))
 
-(defun simple-error-arg ((e simple-error))
+(defun simple-error-arg ((e simple-error) -> object)
   (%simple-error-arg e))
 
-(defun slot-value ((a object) (slot-name string))
+(defun slot-value ((a object) (slot-name string) -> object)
   (%slot-value a slot-name))
 
-(defun string-concat (&rest arguments)
+(defun string-concat (&rest arguments -> string)
   (apply \%string-concat arguments))
 
-(defun string-dict-get ((d string-dict) (key string))
+(defun string-dict-get ((d string-dict) (key string) -> object)
   (%string-dict-get d key))
 
-(defun string-dict-has-key ((d string-dict) (key string))
+(defun string-dict-has-key ((d string-dict) (key string) -> boolean)
   (%string-dict-has-key d key))
 
-(defun string-dict-map ((f function) (d string-dict))
+(defun string-dict-map ((f function) (d string-dict) -> list)
   (%string-dict-map f d))
 
-(defun string-dict-put ((d string-dict) (key string) (value object))
+(defun string-dict-put ((d string-dict) (key string) (value object) -> object)
   (%string-dict-put d key value))
 
-(defun string-len ((s string))
+(defun string-len ((s string) -> small-integer)
   (%string-len s))
 
-(defun string-to-form ((s string))
+(defun string-to-form ((s string) -> string-form)
   (%string-to-form s))
 
-(defun string-to-identifier ((s string))
+(defun string-to-identifier ((s string) -> identifier-form)
   (%string-to-identifier s))
 
-(defun string-to-number ((s string))
+(defun string-to-number ((s string) -> number)
   (%string-to-number s))
 
-(defun subtype? ((class class) (possible-superclass class))
+(defun subtype? ((class class) (possible-superclass class) -> boolean)
   (%subtype? class possible-superclass))
 
-(defun superclass ((c class))
+(defun superclass ((c class) -> class)
   (%superclass c))
 
-(defun type-of ((a object))
+(defun type-of ((a object) -> class)
   (%type-of a))
 
 (defmacro the (class object)
