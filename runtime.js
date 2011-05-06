@@ -775,9 +775,11 @@ function lisp_bif_type_of(_key_, obj)
 
 function lisp_bif_the(_key_, klass, object)
 {
-    lisp_assert(lisp_subtypep(lisp_type_of(object), klass),
-                "the", [klass,object]);
-    return object;
+    if (lisp_subtypep(lisp_type_of(object), klass)) {
+        return object;
+    } else {
+        lisp_error(lisp_show(object) + " is not of expected type", lisp_show(klass));
+    }
 }
 
 function lisp_show_type_sensibly(type)
