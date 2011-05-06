@@ -243,7 +243,7 @@ function lisp_show(obj)
     if (typeof(_lisp_function_show) !== "undefined")
         return _lisp_function_show(null, obj);
     else
-        return JSON.stringify(obj);
+        return String(JSON.stringify(obj));
 }
 
 function lisp_array_contains(array, elt)
