@@ -906,6 +906,6 @@ can be used to supply a different collection to hold the results."
 
 (defun provide ((what string))
   "This is really a joke atm as there is no module system."
-  (note (string-concat "Provide " what)))
+  (note (string-concat "Loaded " what)))
 
 (provide "boot")
