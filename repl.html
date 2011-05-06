@@ -1,18 +1,6 @@
 <html>
 <head>
 <title>Lisp</title>
-<style type="text/css">
-html, input { font-family: mono; font-size: medium; }
-a { text-decoration: none; }
-a:hover { text-decoration: underline; }
-.lisp-banner { float: right; text-align: right; }
-.lisp-version { color: gray; font-size: x-small; }
-.lisp-repl-input { font-weight: bold; }
-.lisp-repl-error { color: red; }
-.lisp-repl-note { font-style: italic; }
-.lisp-repl-print { }
-.lisp-repl-output { color: blue; }
-</style>
 <script type="text/javascript" src="lib/json2.js"></script>
 <script type="text/javascript" src="lib/jsparse.js"></script>
 <script type="text/javascript" src="lib/js-numbers.js"></script>
@@ -22,99 +10,14 @@ a:hover { text-decoration: underline; }
 <script type="text/javascript" src="compiler.js"></script>
 <script type="text/javascript" src="client/client-runtime.js"></script>
 <script type="text/javascript">
-function lisp_print(output)
-{
-    lisp_repl_insert(lisp_show(output), "lisp-repl-print");
-}
-
-function lisp_note(input, url)
-{
-    lisp_repl_insert(lisp_show(input), "lisp-repl-note", url);
-}
-
-function lisp_repl_input(input)
-{
-    lisp_repl_insert(input, "lisp-repl-input");
-}
-
-function lisp_repl_output(input)
-{
-    lisp_repl_insert(lisp_show(input), "lisp-repl-output");
-}
-
-function lisp_repl_error(msg)
-{
-    lisp_repl_insert(lisp_show(msg), "lisp-repl-error");
-}
-
-function lisp_repl_insert(input, className, optionalUrl)
-{
-    var element = document.createElement("div");
-    element.className = className;
-    var textElement = element;
-    if (optionalUrl) {
-      var link = document.createElement("a");
-      link.setAttribute("href", optionalUrl);
-      element.appendChild(link);
-      textElement = link;
-    }
-    textElement.innerHTML = input.toString();
-    document.getElementById("output").appendChild(element);
-    lisp_update_repl();
-}
-
-function lisp_repl_prepare(string)
-{
-  var forms = lisp_read(string);
-  var progn = new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(forms));
-  return progn
-}
-
-function lisp_repl()
-{
-    var input = document.getElementById("input").value;
-    lisp_repl_eval(input);
-}
-
-function lisp_repl_eval(input)
-{
-//    try {
-      lisp_repl_input(input);
-      lisp_repl_output(_lisp_function_repl_eval(null, lisp_repl_prepare(input)));
-      document.getElementById("input").value = "";
-//    } catch(error) {
-//      lisp_repl_error(error);
-//    }
-}
-
-function lisp_update_repl()
-{
-    window.scrollTo(0, document.body.scrollHeight);
-}
-
 function lisp_repl_onload()
 {
-    document.getElementById("input").focus();
     lisp_load("lisp/boot.lisp");
     lisp_load("client/client-boot.lisp");
     lisp_load("client/repl.lisp");
-    if(location.hash) {
-        var code = location.hash.slice(1);
-        lisp_note("Evaluating URL fragment:");
-        lisp_repl_eval(code);
-    }
-    window.scrollTo(0, document.body.scrollHeight);
 }
 </script>
 </head>
 <body onload="lisp_repl_onload()">
-<div class="lisp-banner">
-  <span class="lisp-version">0.1.11</span>
-  <a href="https://github.com/manuel/edgelisp/">EdgeLisp</a>
-</div>
-<div id="output"></div>
-<form action="javascript:lisp_repl()">
-<input type="text" id="input" value="" style="width: 100%" class="lisp-repl-input">
-</form>
 </body>
 </html>

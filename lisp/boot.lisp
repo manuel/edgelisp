@@ -231,9 +231,6 @@
 (defun make-uuid (-> string)
   (%make-uuid))
 
-(defun note ((a object) -> nil)
-  (%note a))
-
 (defun params-specializers ((cf compound-form) -> compound-form)
   (%params-specializers cf))
 
@@ -759,13 +756,6 @@
   (note "Aborting hard")
   (native-body #{ throw ~c #}))
 
-(defun alert (&optional (s "Lisp alert"))
-  #{ alert(~s) #})
-
-(defun prompt (&optional (s "Lisp prompt"))
-  "Returns user-entered string or nil."
-  #{ prompt(~s) #})
-
 (defun arguments-len (arguments)
   #{ (~arguments).length #})
 
@@ -946,5 +936,3 @@ can be used to supply a different collection to hold the results."
 (defun provide ((what string))
   "This is really a joke atm as there is no module system."
   (note (string-concat "Loaded " what)))
-
-(provide "boot")

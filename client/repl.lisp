@@ -18,6 +18,9 @@
 (load "client/dom.lisp")
 (load "client/html.lisp")
 
+(defun note ((s string))
+  (dom-append (html-text s)))
+
 (defclass retry-repl-request (restart))
 
 (defun repl-eval (form)

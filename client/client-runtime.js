@@ -13,15 +13,21 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+function lisp_read_unit_as_progn(string)
+{
+  var forms = lisp_read(string);
+  var progn = new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(forms));
+  return progn
+}
+
 function lisp_load(path)
 {
-    lisp_note("Loading " + path, path);
     var req = new XMLHttpRequest();
     // Append UUID to file path to bypass browser cache.
     req.open("GET", path + "?" + uuid(), false);
     req.send(null);
     if(req.status == 200) {
-        lisp_eval(lisp_repl_prepare(req.responseText));
+        lisp_eval(lisp_read_unit_as_progn(req.responseText));
     } else {
         lisp_error("XHR error", req.status);
     }
