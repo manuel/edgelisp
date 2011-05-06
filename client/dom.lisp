@@ -37,6 +37,9 @@
 (defun dom-set-value ((element native) (s string) -> nil)
   #{ (~element).value = (~s), null #})
 
+(defun dom-focus ((element native))
+  #{ (~element).focus(), null #})
+
 (defun dom-set-id ((element native) (id string) -> nil)
   #{ (~element).id = (~id), null #})
 
