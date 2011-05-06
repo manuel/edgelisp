@@ -34,6 +34,9 @@
 (defun dom-value ((element native) -> object)
   #{ (~element).value #})
 
+(defun dom-set-value ((element native) (s string) -> nil)
+  #{ (~element).value = (~s), null #})
+
 (defun dom-set-id ((element native) (id string) -> nil)
   #{ (~element).id = (~id), null #})
 

@@ -43,7 +43,10 @@
   (dom-append-child (dom-id "output") (html-text (show a))))
 
 (defun repl ()
-  (print (repl-eval (read-from-string (dom-value (dom-id "input")))))
+  (let ((input (dom-id "input")))
+    (dynamic-bind ((print-readably #f))
+      (print (dom-value input)))
+    (print (repl-eval (read-from-string (dom-value input))))
+    (dom-set-value input ""))
   #f)
 
-(provide "repl")

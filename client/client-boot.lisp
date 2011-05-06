@@ -12,6 +12,7 @@
   nil)
 
 (defun note ((a object))
-  (print (show a)))
+  (dynamic-bind ((print-readably #f))
+    (print (string-concat "; " (show a)))))
 
 (provide "client-boot")

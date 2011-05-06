@@ -469,6 +469,8 @@
 
 ;;;; Printing
 
+(defdynamic print-readably #t)
+
 (defgeneric show (object))
 
 (defmethod show ((a object))
@@ -492,6 +494,7 @@
 (defmethod show-object ((a object))
   (show-raw a))
 
+
 (defmethod show-object ((a native))
   "")
 
@@ -504,6 +507,11 @@
 (defmethod show-object ((a number))
   #{ (~a).toString() #})
 
+(defmethod show-object ((a string))
+  (if (dynamic print-readably)
+      (show-raw a)
+      #{ (~a).toString() #}))
+
 (defmethod show-object ((a function))
   #{ (~a).toString() #})
 
@@ -512,6 +520,7 @@
 
 (defmethod show-object ((a generic))
   (generic-name a))
+
 
 (defun show-raw (a)
   #{ JSON.stringify(~a) #})
