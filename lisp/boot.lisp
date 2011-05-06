@@ -518,11 +518,16 @@
 ;;; Specific errors
 (defclass unbound-variable (error)
   (name
-   namespace))
-(defun make-unbound-variable ((name string) (namespace string))
-  (make unbound-variable :name name :namespace namespace))
+   namespace
+   hygiene-context))
+(defun make-unbound-variable ((name string) (namespace string) hygiene-context)
+  (make unbound-variable
+        :name name
+        :namespace namespace
+        :hygiene-context hygiene-context))
 (defmethod show ((e unbound-variable))
-  (string-concat "The " (.namespace e) " " (.name e) " is unbound."))
+  (string-concat
+   "The " (.namespace e) " " (.name e) "\\" (.hygiene-context e) " is unbound."))
 (defclass simple-error (error))
 (defmethod show-object ((e simple-error))
   (string-concat (simple-error-message e) ": " (simple-error-arg e)))
@@ -688,10 +693,10 @@
     (do-compute-restarts c l (.parent-frame f)))
   l)
 
-(defun undefined-identifier ((name string) (namespace string))
+(defun undefined-identifier ((name string) (namespace string) hygiene-context)
   "Called by the runtime."
   (block return
-    (let ((c (make-unbound-variable name namespace)))
+    (let ((c (make-unbound-variable name namespace hygiene-context)))
       (restart-bind ((use-value (lambda (r)
                                   (return-from return (.value r)))
                        c))
