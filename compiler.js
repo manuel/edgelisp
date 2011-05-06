@@ -636,7 +636,7 @@ function lisp_compile_sig(st, params)
             var name_form = lisp_assert_identifier_form(param.elts[0]);
             var init_form = lisp_assert_not_null(param.elts[1]);
             return { name: name_form.name,
-                     namespace: name_form.namespace,
+                     namespace: "variable",
                      hygiene_context: name_form.hygiene_context,
                      init: lisp_compile(st, init_form) };
         } else {
@@ -685,7 +685,7 @@ function lisp_param_name(param)
 
 function lisp_mangled_param_name(param)
 {
-    return lisp_mangle_var(lisp_param_name(param));
+    return lisp_mangle_cid(new Lisp_cid(param.name, param.namespace, param.hygiene_context));
 }
 
 function lisp_sig_contains_cid(sig, cid)
