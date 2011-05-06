@@ -9,4 +9,8 @@
 
 * Optional parameter init forms are not compiled in the correct contour.
 
+  This could be fixed by splitting lisp_compile_sig into two parts:
+  1) parses parameters -> produces sig
+  2) compiles optional parameter init forms in contour with sig
+
 * Probably many more...
