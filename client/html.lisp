@@ -13,13 +13,20 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;;; Hypertext Transfer Protocol
+;;;; Hypertext Markup Language
 
-(defun http-get ((url string))
-  (native-body 
-   #{ var req = new XMLHttpRequest();
-      req.open("GET", ~url, false);
-      req.send(null);
-      return req.responseText #}))
+(defun html-div (&key id &rest children)
+  (let ((element (dom-create-element "div")))
+    (when id
+      (dom-set-id element id))
+    (each (lambda (child)
+            (dom-append-child element child))
+          children)
+    element))
+    
+(defun html-text ((s string))
+  (let ((element (dom-create-element "span")))
+    (dom-set-inner-html element s)
+    element))
 
-(provide "http")
+(provide "html")

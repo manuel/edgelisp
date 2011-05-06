@@ -13,6 +13,8 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;;; Read-Eval-Print Loop
+
 (defclass retry-repl-request (restart))
 
 (defun repl-eval (form)
@@ -30,3 +32,10 @@
            (return-from end (eval form)))))))
 
 (provide "repl")
+
+(dom-append-child
+ (dom-document-body)
+ (html-div :id "output"
+           (html-text "Hello")))
+
+(provide "the real repl")

@@ -13,13 +13,22 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;;; Hypertext Transfer Protocol
+;;;; Document Object Model
 
-(defun http-get ((url string))
-  (native-body 
-   #{ var req = new XMLHttpRequest();
-      req.open("GET", ~url, false);
-      req.send(null);
-      return req.responseText #}))
+(defun dom-document () #{ document #})
 
-(provide "http")
+(defun dom-document-body () #{ document.body #})
+
+(defun dom-append-child (parent element)
+  #{ (~parent).appendChild((~element)), null #})
+
+(defun dom-create-element ((tag string))
+  #{ ~(dom-document).createElement((~tag)) #})
+
+(defun dom-set-id (element (id string))
+  #{ (~element).id = (~id) #})
+
+(defun dom-set-inner-html (element (html string))
+  #{ (~element).innerHTML = (~html) #})
+
+(provide "dom")
