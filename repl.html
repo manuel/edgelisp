@@ -96,7 +96,8 @@ function lisp_load_file(path)
 //    try {
       lisp_note("Loading " + path, path);
       var req = new XMLHttpRequest();
-      req.open("GET", path, false);
+      // Append UUID to file path to bypass browser cache.
+      req.open("GET", path + "?" + uuid(), false);
       req.send(null);
       if(req.status == 200) {
         lisp_eval(lisp_repl_prepare(req.responseText));
