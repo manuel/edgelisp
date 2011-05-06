@@ -25,6 +25,70 @@
 /* Nonstandard stuff of which I'd like to get rid of:
    __proto__, <function>.caller */
 
+/* A compiler identifier (CID) is the fully explicit form of
+   identifier used inside the compiler.
+
+   The name is a string.
+
+   The namespace is "variable", "function", "class" or another of the
+   Lisp-Omega namespaces.
+   
+   The hygiene-context is null for user-entered identifiers, and a
+   UUID string for macro-generated identifiers. */ 
+function Lisp_cid(name, namespace, hygiene_context)
+{
+    lisp_assert_string(name, "Bad cid name", name);
+    lisp_assert_string(namespace, "Bad cid namespace", namespace);
+    this.name = name;
+    this.namespace = namespace;
+    this.hygiene_context = hygiene_context;
+}
+
+function lisp_identifier_to_cid(form, namespace)
+{
+    lisp_assert_identifier_form(form, "bad variable identifier", form);
+    lisp_assert_string(namespace);
+    return new Lisp_cid(form.name, namespace, form.hygiene_context);
+}
+
+/* Turns a plain identifier like #'foo, or a compound identifier like
+   #'(%%identifier foo variable), or a macro like #'(function foo)
+   into a CID. */
+function lisp_generalized_identifier_to_cid(form, default_namespace)
+{
+    var ns = default_namespace ? default_namespace : "variable";
+    switch(form.formt) {
+    case "identifier":
+        return new Lisp_cid(form.name, ns, form.hygiene_context);
+    case "compound":
+        var exp = lisp_macroexpand(form);
+        lisp_assert_identifier_form(exp.elts[0]);
+        lisp_assert(exp.elts[0].name, "%%identifier");
+        var name = lisp_assert_identifier_form(exp.elts[1]);
+        var namespace = lisp_assert_identifier_form(exp.elts[2]);
+        return new Lisp_cid(name.name, namespace.name, name.hygiene_context);
+    }
+    lisp_error("Bad generalized identifier form", form);
+}
+
+function lisp_mangle_cid(cid)
+{
+    return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
+}
+
+/* A set mapping mangled CIDs to true. */
+var lisp_globals_set = {};
+
+function lisp_define_global(cid)
+{
+    lisp_globals_set[lisp_mangle_cid(cid)] = true;
+}
+
+function lisp_global_defined(cid)
+{
+    return lisp_globals_set[lisp_mangle_cid(cid)] === true;
+}
+
 /*** Literal ***/
 
 function Lisp_literal()
@@ -1155,16 +1219,19 @@ lisp_export_function("%type-of", "lisp_bif_type_of");
 
 function lisp_export(lisp_name, js_object)
 {
+    lisp_define_global(new Lisp_cid(lisp_name, "variable"));
     eval(lisp_mangle_var(lisp_name) + " = " + js_object);
 }
 
 function lisp_export_function(lisp_name, js_function)
 {
+    lisp_define_global(new Lisp_cid(lisp_name, "function"));
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
 }
 
 function lisp_export_class(lisp_name, js_class)
 {
+    lisp_define_global(new Lisp_cid(lisp_name, "class"));
     var class_name = lisp_mangle_class(lisp_name);
     eval("(" + class_name + " = " + js_class + ", " +
          class_name + ".lisp_name = \"" + lisp_name + "\", " + 

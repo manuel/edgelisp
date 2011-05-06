@@ -65,7 +65,7 @@ function lisp_compile(st, form)
         return { vopt: "string", s: form.s };
     case "identifier":
         lisp_assert_identifier_form(form, "Bad identifier form", form);
-        return lisp_compile_identifier_form(st, form);
+        return lisp_compile_identifier_form(st, form, "variable");
     case "compound":
         lisp_assert_compound_form(form, "Bad compound form", form);
         return lisp_compile_compound_form(st, form);
@@ -73,30 +73,22 @@ function lisp_compile(st, form)
     lisp_error("Bad form", form);
 }
 
-function lisp_compile_identifier_form(st, form)
+function lisp_compile_identifier_form(st, form, namespace)
 {
-    var cid = lisp_variable_identifier_to_cid(form);
+    var cid = lisp_identifier_to_cid(form, namespace);
     if (lisp_local_defined(st.contour, cid)) {
-        return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
+        return { vopt: "ref", cid: lisp_identifier_to_cid(form, namespace) };
     } else {
-        return global_ref(st, form, cid);
-    }
-
-    function global_ref(st, form, cid)
-    {
-        if (!cid.hygiene_context) {
-            return { vopt: "ref", cid: lisp_variable_identifier_to_cid(form) };
-        } else {
-            cid.hygiene_context = null;
-            return global_ref(st, form, cid);
-        }
+        if (cid.hygiene_context && !lisp_global_defined(cid))
+            form.hygiene_context = null;
+        return { vopt: "ref", cid: lisp_identifier_to_cid(form, namespace) };
     }
 }
 
 function lisp_compile_compound_form(st, form)
 {
     var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
-    var cid = lisp_function_identifier_to_cid(op);
+    var cid = lisp_identifier_to_cid(op, "function");
     if (lisp_local_defined(st.contour, cid)) {
         return lisp_compile_function_application(st, form);
     } else {
@@ -130,7 +122,7 @@ function lisp_compile_compound_form(st, form)
 
 function lisp_compile_function_application(st, form)
 {
-    var fun = { vopt: "ref", cid: lisp_function_identifier_to_cid(form.elts[0]) };
+    var fun = lisp_compile_identifier_form(st, form.elts[0], "function");
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -153,75 +145,6 @@ function lisp_set_macro_function(name, expander)
 }
 
 /*** Persistent compiler state ***/
-
-/* A compiler identifier (CID) is the fully explicit form of
-   identifier used inside the compiler.
-
-   The name is a string.
-
-   The namespace is "variable", "function", "class" or another of the
-   Lisp-Omega namespaces.
-   
-   The hygiene-context is null for user-entered identifiers, and a
-   UUID string for macro-generated identifiers. */ 
-function Lisp_cid(name, namespace, hygiene_context)
-{
-    lisp_assert_string(name, "Bad cid name", name);
-    lisp_assert_string(namespace, "Bad cid namespace", namespace);
-    this.name = name;
-    this.namespace = namespace;
-    this.hygiene_context = hygiene_context;
-}
-
-function lisp_variable_identifier_to_cid(form)
-{
-    lisp_assert_identifier_form(form, "bad variable identifier", form);
-    return new Lisp_cid(form.name, "variable", form.hygiene_context);
-}
-
-function lisp_function_identifier_to_cid(form)
-{
-    lisp_assert_identifier_form(form, "bad variable identifier", form);
-    return new Lisp_cid(form.name, "function", form.hygiene_context);
-}
-
-/* Turns a plain identifier like #'foo, or a compound identifier like
-   #'(%%identifier foo variable), or a macro like #'(function foo)
-   into a CID. */
-function lisp_generalized_identifier_to_cid(form, default_namespace)
-{
-    var ns = default_namespace ? default_namespace : "variable";
-    switch(form.formt) {
-    case "identifier":
-        return new Lisp_cid(form.name, ns, form.hygiene_context);
-    case "compound":
-        var exp = lisp_macroexpand(form);
-        lisp_assert_identifier_form(exp.elts[0]);
-        lisp_assert(exp.elts[0].name, "%%identifier");
-        var name = lisp_assert_identifier_form(exp.elts[1]);
-        var namespace = lisp_assert_identifier_form(exp.elts[2]);
-        return new Lisp_cid(name.name, namespace.name, name.hygiene_context);
-    }
-    lisp_error("Bad generalized identifier form", form);
-}
-
-function lisp_mangle_cid(cid)
-{
-    return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
-}
-
-/* A compile-time set mapping mangled CIDs to true. */
-var lisp_globals_set = {};
-
-function lisp_define_global(cid)
-{
-    lisp_globals_set[lisp_mangle_cid(cid)] = true;
-}
-
-function lisp_global_defined(cid)
-{
-    return lisp_globals_set[lisp_mangle_cid(cid)] === true;
-}
 
 function Lisp_compilation_state()
 {
@@ -293,8 +216,7 @@ function lisp_compile_special_identifier(st, form)
                                            "Bad identifier name", form);
     var namespace = lisp_assert_identifier_form(form.elts[2],
                                                 "Bad identifier namespace", form);
-    return { vopt: "ref",
-             cid: new Lisp_cid(name.name, namespace.name, name.hygiene_context) };
+    return lisp_compile_identifier_form(st, name, namespace.name);
 }
 
 /* Updates the value of a global variable.
@@ -1013,9 +935,6 @@ function lisp_emit_vop_progn(st, vop)
    { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_ref(st, vop)
 {
-    if (!lisp_global_defined(vop.cid)) {
-        vop.cid.hygiene_context = null;
-    }
     var mname = lisp_mangle_cid(vop.cid);
     var error_args = JSON.stringify(vop.cid.name) + ", "
         + JSON.stringify(vop.cid.namespace) + ", "
@@ -1036,6 +955,7 @@ function lisp_emit_vop_defparameter(st, vop)
    { vopt: "setq", cid: <cid>, value: <vop> } */
 function lisp_emit_vop_setq(st, vop)
 {
+    // bug: local variables aren't set
     if (!lisp_global_defined(vop.cid)) {
         vop.cid.hygiene_context = null;
     }
