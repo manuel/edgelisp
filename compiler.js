@@ -73,13 +73,7 @@ function lisp_compile(st, form)
 function lisp_compile_identifier_form(st, form, namespace)
 {
     var cid = lisp_identifier_to_cid(form, namespace);
-    if (lisp_local_defined(st.contour, cid)) {
-        return { vopt: "ref", cid: cid };
-    } else {
-        if (cid.hygiene_context && !lisp_global_defined(cid))
-            cid.hygiene_context = null;
-        return { vopt: "ref", cid: cid };
-    }
+    return { vopt: "ref", cid: cid };
 }
 
 function lisp_compile_compound_form(st, form)
@@ -147,8 +141,6 @@ function Lisp_compilation_state()
 {
     // Tracks lambdas
     this.contour = null;
-    // Used for hygiene maintenance.
-    this.in_quasiquote = null;
 }
 
 function Lisp_contour(sig, parent)
@@ -348,49 +340,7 @@ function lisp_compile_special_eval_when_compile(st, form)
    (%%quasiquote form) -> form */
 function lisp_compile_special_quasiquote(st, form)
 {
-    // One of the fundamental moments in enabling hygiene: If this ole
-    // quasiquote is not enclosed by another quasiquote, i.e. it's the
-    // outermost qq, we wrap it in a manually crafted "LET", that
-    // establishes a hygiene context, to be picked up by lexically
-    // nested qq forms.  If OTOH the quasiquote is enclosed in another
-    // quasiquote, we don't create a fresh hygiene context, and let it
-    // pick up the outer, enclosing context.
-
-    var in_quasiquote = st.in_quasiquote;
-    st.in_quasiquote = uuid();
-    try {
-        qq_result = lisp_qq(st, form);
-        if (in_quasiquote) {
-            // we were in a qq before, nothing to do
-            return lisp_compile(st, qq_result);
-        } else {
-            // we are the outermost qq, wrap in fresh context
-            return lisp_compile(st, wrap_in_hygiene_context(qq_result));
-        }
-    } finally {
-        st.in_quasiquote = in_quasiquote;
-    }
-
-    function wrap_in_hygiene_context(form)
-    {
-        // (let ((%%hygiene-context-<UUID> (%make-uuid))) ,form)
-        return make_let(new Lisp_identifier_form("%%hygiene-context-" + st.in_quasiquote),
-                        new Lisp_compound_form([new Lisp_identifier_form("%make-uuid")]),
-                        form);
-    }
-
-    function make_let(var_form, init_form, body_form)
-    {
-        // (%%lambda (,var_form) ,body_form)
-        var lambda_form =
-            new Lisp_compound_form([new Lisp_identifier_form("%%lambda"),
-                                    new Lisp_compound_form([var_form]),
-                                    body_form]);
-        // (%%funcall ,lambda_form ,init_form)
-        return new Lisp_compound_form([new Lisp_identifier_form("%%funcall"),
-                                       lambda_form,
-                                       init_form]);
-    }
+    return lisp_compile(st, lisp_qq(st, form))
 }
 
 /* See heading ``Quasiquotation''.
@@ -962,6 +912,9 @@ function lisp_emit_vop_progn(st, vop)
    { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_ref(st, vop)
 {
+    if (!(lisp_global_defined(vop.cid) || lisp_local_defined(st.contour, vop.cid))) {
+        vop.cid.hygiene_context = null;
+    }
     var mname = lisp_mangle_cid(vop.cid);
     var error_args = JSON.stringify(vop.cid.name) + ", "
         + JSON.stringify(vop.cid.namespace) + ", "
@@ -982,8 +935,7 @@ function lisp_emit_vop_defparameter(st, vop)
    { vopt: "setq", cid: <cid>, value: <vop> } */
 function lisp_emit_vop_setq(st, vop)
 {
-    // bug: local variables aren't set
-    if (!lisp_global_defined(vop.cid)) {
+    if (!(lisp_global_defined(vop.cid) || lisp_local_defined(st.contour, vop.cid))) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -1059,13 +1011,8 @@ function lisp_emit_vop_string_form(st, vop)
    { vopt: "identifier-form", name: <string> } */
 function lisp_emit_vop_identifier_form(st, vop)
 {
-    // Hygiene: constructing an identifier form grabs the variable
-    // %%hygiene-context, and stores it in the identifier.
     lisp_assert_string(vop.name, "Bad identifier name", vop);
-    // BUG: .in_quasiquote isn't even set during emission!
-    var hygiene_context = new Lisp_cid("%%hygiene-context-" + st.in_quasiquote, "variable");
-    return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + ", "
-        + lisp_mangle_cid(hygiene_context) + "))";
+    return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + "))";
 }
 
 /* Creates a lexical closure.
