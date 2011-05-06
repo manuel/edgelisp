@@ -13,9 +13,20 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defun http-get ((url string))
-  (native-body 
-   #{ var req = new XMLHttpRequest();
-      req.open("GET", ~url, false);
-      req.send(null);
-      return req.responseText #}))
+(defclass retry-repl-request (restart))
+
+(defun repl-eval (form)
+  (block end
+    (loop
+       (block retry
+         (restart-bind ((retry-repl-request
+                         (lambda (r)
+                           (note "Retrying")
+                           (return-from retry)))
+                        (abort
+                         (lambda (r)
+                           (note "Aborting")
+                           (return-from end))))
+           (return-from end (eval form)))))))
+
+(provide "repl")
