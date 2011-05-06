@@ -44,8 +44,8 @@ function lisp_eval(form)
    an unlimited number of namespaces.
 
    EdgeLisp is a Lisp-2 insofar as identifiers in the operator
-   position of a call form are looked in the function namespace, not
-   the ordinary variable namespace.
+   position of a call form are looked up in the function namespace,
+   not the ordinary variable namespace.
 
    EdgeLisp uses additional namespaces for other types of objects,
    such as classes and generics.
@@ -160,7 +160,7 @@ function Lisp_contour(sig, parent)
     this.parent = parent;
 }
 
-/* Returns true of the CID is lexically bound. */
+/* Returns true if the CID is lexically bound. */
 function lisp_local_defined(contour, cid)
 {
     if (contour) {
