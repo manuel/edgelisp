@@ -255,7 +255,7 @@
 (defun string-dict-has-key ((d string-dict) (key string) -> boolean)
   (%string-dict-has-key d key))
 
-(defun string-dict-map ((f function) (d string-dict) -> list)
+(defun string-dict-map ((f function) (d string-dict) -> nil)
   (%string-dict-map f d))
 
 (defun string-dict-put ((d string-dict) (key string) (value object) -> object)
@@ -531,7 +531,9 @@
         :hygiene-context hygiene-context))
 (defmethod show ((e unbound-variable))
   (string-concat
-   "The " (.namespace e) " " (.name e) "\\" (.hygiene-context e) " is unbound."))
+   "The " (.namespace e) " " (.name e)
+   (if (not (nil? (.hygiene-context e))) (string-concat "\\" (.hygiene-context e)) "")
+   " is unbound."))
 (defclass simple-error (error))
 (defmethod show-object ((e simple-error))
   (string-concat (simple-error-message e) ": " (simple-error-arg e)))
@@ -548,6 +550,7 @@
 
 ;;; Specific restarts
 (defclass abort (restart))
+(defclass hard-abort (restart))
 (defclass continue (restart))
 (defclass use-value (restart)
   (value))
@@ -727,7 +730,7 @@
                      (make-instance (.handler-class (elt restarts (- n 1))))))))))
         (hard-abort c))))
 
-(defun hard-abort ((c condition))
+(defun hard-abort (&optional c)
   (note "Aborting hard")
   (native-body #{ throw ~c #}))
 
