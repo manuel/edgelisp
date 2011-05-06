@@ -204,6 +204,11 @@ function lisp_special_function(name)
     return lisp_specials_table[name];
 }
 
+function lisp_compile_curry(st)
+{
+    return function(form) { return lisp_compile(st, form); };
+}
+
 /**** List of special forms ****/
 
 /* Compound identifier.
@@ -259,7 +264,7 @@ function lisp_compile_special_progn(st, form)
 {
     var forms = form.elts.slice(1);
     return { vopt: "progn", 
-             vops: forms.map(function(form) { return lisp_compile(st, form); }) };
+             vops: forms.map(lisp_compile_curry(st)) };
 }
 
 /* In EdgeLisp #f and nil are considered false, all other
@@ -417,7 +422,7 @@ function lisp_compile_special_string_form(st, form)
 function lisp_compile_special_native(st, form)
 {
     return { vopt: "native",
-             stuff: form.elts.slice(1).map(function(form){return lisp_compile(st,form);}) };
+             stuff: form.elts.slice(1).map(lisp_compile_curry(st)) };
 }
 
 /* A piece of JS text to directly emit.  Must appear inside NATIVE.
