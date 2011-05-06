@@ -90,4 +90,17 @@
 ;(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
 ;(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
 
+;;; Hygiene
+
+(defmacro test-boot:swap (a b)
+  #`(let ((tmp ,b))
+      (setq ,b ,a)
+      (setq ,a tmp)))
+
+(let ((x 1) (tmp 2))
+  (test-boot:swap x tmp)
+  (assert (and (= x 2) (= tmp 1)))
+  (test-boot:swap tmp x)
+  (assert (and (= x 1) (= tmp 2))))
+
 (provide "test-boot")
