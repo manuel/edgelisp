@@ -1074,6 +1074,8 @@ function lisp_mangle(name, namespace, hygiene_context)
    method) are prefixed, so they can coexist in their respective
    JavaScript namespace(s). */
 
+// BUG: unhygienic
+
 function lisp_mangle_var(name)
 {
     return lisp_mangle(name, "variable");
@@ -1116,7 +1118,6 @@ function lisp_make_uuid()
 lisp_export("#t", "true");
 lisp_export("#f", "false");
 lisp_export("nil", "null");
-lisp_export("%%hygiene-context", "null");
 
 lisp_export_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_export_class("boolean", "Boolean.prototype");
