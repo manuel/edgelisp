@@ -181,6 +181,9 @@
 
 (defparameter \find-method \%find-method) ; fishy
 
+(defun generic-name ((a generic))
+  (%generic-name a))
+
 (defun has-slot ((a object) (slot-name string) -> boolean)
   (%has-slot a slot-name))
 
@@ -492,6 +495,9 @@
 (defmethod show-object ((a object))
   (show-raw a))
 
+(defmethod show-object ((a native))
+  "")
+
 (defmethod show-object ((a nil))
   "nil")
 
@@ -507,8 +513,10 @@
 (defmethod show-object ((a class))
   (class-name a))
 
+(defmethod show-object ((a generic))
+  (generic-name a))
 
-(defun show-raw ((a object))
+(defun show-raw (a)
   #{ JSON.stringify(~a) #})
 
 ;;;; Numbers
@@ -566,7 +574,6 @@
 
 ;;; Specific restarts
 (defclass abort (restart))
-(defclass hard-abort (restart))
 (defclass continue (restart))
 (defclass use-value (restart)
   (value))
@@ -759,8 +766,15 @@
   "Returns user-entered string or nil."
   #{ prompt(~s) #})
 
+(defun arguments-len (arguments)
+  #{ (~arguments).length #})
+
+(defun arguments-elt (arguments (i small-integer))
+  #{ (~arguments)[(~i)] #})
+
 (defparameter \original-no-applicable-method \no-applicable-method)
 (defun no-applicable-method (generic arguments)
+  (note (string-concat "No applicable method for " (show generic)))
   (original-no-applicable-method generic arguments))
 
 (defparameter \original-no-most-specific-method \no-most-specific-method)

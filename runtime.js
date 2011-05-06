@@ -589,6 +589,11 @@ function lisp_generic_name(generic)
     return generic.name ? generic.name : "anonymous generic";
 }
 
+function lisp_bif_generic_name(_key_, generic)
+{
+    return lisp_generic_name(generic);
+}
+
 function Lisp_method_entry(method, specializers)
 {
     this.method = method;
@@ -752,6 +757,15 @@ function lisp_bif_set_class_name(_key_, klass, name)
     return name;
 }
 
+function Lisp_native()
+{
+}
+
+Lisp_native.prototype.toString = function()
+{
+    return "JS object";
+}
+
 function lisp_type_of(obj)
 {
     if (obj === undefined)
@@ -760,8 +774,13 @@ function lisp_type_of(obj)
         return Lisp_nil.prototype;
     else if (obj.hasOwnProperty("lisp_is_class"))
         return Lisp_class.prototype;
-    else
-        return obj.__proto__;
+    else {
+        var proto = obj.__proto__;
+        if (proto.hasOwnProperty("lisp_is_class"))
+            return proto;
+        else
+            return Lisp_native.prototype;
+    }
 }
 
 function lisp_bif_type_of(_key_, obj) 
@@ -1130,6 +1149,7 @@ lisp_export_class("generic", "Lisp_generic.prototype");
 lisp_export_class("list", "Array.prototype");
 lisp_export_class("literal", "Lisp_literal.prototype");
 lisp_export_class("nil", "Lisp_nil.prototype");
+lisp_export_class("native", "Lisp_native.prototype");
 lisp_export_class("number-form", "Lisp_number_form.prototype");
 lisp_export_class("number", "Lisp_number.prototype");
 lisp_export_class("integer", "Lisp_integer.prototype");
@@ -1154,6 +1174,7 @@ lisp_export_set_superclass("generic", "object");
 lisp_export_set_superclass("integer", "rational");
 lisp_export_set_superclass("list", "object");
 lisp_export_set_superclass("literal", "object");
+lisp_export_set_superclass("native", "object");
 lisp_export_set_superclass("nil", "literal");
 lisp_export_set_superclass("number", "literal");
 lisp_export_set_superclass("number-form", "form");
@@ -1185,6 +1206,7 @@ lisp_export_function("%eq", "lisp_bif_eq");
 lisp_export_function("%eval", "lisp_bif_eval");
 lisp_export_function("%fast-apply", "lisp_bif_fast_apply");
 lisp_export_function("%find-method", "lisp_bif_find_method");
+lisp_export_function("%generic-name", "lisp_bif_generic_name");
 lisp_export_function("%has-slot", "lisp_bif_has_slot");
 lisp_export_function("%list", "lisp_bif_list");
 lisp_export_function("%list-add", "lisp_bif_list_add");
