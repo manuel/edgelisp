@@ -77,11 +77,11 @@ function lisp_compile_identifier_form(st, form, namespace)
 {
     var cid = lisp_identifier_to_cid(form, namespace);
     if (lisp_local_defined(st.contour, cid)) {
-        return { vopt: "ref", cid: lisp_identifier_to_cid(form, namespace) };
+        return { vopt: "ref", cid: cid };
     } else {
         if (cid.hygiene_context && !lisp_global_defined(cid))
-            form.hygiene_context = null;
-        return { vopt: "ref", cid: lisp_identifier_to_cid(form, namespace) };
+            cid.hygiene_context = null;
+        return { vopt: "ref", cid: cid };
     }
 }
 
