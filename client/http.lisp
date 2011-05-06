@@ -15,7 +15,7 @@
 
 ;;;; Hypertext Transfer Protocol
 
-(defun http-get ((url string))
+(defun http-get ((url string) -> string)
   (native-body 
    #{ var req = new XMLHttpRequest();
       req.open("GET", ~url, false);

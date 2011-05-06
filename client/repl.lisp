@@ -15,6 +15,9 @@
 
 ;;;; Read-Eval-Print Loop
 
+(load "client/dom.lisp")
+(load "client/html.lisp")
+
 (defclass retry-repl-request (restart))
 
 (defun repl-eval (form)
@@ -31,11 +34,16 @@
                            (return-from end))))
            (return-from end (eval form)))))))
 
-(provide "repl")
-
-(dom-append-child
- (dom-document-body)
+(dom-append
  (html-div :id "output"
            (html-text "Hello")))
 
-(provide "the real repl")
+(dom-append
+ (html-input :type "text")
+ (html-button :onclick "_lisp_function_repl(null)" (html-text "eval")))
+
+(defun repl ()
+  (alert)
+  )
+
+(provide "repl")

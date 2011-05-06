@@ -20,6 +20,7 @@ a:hover { text-decoration: underline; }
 <script type="text/javascript" src="runtime.js"></script>
 <script type="text/javascript" src="reader.js"></script>
 <script type="text/javascript" src="compiler.js"></script>
+<script type="text/javascript" src="client/client-runtime.js"></script>
 <script type="text/javascript">
 function lisp_print(output)
 {
@@ -91,31 +92,12 @@ function lisp_update_repl()
     window.scrollTo(0, document.body.scrollHeight);
 }
 
-function lisp_load_file(path)
-{
-//    try {
-      lisp_note("Loading " + path, path);
-      var req = new XMLHttpRequest();
-      // Append UUID to file path to bypass browser cache.
-      req.open("GET", path + "?" + uuid(), false);
-      req.send(null);
-      if(req.status == 200) {
-        lisp_eval(lisp_repl_prepare(req.responseText));
-      } else {
-        lisp_error("XHR error", req.status);
-      }
-//    } catch(error) {
-//      lisp_repl_error(error);
-//    }
-}
-
 function lisp_repl_onload()
 {
     document.getElementById("input").focus();
-    lisp_load_file("lisp/boot.lisp");
-    lisp_load_file("client/dom.lisp");
-    lisp_load_file("client/html.lisp");
-    lisp_load_file("client/repl.lisp");
+    lisp_load("lisp/boot.lisp");
+    lisp_load("client/client-boot.lisp");
+    lisp_load("client/repl.lisp");
     if(location.hash) {
         var code = location.hash.slice(1);
         lisp_note("Evaluating URL fragment:");

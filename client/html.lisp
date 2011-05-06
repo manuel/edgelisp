@@ -30,6 +30,7 @@
 
 (define-html-tag div)
 (define-html-tag input)
+(define-html-tag button)
 
 (defun html-text ((s string))
   (let ((element (dom-create-element "span")))

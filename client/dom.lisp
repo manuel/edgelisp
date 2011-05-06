@@ -26,7 +26,7 @@
   #{ ~(dom-document).createElement((~tag)) #})
 
 (defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
-  #{ (~element)[(~attr-name)] = (~value), null #})
+  #{ (~element).setAttribute((~attr-name), (~value)), null #})
 
 (defun dom-set-id ((element native) (id string) -> nil)
   #{ (~element).id = (~id), null #})
@@ -35,7 +35,9 @@
   #{ (~element).innerHTML = (~html), null #})
 
 
-(defun dom-append ((element native) -> nil)
-  (dom-append-child (dom-document-body) element))
+(defun dom-append (&rest elements -> nil)
+  (each (lambda (element)
+          (dom-append-child (dom-document-body) element))
+        elements))
 
 (provide "dom")
