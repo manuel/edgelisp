@@ -288,6 +288,21 @@ function lisp_compile_special_lambda(st, form)
     lisp_assert_compound_form(form.elts[1]);
     var body = form.elts[2];
     var sig = lisp_compile_sig(st, form.elts[1].elts);
+    
+    // Result type check: wrap body in (%the (%%identifier ,result_type class) ,body)
+    if (sig.result_type) {
+        var class_identifier =
+            new Lisp_identifier_form(sig.result_type.name,
+                                     sig.result_type.hygiene_context);
+        var class_compound_identifier = 
+            new Lisp_compound_form([new Lisp_identifier_form("%%identifier"),
+                                    class_identifier,
+                                    new Lisp_identifier_form("class")]);
+        body = new Lisp_compound_form([new Lisp_identifier_form("%the"),
+                                       class_compound_identifier,
+                                       body]);
+    }
+
     var contour = new Lisp_contour(sig, st.contour);
     try {
         st.contour = contour;
@@ -539,7 +554,9 @@ function lisp_compile_special_native_snippet(st, form)
      rest_param: <param>,
      all_keys_param: <param>,
      aux_params: <list>,
-     fast_param: <param> }
+     fast_param: <param>,
+     result_type: <string>
+     }
 
    req_params, opt_params, key_params, aux_params: lists of required,
    optional, keyword, and aux parameters, respectively.
@@ -548,6 +565,8 @@ function lisp_compile_special_native_snippet(st, form)
    null.
 
    fast_param: see ``Fast parameter passing''.
+
+   result_type: name of class of result, for type checking.
 
    Parameters are also represented as objects:
 
@@ -598,13 +617,15 @@ var lisp_rest_sig_keyword = "&rest";
 var lisp_all_keys_sig_keyword = "&all-keys";
 var lisp_aux_sig_keyword = "&aux";
 var lisp_fast_sig_keyword = "&fast";
+var lisp_result_type_keyword = "->";
 var lisp_sig_keywords = 
     [lisp_optional_sig_keyword,
      lisp_key_sig_keyword,
      lisp_rest_sig_keyword,
      lisp_all_keys_sig_keyword,
      lisp_aux_sig_keyword,
-     lisp_fast_sig_keyword];
+     lisp_fast_sig_keyword,
+     lisp_result_type_keyword];
 
 function lisp_is_sig_keyword(string)
 {
@@ -614,13 +635,15 @@ function lisp_is_sig_keyword(string)
 /* Given a list of parameter forms, return a signature. */
 function lisp_compile_sig(st, params)
 {
-    var req = [], opt = [], key = [], rest = [], all_keys = [], aux = [], fast = [];
+    var req = [], opt = [], key = [], rest = [], all_keys = [];
+    var aux = [], fast = [], result_type = [];
     var cur = req;
 
     function compile_parameter(param)
     {
         if (param.formt === "identifier") {
             // Ordinary parameter (positional or keyword)
+            // or result type specifier.
             return { name: param.name,
                      namespace: "variable",
                      hygiene_context: param.hygiene_context };
@@ -667,6 +690,8 @@ function lisp_compile_sig(st, params)
                     cur = aux; continue;
                 case lisp_fast_sig_keyword:
                     cur = fast; continue;
+                case lisp_result_type_keyword:
+                    cur = result_type; continue;
                 }
                 lisp_error("Bad signature keyword", param.name);
             }
@@ -680,7 +705,8 @@ function lisp_compile_sig(st, params)
              rest_param: rest[0],
              all_keys_param: all_keys[0],
              aux_params: aux,
-             fast_param: fast[0] };
+             fast_param: fast[0],
+             result_type: result_type[0] };
 }
 
 function lisp_param_name(param)

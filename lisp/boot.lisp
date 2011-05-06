@@ -281,6 +281,9 @@
 (defun type-of ((a object))
   (%type-of a))
 
+(defmacro the (class object)
+  #`(%the (class ,class) ,object))
+
 ) ; eval-and-compile
 
 ;;;; Control flow

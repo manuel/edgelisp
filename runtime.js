@@ -771,6 +771,13 @@ function lisp_bif_type_of(_key_, obj)
     return lisp_type_of(obj);
 }
 
+function lisp_bif_the(_key_, klass, object)
+{
+    lisp_assert(lisp_subtypep(lisp_type_of(object), klass),
+                "the", [klass,object]);
+    return object;
+}
+
 function lisp_show_type_sensibly(type)
 {
     if (type === null) {
@@ -1214,6 +1221,7 @@ lisp_export_function("%subtype?", "lisp_bif_subtypep");
 lisp_export_function("%superclass", "lisp_bif_superclass");
 lisp_export_function("%identifier-name", "lisp_bif_identifier_name");
 lisp_export_function("%identifier?", "lisp_bif_identifierp");
+lisp_export_function("%the", "lisp_bif_the");
 lisp_export_function("%throw", "lisp_bif_throw");
 lisp_export_function("%type-of", "lisp_bif_type_of");
 

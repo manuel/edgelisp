@@ -13,33 +13,33 @@
     }
     #}))
 
-(defun local-storage-get-item ((key string))
+(defun local-storage-get-item ((key string) -> string)
   "Returns the local storage data associated with key, or nil."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
   #{ localStorage.getItem((~key)) #})
 
-(defun local-storage-set-item ((key string) (data string))
+(defun local-storage-set-item ((key string) (data string) -> nil)
   "Updates the local storage data associated with key."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
-  #{ localStorage.setItem((~key), (~value)) #}
+  #{ localStorage.setItem((~key), (~data)) #}
   nil)
 
-(defun local-storage-remove-item ((key string))
+(defun local-storage-remove-item ((key string) -> nil)
   "Deletes the local storage data associated with key."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
   #{ localStorage.removeItem((~key)) #}
   nil)
 
-(defun local-storage-length ()
+(defun local-storage-length (-> small-integer)
   "Returns the number of local storage items."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
   #{ localStorage.length #})
 
-(defun local-storage-key ((i small-integer))
+(defun local-storage-key ((i small-integer) -> string)
   "Returns the key of the local storage item with the given index."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
