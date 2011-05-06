@@ -22,7 +22,8 @@
 function lisp_eval(form)
 {
     var st = new Lisp_compilation_state();
-    return eval(lisp_emit(st, lisp_compile(st, form)));
+    var vop = lisp_compile(st, form);
+    return eval(lisp_emit(st, vop));
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
@@ -372,8 +373,8 @@ function lisp_compile_special_quasiquote(st, form)
 
     function wrap_in_hygiene_context(form)
     {
-        // (let ((%%hygiene-context (%make-uuid))) ,form)
-        return make_let(new Lisp_identifier_form("%%hygiene-context", st.in_quasiquote),
+        // (let ((%%hygiene-context-<UUID> (%make-uuid))) ,form)
+        return make_let(new Lisp_identifier_form("%%hygiene-context-" + st.in_quasiquote),
                         new Lisp_compound_form([new Lisp_identifier_form("%make-uuid")]),
                         form);
     }
@@ -927,7 +928,6 @@ var lisp_vop_table = {
 // Emits a VOP to JavaScript.
 function lisp_emit(st, vop)
 {
-    //    lisp_print(vop);
     lisp_assert_string(vop.vopt, "Bad .vopt", vop);
     var vop_function = lisp_vop_function(vop.vopt);
     lisp_assert_not_null(vop_function, "No VOP emitter function", vop);
@@ -991,7 +991,7 @@ function lisp_emit_vop_setq(st, vop)
     return "(" + mname + " = " + value + ")";
 }
 
-/* Checks whether variable is defined.
+/* Checks whether global variable is defined.
    { vopt: "defined?", cid: <cid> } */
 function lisp_emit_vop_definedp(st, vop)
 {
@@ -1062,7 +1062,8 @@ function lisp_emit_vop_identifier_form(st, vop)
     // Hygiene: constructing an identifier form grabs the variable
     // %%hygiene-context, and stores it in the identifier.
     lisp_assert_string(vop.name, "Bad identifier name", vop);
-    var hygiene_context = new Lisp_cid("%%hygiene-context", "variable", st.in_quasiquote);
+    // BUG: .in_quasiquote isn't even set during emission!
+    var hygiene_context = new Lisp_cid("%%hygiene-context-" + st.in_quasiquote, "variable");
     return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + ", "
         + lisp_mangle_cid(hygiene_context) + "))";
 }
@@ -1072,6 +1073,17 @@ function lisp_emit_vop_identifier_form(st, vop)
    sig: signature, see above;
    body: VOP for the function's body. */
 function lisp_emit_vop_lambda(st, vop)
+{
+    var contour = new Lisp_contour(vop.sig, st.contour);
+    try {
+        st.contour = contour;
+        return lisp_emit_vop_lambda0(st, vop);
+    } finally {
+        st.contour = st.contour.parent;
+    }
+}
+
+function lisp_emit_vop_lambda0(st, vop)
 {
     var req_params = lisp_assert_not_null(vop.sig.req_params);
     var opt_params = lisp_assert_not_null(vop.sig.opt_params);
@@ -1106,6 +1118,7 @@ function lisp_emit_vop_lambda(st, vop)
         var param = req_params[i];
         if (param.specializer) {
             var name = lisp_mangle_var(param.name);
+            // BUG: unhygienic
             var type_name = lisp_mangle_class(param.specializer);
             check_types += "lisp_check_type(" + name + ", " + type_name + "); ";
         }
