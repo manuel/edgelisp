@@ -97,11 +97,12 @@
  (html-div :id "output")
  (html-form :action "javascript:_lisp_function_repl(null)"
             (html-input :id "input" :type "text"))
- (html-text "History")
  (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
-              (html-text "previous"))
+              :title "previous history item"
+              (html-text "&#x25c0;"))
  (html-button :onclick "_lisp_function_repl_history_next_item(null)"
-              (html-text "next")))
+              :title "next history item"
+              (html-text "&#x25B6;")))
 
 (dom-focus (dom-id "input"))
 (note "EdgeLisp 0.1.13")
