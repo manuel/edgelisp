@@ -320,7 +320,6 @@ function lisp_compile_special_funcall(st, form)
    (%%defsyntax name expander-function) -> nil */
 function lisp_compile_special_defsyntax(st, form)
 {
-    //    lisp_print(form.toString());
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));

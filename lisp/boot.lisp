@@ -252,11 +252,11 @@
 (defun set-superclass ((class class) (superclass class) -> class)
   (%set-superclass class superclass))
 
-(defun simple-error-message ((e simple-error) -> string)
-  (%simple-error-message e))
+(defun runtime-error-message ((e runtime-error) -> string)
+  (%runtime-error-message e))
 
-(defun simple-error-arg ((e simple-error) -> object)
-  (%simple-error-arg e))
+(defun runtime-error-arg ((e runtime-error) -> object)
+  (%runtime-error-arg e))
 
 (defun slot-value ((a object) (slot-name string) -> object)
   (%slot-value a slot-name))
@@ -549,6 +549,19 @@
 (defclass error (serious-condition))
 (defclass warning (condition))
 
+(defclass simple-condition (condition)
+  (message))
+(defclass simple-warning (warning)
+  (message))
+(defclass simple-error (error)
+  (message))
+(defmethod show-object ((c simple-condition) -> string)
+  (.message c))
+(defmethod show-object ((c simple-warning) -> string)
+  (.message c))
+(defmethod show-object ((c simple-error) -> string)
+  (.message c))
+
 ;;; Specific errors
 (defclass unbound-variable (error)
   (name
@@ -564,9 +577,9 @@
    "The " (.namespace e) " " (.name e)
    (if (not (nil? (.hygiene-context e))) (string-concat "\\" (.hygiene-context e)) "")
    " is unbound."))
-(defclass simple-error (error))
-(defmethod show-object ((e simple-error))
-  (string-concat (simple-error-message e) ": " (simple-error-arg e)))
+(defclass runtime-error (error))
+(defmethod show-object ((e runtime-error))
+  (string-concat (runtime-error-message e) ": " (runtime-error-arg e)))
 (defclass control-error (error))
 (defclass restart-control-error (control-error)
   (restart))
@@ -590,7 +603,7 @@
 (defmethod default-handler ((c condition))
   nil)
 (defmethod default-handler ((c warning))
-  (print c))
+  (note c))
 (defmethod default-handler ((c serious-condition))
   (invoke-debugger c))
 (defmethod default-handler ((r restart))
@@ -633,8 +646,23 @@
                      (dynamic handler-frame))))
       ,@body))
 
-(defun signal ((c condition))
+(defgeneric signal (condition))
+(defmethod signal ((c condition))
   (signal-condition c (dynamic handler-frame)))
+(defmethod signal ((s string))
+  (signal (make simple-condition :message s)))
+
+(defgeneric warn (condition))
+(defmethod warn ((c condition))
+  (signal-condition c (dynamic handler-frame)))
+(defmethod warn ((s string))
+  (signal (make simple-warning :message s)))
+
+(defgeneric error (condition))
+(defmethod error ((c condition))
+  (signal-condition c (dynamic handler-frame)))
+(defmethod error ((s string))
+  (signal (make simple-error :message s)))
 
 (defdynamic restart-frame)
 
@@ -710,9 +738,6 @@
 
 (defmethod call-condition-handler ((r restart) (h handler) (f handler-frame))
   (funcall (.handler-function h) r))
-
-(defparameter \error \signal)
-(defparameter \warn \signal)
 
 (defun abort ()
   (invoke-restart (make abort)))

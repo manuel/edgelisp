@@ -271,25 +271,25 @@ function Lisp_error()
 {
 }
 
-function Lisp_simple_error(message, arg)
+function Lisp_runtime_error(message, arg)
 {
     this.message = message;
     this.arg = arg;
 }
 
-function lisp_bif_simple_error_message(_key_, simple_error)
+function lisp_bif_runtime_error_message(_key_, runtime_error)
 {
-    return simple_error.message;
+    return runtime_error.message;
 }
 
-function lisp_bif_simple_error_arg(_key_, simple_error)
+function lisp_bif_runtime_error_arg(_key_, runtime_error)
 {
-    return simple_error.arg;
+    return runtime_error.arg;
 }
 
 function lisp_error(message, arg)
 {
-    return lisp_signal(new Lisp_simple_error(message, arg));
+    return lisp_signal(new Lisp_runtime_error(message, arg));
 }
 
 function lisp_signal(condition)
@@ -1145,7 +1145,7 @@ lisp_export_class("object", "Object.prototype");
 lisp_export_class("rational", "jsnums.Rational.prototype");
 lisp_export_class("real", "jsnums.FloatPoint.prototype");
 lisp_export_class("small-integer", "Number.prototype");
-lisp_export_class("simple-error", "Lisp_simple_error.prototype");
+lisp_export_class("runtime-error", "Lisp_runtime_error.prototype");
 lisp_export_class("string", "String.prototype");
 lisp_export_class("string-dict", "Lisp_string_dict.prototype");
 lisp_export_class("string-form", "Lisp_string_form.prototype");
@@ -1168,7 +1168,7 @@ lisp_export_set_superclass("number", "literal");
 lisp_export_set_superclass("number-form", "form");
 lisp_export_set_superclass("rational", "real");
 lisp_export_set_superclass("real", "number");
-lisp_export_set_superclass("simple-error", "error");
+lisp_export_set_superclass("runtime-error", "error");
 lisp_export_set_superclass("small-integer", "integer");
 lisp_export_set_superclass("string", "literal");
 lisp_export_set_superclass("string-dict", "object");
@@ -1215,8 +1215,8 @@ lisp_export_function("%read-from-string", "lisp_bif_read_from_string");
 lisp_export_function("%set-class-name", "lisp_bif_set_class_name");
 lisp_export_function("%set-slot-value", "lisp_bif_set_slot_value");
 lisp_export_function("%set-superclass", "lisp_bif_set_superclass");
-lisp_export_function("%simple-error-message", "lisp_bif_simple_error_message");
-lisp_export_function("%simple-error-arg", "lisp_bif_simple_error_arg");
+lisp_export_function("%runtime-error-message", "lisp_bif_runtime_error_message");
+lisp_export_function("%runtime-error-arg", "lisp_bif_runtime_error_arg");
 lisp_export_function("%slot-value", "lisp_bif_slot_value");
 lisp_export_function("%string-concat", "lisp_bif_string_concat");
 lisp_export_function("%string-dict-get", "lisp_bif_string_dict_get");

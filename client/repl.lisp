@@ -15,9 +15,6 @@
 
 ;;;; Read-Eval-Print Loop
 
-(load "client/dom.lisp")
-(load "client/html.lisp")
-
 (defclass retry-repl-request (restart))
 
 (defun repl-eval (form)
@@ -34,25 +31,45 @@
                            (return-from end))))
            (return-from end (eval form)))))))
 
-(dom-append
- (html-div :id "output")
- (html-form :action "javascript:_lisp_function_repl(null)"
-            (html-input :id "input" :type "text")))
-
 (defun print ((a object))
   (dom-append-child (dom-id "output") (html-text (show a)))
   (repl-scroll-to-bottom))
 
 (defun repl ()
-  (let ((input (dom-id "input")))
+  (let* ((input (dom-id "input"))
+         (value (dom-value input)))
     (dynamic-bind ((print-readably #f))
-      (print (dom-value input)))
-    (print (repl-eval (read-from-string (dom-value input))))
-    (dom-set-value input ""))
+      (note value))
+    (print (repl-eval (read-from-string value)))
+    (dom-set-value input "")
+    (repl-history-add value))
   #f)
 
 (defun repl-scroll-to-bottom ()
   #{ window.scrollTo(0, document.body.scrollHeight), null #})
 
+(dom-append
+ (html-div :id "output")
+ (html-form :action "javascript:_lisp_function_repl(null)"
+            (html-input :id "input" :type "text")))
+
 (dom-focus (dom-id "input"))
 (note "EdgeLisp 0.1.13")
+
+(unless (and (defined? \local-storage-supported?)
+             (local-storage-supported?))
+  (warn "Local storage not supported"))
+
+;;;; History
+
+(defun repl-history-add ((input string))
+  (when (and (defined? \local-storage-supported?)
+             (local-storage-supported?))
+    (let ((ct-str (local-storage-get-item "repl-history-count"))
+          (ct 0))
+      (when ct-str
+        (setq ct (eval (read-from-string ct-str))))
+      (local-storage-set-item "repl-history-count" (show (+ 1 ct)))
+      (local-storage-set-item (string-concat "repl-history-item-" (show ct))
+                              input))))
+

@@ -30,7 +30,7 @@
     }
     #}))
 
-(defun local-storage-get-item ((key string) -> string)
+(defun local-storage-get-item ((key string) -> object)
   "Returns the local storage data associated with key, or nil."
   (unless (local-storage-supported?)
     (error (make local-storage-error)))
