@@ -7,4 +7,6 @@
 
 * Calling a non-function produces a JS, not a Lisp error
 
+* Optional parameter init forms are not compiled in the correct contour.
+
 * Probably many more...
