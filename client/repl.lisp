@@ -39,7 +39,7 @@
   (let* ((input (dom-id "input"))
          (value (dom-value input)))
     (dynamic-bind ((print-readably #f))
-      (note value))
+      (print value))
     (print (repl-eval (read-from-string value)))
     (dom-set-value input "")
     (repl-history-add value))
