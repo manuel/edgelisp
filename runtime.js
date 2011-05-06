@@ -1095,6 +1095,11 @@ function lisp_mangle_method(name)
 
 function lisp_bif_make_uuid(_key_)
 {
+    return lisp_make_uuid();
+}
+
+function lisp_make_uuid()
+{
     return uuid();
 }
 
