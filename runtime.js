@@ -248,7 +248,7 @@ function lisp_show(obj)
 
 function lisp_array_contains(array, elt)
 {
-    for (var i in array) {
+    for (var i = 0; i < array.length; i++) {
         if (array[i] === elt) return true;
     }
     return false;
@@ -536,6 +536,7 @@ function lisp_bif_string_dict_get(_key_, dict, key)
 function lisp_bif_string_dict_put(_key_, dict, key, value)
 {
     dict[lisp_mangle_string_dict_key(key)] = value;
+    return value;
 }
 
 function lisp_bif_string_dict_has_key(_key_, dict, key)
@@ -752,6 +753,7 @@ function lisp_bif_class_name(_key_, klass)
 function lisp_bif_set_class_name(_key_, klass, name)
 {
     klass.lisp_name = name;
+    return name;
 }
 
 function lisp_type_of(obj)
@@ -844,7 +846,7 @@ function lisp_superclass(clsA)
 function lisp_set_superclass(clsA, clsB)
 {
     clsA.lisp_superclass = clsB;
-    return null;
+    return clsB;
 }
 
 function lisp_bif_make_instance(_key_, cls)
@@ -867,7 +869,8 @@ function lisp_bif_slot_value(_key_, obj, name)
 function lisp_bif_set_slot_value(_key_, obj, name, value)
 {
     lisp_assert_string(name);
-    return obj[lisp_mangle_slot(name)] = value;
+    obj[lisp_mangle_slot(name)] = value;
+    return value;
 }
 
 function lisp_bif_has_slot(_key_, obj, name)
