@@ -105,7 +105,7 @@
    (html-div
     (html-div :id "output")
     (html-form :action "javascript:_lisp_function_repl(null)"
-               (html-input :id "input" :type "text"))
+               (html-input :id "input" :type "text" :autocomplete "off"))
     (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
                  :title "previous history item"
                  (html-text "<"))
