@@ -46,7 +46,10 @@ function lisp_bif_load(_key_, path)
 
 function lisp_print(object)
 {
-    return _lisp_function_print(null, object);
+    document.body.appendChild(document.createTextNode(lisp_show(object)));
+    document.body.appendChild(document.createElement("br"));
+    return null;
+    //    return _lisp_function_print(null, object);
 }
 
 function lisp_bif_note(_key_, object)
