@@ -154,6 +154,9 @@
 (defun apply ((f function) (args list) &optional (keys nil) -> object)
   (%apply f args keys))
 
+(defun apropos ((str string) -> list)
+  (%apropos str))
+
 (defun call-unwind-protected ((protected function) (cleanup function) -> object)
   (%call-unwind-protected protected cleanup))
 

@@ -72,17 +72,33 @@ function lisp_mangle_cid(cid)
     return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
 }
 
-/* A set mapping mangled CIDs to true. */
-var lisp_globals_set = {};
+/* A set mapping mangled CIDs to CIDs. */
+var lisp_globals = {};
 
 function lisp_define_global(cid)
 {
-    lisp_globals_set[lisp_mangle_cid(cid)] = true;
+    lisp_globals[lisp_mangle_cid(cid)] = cid;
 }
 
 function lisp_global_defined(cid)
 {
-    return lisp_globals_set[lisp_mangle_cid(cid)] === true;
+    return lisp_globals[lisp_mangle_cid(cid)] !== undefined;
+}
+
+function lisp_apropos(str)
+{
+    var results = [];
+    lisp_iter_dict(lisp_globals, function(k) {
+            var cid = lisp_globals[k];
+            if (cid.name.indexOf(str) !== -1)
+                results.push(cid.name);
+        });
+    return results;
+}
+
+function lisp_bif_apropos(_key_, str)
+{
+    return lisp_apropos(str);
 }
 
 /*** Literal ***/
@@ -1181,6 +1197,7 @@ lisp_export_set_superclass("identifier-form", "form");
 
 lisp_export_function("%append-compounds", "lisp_bif_append_compounds");
 lisp_export_function("%apply", "lisp_bif_apply");
+lisp_export_function("%apropos", "lisp_bif_apropos");
 lisp_export_function("%call-unwind-protected", "lisp_bif_call_unwind_protected");
 lisp_export_function("%call-with-catch-tag", "lisp_bif_call_with_catch_tag");
 lisp_export_function("%call-forever", "lisp_bif_call_forever");
