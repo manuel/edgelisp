@@ -119,6 +119,9 @@
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
 
+(defun native-callback ((f function))
+  #{ function(result) { return (~f)(null, result) } #})
+
 (defun nil? ((a object) -> boolean)
   (if (eq nil a) #t #f))
 
@@ -500,7 +503,7 @@
   (original-show a))
 
 (defmethod show-object ((a native))
-  "")
+  (original-show a))
 
 (defmethod show-object ((a nil))
   "nil")
