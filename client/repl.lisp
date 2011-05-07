@@ -38,8 +38,7 @@
       (print value))
     (print (repl-eval (read-from-string value)))
     (dom-set-value input "")
-    (repl-history-add value))
-  #f)
+    (repl-history-add value)))
 
 (defun repl-scroll-to-bottom ()
   #{ window.scrollTo(0, document.body.scrollHeight), null #})
@@ -100,8 +99,8 @@
   (dom-append-child
    (window-element w)
    (html-div
-    (html-div :id "output")
-    (html-form :onsubmit "_lisp_function_repl(null)"
+    (html-div :data-wid "output")
+    (html-form :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
                (html-input :id "input" :type "text" :autocomplete "off"))
     (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
                  :title "previous history item"
@@ -115,7 +114,7 @@
 (defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
 
 (defun print ((a object))
-  (dom-append-child (window-element *repl-window*)
+  (dom-append-child (window-find *repl-window* "output")
                     (html-div (html-text (show a)))))
 ;  (repl-scroll-to-bottom))
 

@@ -39,7 +39,9 @@
 
 (defun make-jwim-window-manager (-> jwim-window-manager)
   (make jwim-window-manager
-        :native #{ new jwim.Manager() #}
+        :native
+        #{ new jwim.Manager({showMaximizer:false, showClose:false})
+        #}
         :windows (list)))
 
 (defmethod make-window ((wm jwim-window-manager)
@@ -74,7 +76,7 @@
 (defmethod window-element ((w jwim-window) -> native)
   #{ ~(.native w).content #})
 
-(defmethod window-find ((w jwim-window) (id string) -> native)
+(defmethod window-find ((w jwim-window) (id string) -> object)
   #{ ~(.native w).getElement(~id) #})
 
 (defvar *window-manager* (make-jwim-window-manager))
