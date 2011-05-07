@@ -38,6 +38,7 @@
       (print value))
     (print (repl-eval (read-from-string value)))
     (dom-set-value input "")
+    (set-window-size *repl-window* 600 200)
     (repl-history-add value))
   #f)
 
@@ -112,9 +113,34 @@
   (dom-focus (dom-id "input"))
   (note "EdgeLisp 0.1.13"))
 
+(defclass notes-mode (mode))
+(defun make-notes-mode (-> notes-mode)
+  (make notes-mode))
+(defmethod show-object ((m notes-mode)) "Notes")
+(defmethod mode-init-window ((m notes-mode) (w window))
+  (set-window-position w 400 50)
+  (set-window-size w 600 200)
+  (set-window-title w "Notes")
+  (dom-append-child
+   (window-element w)
+   (html-div
+    (html-div :id "output")
+    (html-form :action "javascript:_lisp_function_notes(null)"
+               (html-input :id "input" :type "text" :autocomplete "off"))))
+;    (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
+;                 :title "previous history item"
+;                 (html-text "<"))
+;    (html-button :onclick "_lisp_function_repl_history_next_item(null)"
+;                 :title "next history item"
+;                 (html-text ">"))))
+  (dom-focus (dom-id "input"))
+  (note "EdgeLisp 0.1.13"))
+
 (defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
+(defvar *notes-window* (make-window *window-manager* :mode (make-notes-mode)))
 
 (defun print ((a object))
   (dom-append-child (window-element *repl-window*)
                     (html-div (html-text (show a)))))
 ;  (repl-scroll-to-bottom))
+

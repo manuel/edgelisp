@@ -18,7 +18,7 @@ function lisp_repl_onload()
 {
     lisp_load("lisp/boot.lisp");
     lisp_load("client/client-boot.lisp");
-    lisp_load("client/local-storage.lisp");
+    lisp_load("client/html5.lisp");
 //    lisp_load("client/google-feed.lisp");
     lisp_load("client/window-manager.lisp");
     lisp_load("client/repl.lisp");
@@ -26,10 +26,10 @@ function lisp_repl_onload()
 </script>
 <style type="text/css">
 html, input { font-family: mono; font-size: 16pt; background-color: #ddd; }
-#input { width: 100%; }
+#input { width: 90%; }
 .JMWindow, .activeJMWindow {}
 .title { background-color: #fff; font-weight: bold; padding: 5px 10px; }
-.content { padding: 10px; }
+.content { padding: 10px; overflow: auto}
 </style>
 </head>
 <body onload="lisp_repl_onload()">

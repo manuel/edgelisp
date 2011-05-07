@@ -1,19 +1,4 @@
-; EdgeLisp: A Lisp that compiles to JavaScript.
-; Copyright (C) 2008-2011 by Manuel Simoni.
-;
-; This program is free software: you can redistribute it and/or modify
-; it under the terms of the GNU Affero General Public License as
-; published by the Free Software Foundation, version 3.
-;
-; This program is distributed in the hope that it will be useful,
-; but WITHOUT ANY WARRANTY; without even the implied warranty of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU Affero General Public License for more details.
-;
-; You should have received a copy of the GNU Affero General Public License
-; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-;;;; HTML5 Local Storage
+;;;; Local Storage
 
 ;;; Thanks to Mark Pilgrim for docs
 ;;; http://diveintohtml5.org/storage.html
@@ -62,4 +47,17 @@
     (error (make local-storage-error)))
   #{ localStorage.key((~i)) #})
 
-(provide "local-storage")
+;;;; IndexedDB
+
+(defclass indexed-db-error (error))
+
+(defun indexed-db-supported? (-> boolean)
+  "Returns true if IndexedDB is supported, false otherwise."
+  (native-body #{
+    try {
+      return "webkitIndexedDB" in window && window["webkitIndexedDB"] !== null;
+    } catch (e) {
+      return false;
+    }
+    #}))
+
