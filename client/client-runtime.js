@@ -13,6 +13,10 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+/* This file contains functions required for running EdgeLisp in
+   browsers.  It is loaded immediately after runtime.js is loaded, and
+   before the compiler. */
+
 function lisp_read_unit_as_progn(string)
 {
     var forms = lisp_read(string);
