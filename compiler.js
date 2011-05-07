@@ -219,6 +219,7 @@ function lisp_compile_special_identifier(st, form)
 function lisp_compile_special_defparameter(st, form)
 {
     var cid = lisp_generalized_identifier_to_cid(form.elts[1]);
+    lisp_note(cid.namespace + " " + cid.name);
     lisp_define_global(cid);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "defparameter", 
@@ -322,6 +323,7 @@ function lisp_compile_special_defsyntax(st, form)
 {
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
+    lisp_note("macro " + name_form.name);
     lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
     return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
 }

@@ -22,6 +22,7 @@ function lisp_read_unit_as_progn(string)
 
 function lisp_load(path)
 {
+    lisp_note("Loading " + path);
     var req = new XMLHttpRequest();
     // Append UUID to file path to bypass browser cache.
     req.open("GET", path + "?" + uuid(), false);
