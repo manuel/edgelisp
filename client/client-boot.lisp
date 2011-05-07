@@ -74,6 +74,9 @@
 (defun dom-text ((s string) -> native)
   #{ document.createTextNode((~s)) #})
 
+(define-native-slot scroll-top "scrollTop")
+(define-native-slot scroll-height "scrollHeight")
+
 ;;; Scripts
 
 (defun dom-load-script ((url string) &optional (type "text/javascript"))

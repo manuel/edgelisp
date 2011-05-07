@@ -41,8 +41,8 @@
     (repl-history-add value)))
 
 (defun repl-scroll-to-bottom ()
-  #{ ~(window-element *repl-window*).scrollTop =
-        ~(window-element *repl-window*).scrollHeight #})
+  (let ((e (window-element *repl-window*)))
+    (setf (.scroll-top e) (.scroll-height e))))
 
 (unless (and (defined? \local-storage-supported?)
              (local-storage-supported?))
