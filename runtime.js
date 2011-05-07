@@ -235,11 +235,13 @@ function lisp_check_type(obj, type)
 
 function lisp_show(obj)
 {
-    // show is defined as a generic function in boot.lisp
-    if (typeof(_lisp_function_show) !== "undefined")
-        return _lisp_function_show(null, obj);
-    else
-        return String(JSON.stringify(obj));
+    return _lisp_function_show(null, obj);
+}
+
+function _lisp_function_show(_key_, obj)
+{
+    // Needs to be safe
+    return String(JSON.stringify(obj));
 }
 
 function lisp_array_contains(array, elt)
@@ -1235,9 +1237,10 @@ lisp_export_function("%the", "lisp_bif_the");
 lisp_export_function("%throw", "lisp_bif_throw");
 lisp_export_function("%type-of", "lisp_bif_type_of");
 
-// Additional functions:
+// Additional interface functions
+// - show 
 // - signal
-// - no-applicable-method
+// - no-applicable-method 
 // - no-most-specific-method
 // - undefined-identifier
 

@@ -15,9 +15,9 @@
 
 function lisp_read_unit_as_progn(string)
 {
-  var forms = lisp_read(string);
-  var progn = new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(forms));
-  return progn
+    var forms = lisp_read(string);
+    var progn = new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(forms));
+    return progn
 }
 
 function lisp_load(path)
@@ -39,4 +39,30 @@ function lisp_bif_load(_key_, path)
     return lisp_load(path);
 }
 
+function lisp_print(object)
+{
+    return _lisp_function_print(null, object);
+}
+
+function lisp_bif_note(_key_, object)
+{
+    return lisp_note(object);
+}
+
+function lisp_note(object)
+{
+    return lisp_print("; " + lisp_show(object));
+}
+
+function _lisp_function_print(_key_, object)
+{
+    if (console.log)
+        console.log(object);
+    return null;
+}
+
 lisp_export_function("%load", "lisp_bif_load");
+lisp_export_function("%note", "lisp_bif_note");
+
+// Additional interface functions:
+// - print

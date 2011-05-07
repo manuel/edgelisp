@@ -231,11 +231,11 @@
 (defun make-uuid (-> string)
   (%make-uuid))
 
+(defun note ((a object) -> nil)
+  (%note a))
+
 (defun params-specializers ((cf compound-form) -> compound-form)
   (%params-specializers cf))
-
-(defun print ((a object) -> nil)
-  (%print a))
 
 (defun put-method ((g generic) (specializers list) (m function) -> nil)
   (%put-method g specializers m))
@@ -471,6 +471,9 @@
 
 (defdynamic print-readably #t)
 
+;;; Save built-in show impl for default method on show-object
+(defparameter \original-show \show)
+
 (defgeneric show (object))
 
 (defmethod show ((a object))
@@ -492,8 +495,7 @@
 (defgeneric show-object (object))
 
 (defmethod show-object ((a object))
-  (show-raw a))
-
+  (original-show a))
 
 (defmethod show-object ((a native))
   "")
@@ -522,8 +524,6 @@
   (generic-name a))
 
 
-(defun show-raw (a)
-  #{ JSON.stringify(~a) #})
 
 ;;;; Numbers
 
