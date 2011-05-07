@@ -6,10 +6,12 @@
    mode))
 (defgeneric make-window (wm -> window))
 (defgeneric set-window-content (window content))
+(defgeneric set-window-title (window title))
 (defgeneric set-window-position (window x y))
 (defgeneric set-window-size (window w h))
 (defgeneric window-element (window -> native))
 (defgeneric window-buffer (window -> buffer))
+(defgeneric window-find (window id -> native))
 
 (defclass mode)
 (defgeneric mode-init-window (mode window))
@@ -44,6 +46,7 @@
                         &key 
                         (mode (make-fundamental-mode))
                         (buffer (make-buffer))
+                        (container (dom-document-body))
                         -> jwim-window)
   (let ((w (make jwim-window
                  :native #{ ~(.native wm).createWindow() #}
@@ -59,6 +62,9 @@
 (defmethod set-window-content ((w jwim-window) (content string))
   #{ ~(.native w).setContent(~content), null #})
 
+(defmethod set-window-title ((w jwim-window) (title string))
+  #{ ~(.native w).setTitle(~title), null #})
+
 (defmethod set-window-position ((w jwim-window) (x small-integer) (y small-integer))
   #{ ~(.native w).setPosition(~x, ~y), null #})
 
@@ -68,5 +74,7 @@
 (defmethod window-element ((w jwim-window) -> native)
   #{ ~(.native w).content #})
 
+(defmethod window-find ((w jwim-window) (id string) -> native)
+  #{ ~(.native w).getElement(~id) #})
 
 (defvar *window-manager* (make-jwim-window-manager))

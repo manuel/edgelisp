@@ -31,10 +31,6 @@
                            (return-from end))))
            (return-from end (eval form)))))))
 
-(defun print ((a object))
-  (dom-append (html-div (html-text (show a))))
-  (repl-scroll-to-bottom))
-
 (defun repl ()
   (let* ((input (dom-id "input"))
          (value (dom-value input)))
@@ -99,20 +95,26 @@
 (defmethod show-object ((m repl-mode)) "REPL")
 (defmethod mode-init-window ((m repl-mode) (w window))
   (set-window-position w 50 50)
-  (set-window-size w 400 200)
+  (set-window-size w 600 200)
+  (set-window-title w "REPL")
   (dom-append-child
    (window-element w)
    (html-div
     (html-div :id "output")
     (html-form :action "javascript:_lisp_function_repl(null)"
-               (html-input :id "input" :type "text" :autocomplete "off"))
-    (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
-                 :title "previous history item"
-                 (html-text "<"))
-    (html-button :onclick "_lisp_function_repl_history_next_item(null)"
-                 :title "next history item"
-                 (html-text ">"))))
+               (html-input :id "input" :type "text" :autocomplete "off"))))
+;    (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
+;                 :title "previous history item"
+;                 (html-text "<"))
+;    (html-button :onclick "_lisp_function_repl_history_next_item(null)"
+;                 :title "next history item"
+;                 (html-text ">"))))
   (dom-focus (dom-id "input"))
   (note "EdgeLisp 0.1.13"))
 
 (defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
+
+(defun print ((a object))
+  (dom-append-child (window-element *repl-window*)
+                    (html-div (html-text (show a)))))
+;  (repl-scroll-to-bottom))
