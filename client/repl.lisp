@@ -32,7 +32,7 @@
            (return-from end (eval form)))))))
 
 (defun print ((a object))
-  (dom-append-child (dom-id "output") (html-text (show a)))
+  (dom-append-child (dom-id "output") (html-div (html-text (show a))))
   (repl-scroll-to-bottom))
 
 (defun repl ()
@@ -99,10 +99,10 @@
             (html-input :id "input" :type "text"))
  (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
               :title "previous history item"
-              (html-text "&#x25c0;"))
+              (html-text "<"))
  (html-button :onclick "_lisp_function_repl_history_next_item(null)"
               :title "next history item"
-              (html-text "&#x25B6;")))
+              (html-text ">")))
 
 (dom-focus (dom-id "input"))
 (note "EdgeLisp 0.1.13")

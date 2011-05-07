@@ -53,6 +53,9 @@
           (dom-append-child (dom-document-body) element))
         elements))
 
+(defun dom-text ((s string) -> native)
+  #{ document.createTextNode((~s)) #})
+
 ;;; Scripts
 
 (defun dom-load-script ((url string) &optional (type "text/javascript"))
@@ -81,9 +84,7 @@
 (define-html-tag span)
 
 (defun html-text ((s string) -> native)
-  (let ((element (dom-create-element "div")))
-    (dom-set-inner-html element s)
-    element))
+  (dom-text s))
 
 ;;;; Hypertext Transfer Protocol
 
