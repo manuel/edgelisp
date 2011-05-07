@@ -9,6 +9,9 @@
 <script type="text/javascript" src="client/client-runtime.js"></script>
 <script type="text/javascript" src="reader.js"></script>
 <script type="text/javascript" src="compiler.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAAsDylyHuLqoMVDQ-FI1o2rRQIuhHBNtSzOwBJ-bNgzgP7yqq0KBSIT9w56_5MKceXF5GR3HiVt6h9uQ"></script>
+<script type="text/javascript">google.load("feeds", "1");</script>
+
 <script type="text/javascript">
 function lisp_repl_onload()
 {
@@ -25,5 +28,6 @@ html, input { font-family: mono; font-size: 16pt; }
 </style>
 </head>
 <body onload="lisp_repl_onload()">
+<div id="feed"></div>
 </body>
 </html>
