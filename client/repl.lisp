@@ -109,8 +109,7 @@
                                           (if (= (dom-event-which event) +key-down-arrow+)
                                               (repl-history-next-item)))))
                  input))))
-  (dom-focus (dom-id "input"))
-  (note "EdgeLisp 0.1.13"))
+  (dom-focus (dom-id "input")))
 
 (defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
 
@@ -119,3 +118,4 @@
                     (html-div (html-text (show a))))
   (repl-scroll-to-bottom))
 
+(note "EdgeLisp 0.1.15")
