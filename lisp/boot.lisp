@@ -122,6 +122,9 @@
 (defun native-callback ((f function))
   #{ function(result) { return (~f)(null, result) } #})
 
+(defun native-callback-nullary ((f function))
+  #{ function() { return (~f)(null) } #})
+
 (defun nil? ((a object) -> boolean)
   (if (eq nil a) #t #f))
 
