@@ -102,13 +102,13 @@
    (html-div
     (html-div :data-wid "output")
     (html-form :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
-               (html-input :id "input" :type "text" :autocomplete "off"))
-    (html-button :onclick "_lisp_function_repl_history_previous_item(null)"
-                 :title "previous history item"
-                 (html-text "<"))
-    (html-button :onclick "_lisp_function_repl_history_next_item(null)"
-                 :title "next history item"
-                 (html-text ">"))))
+               (let ((input (html-input :id "input" :type "text" :autocomplete "off")))
+                 (dom-keydown input (lambda (event)
+                                      (if (= (dom-event-which event) +key-up-arrow+)
+                                          (repl-history-previous-item)
+                                          (if (= (dom-event-which event) +key-down-arrow+)
+                                              (repl-history-next-item)))))
+                 input))))
   (dom-focus (dom-id "input"))
   (note "EdgeLisp 0.1.13"))
 

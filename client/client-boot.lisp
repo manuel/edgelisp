@@ -81,6 +81,9 @@
 
 ;;; Events
 
+(defun dom-event-which ((event native) -> object)
+  #{ (~event).which #})
+
 (defun dom-keydown ((element native) (callback function))
   #{ $(~element).keydown(~(native-callback callback)), null #})
 
@@ -125,5 +128,10 @@
 
 (defun window-inner-height (-> small-integer)
   #{ window.innerHeight #})
+
+(defvar +key-left-arrow+ 37)
+(defvar +key-up-arrow+ 38)
+(defvar +key-right-arrow+ 39)
+(defvar +key-down-arrow+ 40)
 
 (provide "client-boot")
