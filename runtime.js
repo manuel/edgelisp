@@ -233,6 +233,7 @@ function lisp_check_type(obj, type)
         return lisp_error("Type error", [obj, lisp_show(type)]);
 }
 
+/* This later replaced with generic function in boot.lisp. */
 function lisp_show(obj)
 {
     return _lisp_function_show(null, obj);
