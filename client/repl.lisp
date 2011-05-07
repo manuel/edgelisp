@@ -92,11 +92,11 @@
 (defclass repl-mode (mode))
 (defun make-repl-mode (-> repl-mode)
   (make repl-mode))
-(defmethod show-object ((m repl-mode)) "REPL")
+(defmethod show-object ((m repl-mode)) "Console")
 (defmethod mode-init-window ((m repl-mode) (w window))
   (set-window-position w 50 50)
   (set-window-size w 640 480)
-  (set-window-title w "REPL")
+  (set-window-title w "Console")
   (dom-append-child
    (window-element w)
    (html-div
