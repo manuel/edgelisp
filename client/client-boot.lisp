@@ -113,4 +113,12 @@
       req.send(null);
       return req.responseText #}))
 
+;;;; Browser
+
+(defun window-inner-width (-> small-integer)
+  #{ window.innerWidth #})
+
+(defun window-inner-height (-> small-integer)
+  #{ window.innerHeight #})
+
 (provide "client-boot")
