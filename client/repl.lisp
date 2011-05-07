@@ -41,7 +41,8 @@
     (repl-history-add value)))
 
 (defun repl-scroll-to-bottom ()
-  #{ window.scrollTo(0, document.body.scrollHeight), null #})
+  #{ ~(window-element *repl-window*).scrollTop =
+        ~(window-element *repl-window*).scrollHeight #})
 
 (unless (and (defined? \local-storage-supported?)
              (local-storage-supported?))
@@ -115,6 +116,6 @@
 
 (defun print ((a object))
   (dom-append-child (window-find *repl-window* "output")
-                    (html-div (html-text (show a)))))
-;  (repl-scroll-to-bottom))
+                    (html-div (html-text (show a))))
+  (repl-scroll-to-bottom))
 
