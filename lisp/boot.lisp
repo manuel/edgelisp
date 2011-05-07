@@ -511,7 +511,7 @@
 
 (defmethod show-object ((a string))
   (if (dynamic print-readably)
-      (show-raw a)
+      (original-show a)
       #{ (~a).toString() #}))
 
 (defmethod show-object ((a function))
