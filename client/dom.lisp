@@ -15,6 +15,8 @@
 
 ;;;; Document Object Model
 
+;;; Document Elements
+
 (defun dom-document (-> native) #{ document #})
 
 (defun dom-document-body (-> native) #{ document.body #})
@@ -51,5 +53,10 @@
   (each (lambda (element)
           (dom-append-child (dom-document-body) element))
         elements))
+
+;;; Scripts
+
+(defun dom-load-script ((url string) &optional (type "text/javascript"))
+  (dom-append (html-script :src url :type type)))
 
 (provide "dom")

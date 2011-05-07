@@ -1,3 +1,4 @@
+
 ; EdgeLisp: A Lisp that compiles to JavaScript.
 ; Copyright (C) 2008-2011 by Manuel Simoni.
 ;
@@ -32,6 +33,7 @@
 (define-html-tag div)
 (define-html-tag form)
 (define-html-tag input)
+(define-html-tag script)
 (define-html-tag span)
 
 (defun html-text ((s string) -> native)
