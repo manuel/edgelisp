@@ -50,21 +50,8 @@
 (defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
   #{ (~element).setAttribute((~attr-name), (~value)), null #})
 
-(defun dom-value ((element native) -> object)
-  #{ (~element).value #})
-
-(defun dom-set-value ((element native) (s string) -> nil)
-  #{ (~element).value = (~s), null #})
-
 (defun dom-focus ((element native))
   #{ (~element).focus(), null #})
-
-(defun dom-set-id ((element native) (id string) -> nil)
-  #{ (~element).id = (~id), null #})
-
-(defun dom-set-inner-html ((element native) (html string) -> nil)
-  #{ (~element).innerHTML = (~html), null #})
-
 
 (defun dom-append (&rest elements -> nil)
   (each (lambda (element)
@@ -74,8 +61,12 @@
 (defun dom-text ((s string) -> native)
   #{ document.createTextNode((~s)) #})
 
-(define-native-slot scroll-top "scrollTop")
-(define-native-slot scroll-height "scrollHeight")
+(define-native-slot element-id "id")
+(define-native-slot element-inner-html "innerHTML")
+(define-native-slot element-scroll-height "scrollHeight")
+(define-native-slot element-scroll-top "scrollTop")
+(define-native-slot element-value "value")
+(define-native-slot event-which "which")
 
 ;;; Scripts
 
@@ -83,9 +74,6 @@
   (dom-append (html-script :src url :type type)))
 
 ;;; Events
-
-(defun dom-event-which ((event native) -> object)
-  #{ (~event).which #})
 
 (defun dom-keydown ((element native) (callback function))
   #{ $(~element).keydown(~(native-callback callback)), null #})
@@ -125,12 +113,6 @@
       return req.responseText #}))
 
 ;;;; Browser
-
-(defun window-inner-width (-> small-integer)
-  #{ window.innerWidth #})
-
-(defun window-inner-height (-> small-integer)
-  #{ window.innerHeight #})
 
 (defvar +key-left-arrow+ 37)
 (defvar +key-up-arrow+ 38)

@@ -33,16 +33,16 @@
 
 (defun repl ()
   (let* ((input (dom-id "input"))
-         (value (dom-value input)))
+         (value (.element-value input)))
     (dynamic-bind ((print-readably #f))
       (print value))
     (print (repl-eval (read-from-string value)))
-    (dom-set-value input "")
+    (setf (.element-value input) "")
     (repl-history-add value)))
 
 (defun repl-scroll-to-bottom ()
   (let ((e (window-element *repl-window*)))
-    (setf (.scroll-top e) (.scroll-height e))))
+    (setf (.element-scroll-top e) (.element-scroll-height e))))
 
 (unless (and (defined? \local-storage-supported?)
              (local-storage-supported?))
@@ -77,8 +77,8 @@
       (incf *repl-offset*)
       (let ((i (- (repl-history-count) *repl-offset*)))
         (when (and (> i -1) (< i (repl-history-count)))
-          (dom-set-value (dom-id "input")
-                         (local-storage-get-item (repl-history-item-name i))))))))
+          (setf (.element-value (dom-id "input"))
+                (local-storage-get-item (repl-history-item-name i))))))))
 
 (defun repl-history-next-item ()
   (when (and (defined? \local-storage-supported?)
@@ -86,8 +86,8 @@
     (decf *repl-offset*)
     (let ((i (- (repl-history-count) *repl-offset*)))
       (when (and (> i -1) (< i (repl-history-count)))
-        (dom-set-value (dom-id "input")
-                       (local-storage-get-item (repl-history-item-name i)))))))
+        (setf (.element-value (dom-id "input"))
+              (local-storage-get-item (repl-history-item-name i)))))))
 
 (defclass repl-mode (mode))
 (defun make-repl-mode (-> repl-mode)
@@ -104,9 +104,9 @@
     (html-form :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
                (let ((input (html-input :id "input" :type "text" :autocomplete "off")))
                  (dom-keydown input (lambda (event)
-                                      (if (= (dom-event-which event) +key-up-arrow+)
+                                      (if (= (.event-which event) +key-up-arrow+)
                                           (repl-history-previous-item)
-                                          (if (= (dom-event-which event) +key-down-arrow+)
+                                          (if (= (.event-which event) +key-down-arrow+)
                                               (repl-history-next-item)))))
                  input))))
   (dom-focus (dom-id "input")))
