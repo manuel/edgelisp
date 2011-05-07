@@ -125,6 +125,22 @@
 (defun native-callback-nullary ((f function))
   #{ function() { return (~f)(null) } #})
 
+(defun native-slot-value (obj name)
+  #{ (~obj)[~name] #})
+
+(defun set-native-slot-value (obj name value)
+  #{ (~obj)[~name] = ~value, null #})
+
+(defmacro define-native-slot (lisp-name native-name-string)
+  (let* ((slot-name (identifier-name lisp-name))
+         (accessor-name (string-concat "." slot-name))
+         (setter-name (setter-name accessor-name)))
+    #`(progn
+        (defun ,(string-to-identifier accessor-name) (obj)
+          (native-slot-value obj ,native-name-string))
+        (defun ,(string-to-identifier setter-name) (obj value)
+          (set-native-slot-value obj ,native-name-string value)))))
+
 (defun nil? ((a object) -> boolean)
   (if (eq nil a) #t #f))
 
