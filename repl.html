@@ -18,15 +18,16 @@ function lisp_repl_onload()
 {
     lisp_load("lisp/boot.lisp");
     lisp_load("client/client-boot.lisp");
-    lisp_load("client/local-storage.lisp");
-    lisp_load("client/repl.lisp");
-    lisp_load("client/google-feed.lisp");
+//    lisp_load("client/local-storage.lisp");
+//    lisp_load("client/repl.lisp");
+//    lisp_load("client/google-feed.lisp");
     lisp_load("client/window-manager.lisp");
 }
 </script>
 <style type="text/css">
-html, input { font-family: mono; font-size: 16pt; }
+html, input { font-family: mono; font-size: 16pt; background-color: #ddd; }
 #input { width: 100%; }
+.JMWindow, .activeJMWindow { background-color: #fff };
 </style>
 </head>
 <body onload="lisp_repl_onload()">
