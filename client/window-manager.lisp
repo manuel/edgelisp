@@ -9,6 +9,7 @@
 (defgeneric set-window-position (window x y))
 (defgeneric set-window-size (window w h))
 (defgeneric window-element (window -> native))
+(defgeneric window-buffer (window -> buffer))
 
 (defclass mode)
 (defgeneric mode-init-window (mode window))
@@ -17,6 +18,11 @@
 (defclass fundamental-mode (mode))
 (defun make-fundamental-mode (-> fundamental-mode)
   (make fundamental-mode))
+
+(defclass buffer ()
+  (entries))
+(defun make-buffer ()
+  (make buffer :entries (list)))
 
 ;;; Window manager implementation based on JWIM
 
@@ -35,13 +41,15 @@
         :windows (list)))
 
 (defmethod make-window ((wm jwim-window-manager)
-                        &key (mode (make-fundamental-mode))
+                        &key 
+                        (mode (make-fundamental-mode))
+                        (buffer (make-buffer))
                         -> jwim-window)
   (let ((w (make jwim-window
                  :native #{ ~(.native wm).createWindow() #}
-                 :mode mode)))
+                 :mode mode
+                 :buffer buffer)))
     (jwim-add-window wm w)
-    (set-window-content w "")
     (mode-init-window mode w)
     w))
 
@@ -59,3 +67,6 @@
 
 (defmethod window-element ((w jwim-window) -> native)
   #{ ~(.native w).content #})
+
+
+(defvar *window-manager* (make-jwim-window-manager))

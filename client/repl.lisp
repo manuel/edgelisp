@@ -98,6 +98,8 @@
   (make repl-mode))
 (defmethod show-object ((m repl-mode)) "REPL")
 (defmethod mode-init-window ((m repl-mode) (w window))
+  (set-window-position w 50 50)
+  (set-window-size w 400 200)
   (dom-append-child
    (window-element w)
    (html-div
@@ -113,8 +115,4 @@
   (dom-focus (dom-id "input"))
   (note "EdgeLisp 0.1.13"))
 
-(defvar *window-manager* (make-jwim-window-manager))
-(defvar *top-window* (make-window *window-manager* :mode (make-repl-mode)))
-(set-window-position *top-window* 50 50)
-(set-window-size *top-window* 400 200)
-
+(defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
