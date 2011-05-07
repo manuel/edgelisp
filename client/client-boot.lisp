@@ -79,6 +79,11 @@
 (defun dom-load-script ((url string) &optional (type "text/javascript"))
   (dom-append (html-script :src url :type type)))
 
+;;; Events
+
+(defun dom-keydown ((element native) (callback function))
+  #{ $(~element).keydown(~(native-callback callback)), null #})
+
 ;;;; Hypertext Markup Language
 
 (defmacro define-html-tag (name &optional (prefix #'html-))
