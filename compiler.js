@@ -21,9 +21,53 @@
 
 function lisp_eval(form)
 {
+    var fasl = lisp_compile_unit(form);
+    return lisp_perform_effects(fasl, "execute");
+}
+
+// Compiles the form, which may involve compile-time evaluation, and
+// bundles its runtime effects and compile-time effects into a fasl.
+function lisp_compile_unit(form)
+{
     var st = new Lisp_compilation_state();
-    var vop = lisp_compile(st, form);
-    return eval(lisp_emit(st, vop));
+    var run_time_vop = lisp_compile(st, form);
+    return new Lisp_fasl({ "execute": lisp_emit(st, run_time_vop),
+                           "compile": st.compile_time });    
+}
+
+// Evaluates the code stored in a fasl for a certain time, such as
+// "execute" or "compile".
+function lisp_perform_effects(fasl, time)
+{
+    lisp_assert_not_null(fasl.times[time]);
+    return eval(fasl.times[time]);
+}
+
+// Used by macro definition and eval-when-compile: evaluate form and
+// add code to compile-time.
+function lisp_compile_time_eval(st, form)
+{
+    var js = lisp_emit(st, lisp_compile(st, form));
+    eval(js);
+    st.compile_time += (", " + js);
+    return null;
+}
+
+// Threaded through a single form compilation.  Note that there's also
+// global compiler state, such as the lisp_macros_table.
+function Lisp_compilation_state()
+{
+    // Tracks lambdas
+    this.contour = null;
+    // JS code evaluated during compilation
+    this.compile_time = "";
+}
+
+// A "rib" in the compile-time lexical environment.
+function Lisp_contour(sig, parent)
+{
+    this.sig = sig;
+    this.parent = parent;
 }
 
 /* The usual Lisp evaluation rule: literals evaluate to themselves;
@@ -118,35 +162,6 @@ function lisp_compile_function_application(st, form)
     return { vopt: "funcall", 
              fun: fun, 
              call_site: call_site };
-}
-
-function lisp_macro_function(name)
-{
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);
-    return lisp_macros_table[mangled_name];
-}
-
-function lisp_set_macro_function(name, expander)
-{
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);    
-    lisp_macros_table[mangled_name] = expander;
-    return expander;
-}
-
-/*** Persistent compiler state ***/
-
-function Lisp_compilation_state()
-{
-    // Tracks lambdas
-    this.contour = null;
-}
-
-function Lisp_contour(sig, parent)
-{
-    this.sig = sig;
-    this.parent = parent;
 }
 
 /* Returns true if the CID is lexically bound. */
@@ -323,8 +338,11 @@ function lisp_compile_special_defsyntax(st, form)
 {
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
-    //    lisp_note("macro " + name_form.name);
-    lisp_set_macro_function(name_form.name, lisp_eval(expander_form));
+    var set_macro_form =
+        new Lisp_compound_form([new Lisp_identifier_form("%set-macro-function"),
+                                new Lisp_string_form(name_form.name),
+                                expander_form]);
+    lisp_compile_time_eval(st, set_macro_form);
     return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
 }
 
@@ -333,7 +351,7 @@ function lisp_compile_special_defsyntax(st, form)
 function lisp_compile_special_eval_when_compile(st, form)
 {
     var body_form = lisp_assert_not_null(form.elts[1]);
-    lisp_eval(body_form);
+    lisp_compile_time_eval(st, body_form);
     return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
 }
 

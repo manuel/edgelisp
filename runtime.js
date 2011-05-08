@@ -21,6 +21,13 @@
 /* Nonstandard stuff of which I'd like to get rid of:
    __proto__, <function>.caller */
 
+// Fast-loadable, contains compiled JS code for a Lisp unit.
+function Lisp_fasl(times)
+{
+    // Maps time names ("execute", "compile") to compiled JS.
+    this.times = times;
+}
+
 /* A compiler identifier (CID) is the fully explicit form of
    identifier used inside the compiler.
 
@@ -925,6 +932,26 @@ function lisp_bif_has_slot(_key_, obj, name)
    macroexpand don't get an error. */
 var lisp_macros_table = {};
 
+function lisp_macro_function(name)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);
+    return lisp_macros_table[mangled_name];
+}
+
+function lisp_set_macro_function(name, expander)
+{
+    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
+    var mangled_name = lisp_mangle_function(name);    
+    lisp_macros_table[mangled_name] = expander;
+    return expander;
+}
+
+function lisp_bif_set_macro_function(_key_, name, fun)
+{
+    return lisp_set_macro_function(name, fun);
+}
+
 function lisp_macroexpand(form)
 {
     var exp = lisp_macroexpand_1(form);
@@ -1140,6 +1167,13 @@ function lisp_make_uuid()
     return uuid();
 }
 
+/*** Compilation ***/
+
+function lisp_bif_compile(_key_, form)
+{
+    return lisp_compile_unit(form);
+}
+
 /*** Export to Lisp ***/
 
 lisp_export("#t", "true");
@@ -1148,9 +1182,11 @@ lisp_export("nil", "null");
 
 lisp_export_class("big-integer", "jsnums.BigInteger.prototype")
 lisp_export_class("boolean", "Boolean.prototype");
+lisp_export_class("cid", "Lisp_cid.prototype");
 lisp_export_class("class", "Lisp_class.prototype");
 lisp_export_class("compound-form", "Lisp_compound_form.prototype");
 lisp_export_class("error", "Error.prototype");
+lisp_export_class("fasl", "Lisp_fasl.prototype");
 lisp_export_class("form", "Lisp_form.prototype");
 lisp_export_class("function", "Function.prototype");
 lisp_export_class("generic", "Lisp_generic.prototype");
@@ -1173,9 +1209,11 @@ lisp_export_class("identifier-form", "Lisp_identifier_form.prototype");
 
 lisp_export_set_superclass("big-integer", "integer");
 lisp_export_set_superclass("boolean", "literal");
+lisp_export_set_superclass("cid", "object");
 lisp_export_set_superclass("class", "object");
 lisp_export_set_superclass("compound-form", "form");
 lisp_export_set_superclass("error", "object");
+lisp_export_set_superclass("fasl", "object");
 lisp_export_set_superclass("form", "object");
 lisp_export_set_superclass("function", "object");
 lisp_export_set_superclass("generic", "object");
@@ -1202,6 +1240,7 @@ lisp_export_function("%call-unwind-protected", "lisp_bif_call_unwind_protected")
 lisp_export_function("%call-with-catch-tag", "lisp_bif_call_with_catch_tag");
 lisp_export_function("%call-forever", "lisp_bif_call_forever");
 lisp_export_function("%class-name", "lisp_bif_class_name");
+lisp_export_function("%compile", "lisp_bif_compile");
 lisp_export_function("%compound-apply", "lisp_bif_compound_apply");
 lisp_export_function("%compound-add", "lisp_bif_compound_add");
 lisp_export_function("%compound-elt", "lisp_bif_compound_elt");
@@ -1234,6 +1273,7 @@ lisp_export_function("%params-specializers", "lisp_bif_params_specializers");
 lisp_export_function("%put-method", "lisp_bif_put_method");
 lisp_export_function("%read-from-string", "lisp_bif_read_from_string");
 lisp_export_function("%set-class-name", "lisp_bif_set_class_name");
+lisp_export_function("%set-macro-function", "lisp_bif_set_macro_function");
 lisp_export_function("%set-slot-value", "lisp_bif_set_slot_value");
 lisp_export_function("%set-superclass", "lisp_bif_set_superclass");
 lisp_export_function("%runtime-error-message", "lisp_bif_runtime_error_message");

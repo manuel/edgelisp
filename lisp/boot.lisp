@@ -13,8 +13,6 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(%%eval-when-compile (%note "Lisp boot"))
-
 ;;;; Bootstrap defmacro
 
 (%%defsyntax defmacro
@@ -168,6 +166,9 @@
 
 (defun class-name ((c class) -> string)
   (%class-name c))
+
+(defun compile ((f form) -> fasl)
+  (%compile f))
 
 (defun compound-apply ((f function) (cf compound-form) -> object)
   (%compound-apply f cf))
