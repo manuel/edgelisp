@@ -32,7 +32,7 @@ function lisp_compile_unit(form)
     var st = new Lisp_compilation_state();
     var run_time_vop = lisp_compile(st, form);
     return new Lisp_fasl({ "execute": lisp_emit(st, run_time_vop),
-                           "compile": st.compile_time });    
+                           "compile": st.compile_time });
 }
 
 // Evaluates the code stored in a fasl for a certain time, such as
@@ -49,7 +49,10 @@ function lisp_compile_time_eval(st, form)
 {
     var js = lisp_emit(st, lisp_compile(st, form));
     eval(js);
-    st.compile_time += (", " + js);
+    if (st.compile_time !== undefined)
+        st.compile_time += (", " + js);
+    else
+        st.compile_time = js;
     return null;
 }
 
@@ -60,7 +63,7 @@ function Lisp_compilation_state()
     // Tracks lambdas
     this.contour = null;
     // JS code evaluated during compilation
-    this.compile_time = "";
+    this.compile_time = undefined;
 }
 
 // A "rib" in the compile-time lexical environment.
