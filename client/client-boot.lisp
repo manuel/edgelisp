@@ -24,7 +24,7 @@
   (%load-file path))
 
 (defmethod load ((what string))
-  (load-file path))
+  (load-file what))
 
 (defun alert (&optional (s "Lisp alert"))
   #{ alert(~s) #})
