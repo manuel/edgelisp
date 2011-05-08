@@ -305,7 +305,7 @@ function lisp_iter_dict(dict, fun)
 
 function lisp_lists_equal(list1, list2)
 {
-    if (list1.length != list2.length) return false;
+    if (list1.length !== list2.length) return false;
     for (var i = 0, len = list1.length; i < len; i++) {
         if (list1[i] !== list2[i]) return false;
     }
