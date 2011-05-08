@@ -24,7 +24,7 @@ function lisp_read_unit_as_progn(string)
     return progn
 }
 
-function lisp_load(path)
+function lisp_load_file(path)
 {
     lisp_note("Loading " + path);
     var req = new XMLHttpRequest();
@@ -39,9 +39,9 @@ function lisp_load(path)
     return null;
 }
 
-function lisp_bif_load(_key_, path)
+function lisp_bif_load_file(_key_, path)
 {
-    return lisp_load(path);
+    return lisp_load_file(path);
 }
 
 function lisp_print(object)
@@ -69,7 +69,7 @@ function _lisp_function_print(_key_, object)
     return null;
 }
 
-lisp_export_function("%load", "lisp_bif_load");
+lisp_export_function("%load-file", "lisp_bif_load_file");
 lisp_export_function("%note", "lisp_bif_note");
 
 // Additional interface functions:

@@ -28,6 +28,24 @@ function Lisp_fasl(times)
     this.times = times;
 }
 
+function lisp_bif_make_fasl(_key_)
+{
+    return new Lisp_fasl({});
+}
+
+function lisp_bif_load_fasl(_key_, fasl, time)
+{
+    return lisp_load_fasl(fasl, time);
+}
+
+// Evaluates the code stored in a fasl for a certain time, such as
+// "execute" or "compile".
+function lisp_load_fasl(fasl, time)
+{
+    lisp_assert_not_null(fasl.times[time]);
+    return eval(fasl.times[time]);
+}
+
 /* A compiler identifier (CID) is the fully explicit form of
    identifier used inside the compiler.
 
@@ -1262,10 +1280,12 @@ lisp_export_function("%list-elt", "lisp_bif_list_elt");
 lisp_export_function("%list-empty?", "lisp_bif_list_emptyp");
 lisp_export_function("%list-len", "lisp_bif_list_len");
 lisp_export_function("%list-slice", "lisp_bif_list_slice");
+lisp_export_function("%load-fasl", "lisp_bif_load_fasl");
 lisp_export_function("%macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_export_function("%macroexpand", "lisp_bif_macroexpand");
 lisp_export_function("%make-class", "lisp_bif_make_class");
 lisp_export_function("%make-compound", "lisp_bif_make_compound");
+lisp_export_function("%make-fasl", "lisp_bif_make_fasl");
 lisp_export_function("%make-generic", "lisp_bif_make_generic");
 lisp_export_function("%make-instance", "lisp_bif_make_instance");
 lisp_export_function("%make-uuid", "lisp_bif_make_uuid");

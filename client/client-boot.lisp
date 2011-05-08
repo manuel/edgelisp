@@ -20,8 +20,11 @@
   (dynamic-bind ((print-readably #f))
     (print (string-concat "; " (show a)))))
 
-(defun load ((path string) -> nil)
-  (%load path))
+(defun load-file ((path string) -> nil)
+  (%load-file path))
+
+(defmethod load ((what string))
+  (load-file path))
 
 (defun alert (&optional (s "Lisp alert"))
   #{ alert(~s) #})

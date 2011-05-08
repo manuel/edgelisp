@@ -117,16 +117,21 @@
 (defmacro native-body (&rest stuff)
   #`#{ (function(){ ~,@stuff })() #})
 
-(defun native-callback ((f function))
+(defun native-callback ((f function) -> function)
   #{ function(result) { return (~f)(null, result) } #})
 
-(defun native-callback-nullary ((f function))
+(defun native-callback-nullary ((f function) -> function)
   #{ function() { return (~f)(null) } #})
 
-(defun native-slot-value (obj name)
-  #{ (~obj)[~name] #})
+(defun native-slot-defined? (obj (name string) -> boolean)
+  #{ (~obj)[~name] !== undefined #})
 
-(defun set-native-slot-value (obj name value)
+(defun native-slot-value (obj (name string) -> object)
+  (if (native-slot-defined? obj name)
+      #{ (~obj)[~name] #}
+      (native-slot-undefined-error obj name)))
+
+(defun set-native-slot-value (obj (name string) value)
   #{ (~obj)[~name] = ~value, null #})
 
 (defmacro define-native-slot (lisp-name native-name-string)
@@ -138,6 +143,9 @@
           (native-slot-value obj ,native-name-string))
         (defun ,(string-to-identifier setter-name) (obj value)
           (set-native-slot-value obj ,native-name-string value)))))
+
+(defun native-slot-undefined-error (obj (slot-name string))
+  (error (string-concat "Slot undefined: " slot-name)))
 
 (defun nil? ((a object) -> boolean)
   (if (eq nil a) #t #f))
@@ -241,6 +249,9 @@
                    -> list)
   (%list-slice l start end))
 
+(defun load-fasl ((f fasl) &optional (time "execute"))
+  (%load-fasl f time))
+
 (defun macroexpand-1 ((form form) -> form)
   (%macroexpand-1 form))
 
@@ -252,6 +263,9 @@
 
 (defun make-compound (&rest arguments -> compound-form)
   (apply \%make-compound arguments))
+
+(defun make-fasl (-> fasl)
+  (%make-fasl))
 
 (defun make-generic ((name string) -> generic)
   (%make-generic name))
@@ -1002,3 +1016,10 @@ can be used to supply a different collection to hold the results."
 (defun provide ((what string))
   "This is really a joke atm as there is no module system."
   (note (string-concat "Loaded " what)))
+
+;;; Loading
+
+(defgeneric load (what))
+
+(defmethod load ((what fasl) &key (time "execute"))
+  (load-fasl what time))

@@ -22,7 +22,7 @@
 function lisp_eval(form)
 {
     var fasl = lisp_compile_unit(form);
-    return lisp_perform_effects(fasl, "execute");
+    return lisp_load_fasl(fasl, "execute");
 }
 
 // Compiles the form, which may involve compile-time evaluation, and
@@ -33,14 +33,6 @@ function lisp_compile_unit(form)
     var run_time_vop = lisp_compile(st, form);
     return new Lisp_fasl({ "execute": lisp_emit(st, run_time_vop),
                            "compile": st.compile_time });
-}
-
-// Evaluates the code stored in a fasl for a certain time, such as
-// "execute" or "compile".
-function lisp_perform_effects(fasl, time)
-{
-    lisp_assert_not_null(fasl.times[time]);
-    return eval(fasl.times[time]);
 }
 
 // Used by macro definition and eval-when-compile: evaluate form and
