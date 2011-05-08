@@ -73,6 +73,7 @@
 (define-native-slot element-scroll-top "scrollTop")
 (define-native-slot element-value "value")
 (define-native-slot event-which "which")
+(define-native-slot node-value "nodeValue")
 
 ;;; Scripts
 
