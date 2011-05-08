@@ -551,7 +551,11 @@
 (defmethod show-object ((a generic))
   (generic-name a))
 
+(defun to-json ((a object))
+  #{ JSON.stringify(~a) #})
 
+(defmethod show-object ((a fasl))
+  (to-json (native-slot-value a "times")))
 
 ;;;; Numbers
 
