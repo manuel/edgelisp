@@ -28,6 +28,16 @@ function Lisp_fasl(times)
     this.times = times;
 }
 
+Lisp_fasl.prototype.toString = function()
+{
+    var res = "\n";
+    var this_times = this.times;
+    lisp_iter_dict(this_times, function(time) {
+            res += (time + ":\n" + this_times[time] + "\n");
+        });
+    return res;
+}
+    
 function lisp_bif_make_fasl(_key_)
 {
     return new Lisp_fasl({});
@@ -36,6 +46,11 @@ function lisp_bif_make_fasl(_key_)
 function lisp_bif_load_fasl(_key_, fasl, time)
 {
     return lisp_load_fasl(fasl, time);
+}
+
+function lisp_bif_fasl_to_data_uri(_key_, fasl, time)
+{
+    return "data:text/javascript," + escape(fasl.times[time]);
 }
 
 // Evaluates the code stored in a fasl for a certain time, such as
@@ -1270,6 +1285,7 @@ lisp_export_function("%compound-slice", "lisp_bif_compound_slice");
 lisp_export_function("%compound?", "lisp_bif_compoundp");
 lisp_export_function("%eq", "lisp_bif_eq");
 lisp_export_function("%eval", "lisp_bif_eval");
+lisp_export_function("%fasl-to-data-uri", "lisp_bif_fasl_to_data_uri");
 lisp_export_function("%fast-apply", "lisp_bif_fast_apply");
 lisp_export_function("%find-method", "lisp_bif_find_method");
 lisp_export_function("%generic-name", "lisp_bif_generic_name");

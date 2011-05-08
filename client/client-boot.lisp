@@ -20,6 +20,9 @@
   (dynamic-bind ((print-readably #f))
     (print (string-concat "; " (show a)))))
 
+(defun compile-file ((path string) -> fasl)
+  (%compile-file path))
+
 (defun load-file ((path string) -> nil)
   (%load-file path))
 
@@ -121,5 +124,8 @@
 (defvar +key-up-arrow+ 38)
 (defvar +key-right-arrow+ 39)
 (defvar +key-down-arrow+ 40)
+
+(defun window-open ((url string))
+  #{ window.open(~url), null #})
 
 (provide "client-boot")

@@ -213,6 +213,9 @@
 (defun eval ((form form) -> object)
   (%eval form))
 
+(defun fasl-to-data-uri ((f fasl) &optional (time "execute"))
+  (%fasl-to-data-uri f time))
+
 (defparameter \fast-apply \%fast-apply) ; fishy?
 
 (defparameter \find-method \%find-method) ; fishy
@@ -569,7 +572,7 @@
   #{ JSON.stringify(~a) #})
 
 (defmethod show-object ((a fasl))
-  (to-json (native-slot-value a "times")))
+  #{ (~a).toString() #})
 
 ;;;; Numbers
 

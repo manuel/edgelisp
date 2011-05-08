@@ -24,19 +24,33 @@ function lisp_read_unit_as_progn(string)
     return progn
 }
 
-function lisp_load_file(path)
+function lisp_get_file(path)
 {
-    lisp_note("Loading " + path);
+    lisp_note("Retrieving " + path);
     var req = new XMLHttpRequest();
     // Append UUID to file path to bypass browser cache.
     req.open("GET", path + "?" + uuid(), false);
     req.send(null);
     if(req.status == 200) {
-        lisp_eval(lisp_read_unit_as_progn(req.responseText));
+        return req.responseText;
     } else {
-        lisp_error("XHR error", req.status);
+        return lisp_error("XHR error", req.status);
     }
-    return null;
+}
+
+function lisp_compile_file(path)
+{
+    return lisp_compile_unit(lisp_read_unit_as_progn(lisp_get_file(path)));
+}
+
+function lisp_bif_compile_file(_key_, path)
+{
+    return lisp_compile_file(path);
+}
+
+function lisp_load_file(path)
+{
+    return lisp_eval(lisp_read_unit_as_progn(lisp_get_file(path)));
 }
 
 function lisp_bif_load_file(_key_, path)
@@ -69,6 +83,7 @@ function _lisp_function_print(_key_, object)
     return null;
 }
 
+lisp_export_function("%compile-file", "lisp_bif_compile_file");
 lisp_export_function("%load-file", "lisp_bif_load_file");
 lisp_export_function("%note", "lisp_bif_note");
 
