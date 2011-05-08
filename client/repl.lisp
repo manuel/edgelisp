@@ -94,8 +94,6 @@
   (make repl-mode))
 (defmethod show-object ((m repl-mode)) "Console")
 (defmethod mode-init-window ((m repl-mode) (w window))
-  (set-window-position w 50 50)
-  (set-window-size w 640 480)
   (set-window-title w "Console")
   (dom-append-child
    (window-element w)
@@ -103,13 +101,14 @@
     (html-div :data-wid "output")
     (html-form :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
                (let ((input (html-input :id "input" :type "text" :autocomplete "off")))
-                 (dom-keydown input (lambda (event)
-                                      (if (= (.event-which event) +key-up-arrow+)
-                                          (repl-history-previous-item)
-                                          (if (= (.event-which event) +key-down-arrow+)
-                                              (repl-history-next-item)))))
-                 input))))
-  (dom-focus (dom-id "input")))
+                 (dom-keydown input \repl-input-keydown)
+                 input)))))
+
+(defun repl-input-keydown ((event native))
+  (if (= (.event-which event) +key-up-arrow+)
+      (repl-history-previous-item)
+      (if (= (.event-which event) +key-down-arrow+)
+          (repl-history-next-item))))
 
 (defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
 
@@ -118,4 +117,5 @@
                     (html-div (html-text (show a))))
   (repl-scroll-to-bottom))
 
+(dom-focus (window-find *repl-window* "output"))
 (note "EdgeLisp 0.1.15")

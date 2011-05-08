@@ -40,7 +40,11 @@
 (defun make-jwim-window-manager (-> jwim-window-manager)
   (make jwim-window-manager
         :native
-        #{ new jwim.Manager({showMaximizer:false, showClose:false})
+        #{ new jwim.Manager({showMaximizer:false,
+                            showClose:false,
+                            showResizer:false,
+                            defaultState:"maximized"
+                            })
         #}
         :windows (list)))
 
