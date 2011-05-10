@@ -32,6 +32,7 @@ Planned Features
 
 * Multiple inheritance
 * Sequence protocol based on D's ranges
+* call-next-method; method advice
 
 Compatibility
 -------------
