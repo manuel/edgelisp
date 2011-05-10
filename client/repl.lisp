@@ -118,4 +118,4 @@
   (repl-scroll-to-bottom))
 
 (dom-focus (window-find *repl-window* "output"))
-(note "EdgeLisp 0.1.17")
+(note "EdgeLisp 0.1.19")
