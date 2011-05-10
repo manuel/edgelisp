@@ -1122,9 +1122,8 @@ function lisp_emit_vop_lambda0(st, vop)
     for (var i = 0, len = req_params.length; i < len; i++) {
         var param = req_params[i];
         if (param.specializer) {
-            var name = lisp_mangle_var(param.name);
-            // BUG: unhygienic
-            var type_name = lisp_mangle_class(param.specializer);
+            var name = lisp_mangle_var(param.name, param.hygiene_context);
+            var type_name = lisp_mangle_class(param.specializer); // unhygienic!
             check_types += "lisp_check_type(" + name + ", " + type_name + "); ";
         }
     }

@@ -1163,29 +1163,29 @@ function lisp_mangle(name, namespace, hygiene_context)
 
 // BUG: unhygienic
 
-function lisp_mangle_var(name)
+function lisp_mangle_var(name, hygiene_context)
 {
-    return lisp_mangle(name, "variable");
+    return lisp_mangle(name, "variable", hygiene_context);
 }
 
-function lisp_mangle_function(name)
+function lisp_mangle_function(name, hygiene_context)
 {
-    return lisp_mangle(name, "function");
+    return lisp_mangle(name, "function", hygiene_context);
 }
 
-function lisp_mangle_class(name)
+function lisp_mangle_class(name, hygiene_context)
 {
-    return lisp_mangle(name, "class");
+    return lisp_mangle(name, "class", hygiene_context);
 }
 
-function lisp_mangle_slot(name)
+function lisp_mangle_slot(name, hygiene_context)
 {
-    return lisp_mangle(name, "slot");
+    return lisp_mangle(name, "slot", hygiene_context);
 }
 
-function lisp_mangle_method(name)
+function lisp_mangle_method(name, hygiene_context)
 {
-    return lisp_mangle(name, "method");
+    return lisp_mangle(name, "method", hygiene_context);
 }
 
 /*** UUID ***/
