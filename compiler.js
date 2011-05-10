@@ -52,6 +52,8 @@ function lisp_compile_time_eval(st, form)
 // global compiler state, such as the lisp_macros_table.
 function Lisp_compilation_state()
 {
+    // Whether we are in a quasiquote
+    this.in_quasiquote = false;
     // Tracks lambdas
     this.contour = null;
     // JS code evaluated during compilation
@@ -354,7 +356,49 @@ function lisp_compile_special_eval_when_compile(st, form)
    (%%quasiquote form) -> form */
 function lisp_compile_special_quasiquote(st, form)
 {
-    return lisp_compile(st, lisp_qq(st, form))
+    // One of the fundamental moments in enabling hygiene: If this ole
+    // quasiquote is not enclosed by another quasiquote, i.e. it's the
+    // outermost qq, we wrap it in a manually crafted "LET", that
+    // establishes a hygiene context, to be picked up by lexically
+    // nested qq forms.  If OTOH the quasiquote is enclosed in another
+    // quasiquote, we don't create a fresh hygiene context, and let it
+    // pick up the outer, enclosing context.
+
+    var in_quasiquote = st.in_quasiquote;
+    st.in_quasiquote = true;
+    try {
+        qq_result = lisp_qq(st, form);
+        if (in_quasiquote) {
+            // we were in a qq before, nothing to do
+            return lisp_compile(st, qq_result);
+        } else {
+            // we are the outermost qq, wrap in fresh context
+            return lisp_compile(st, wrap_in_hygiene_context(qq_result));
+        }
+    } finally {
+        st.in_quasiquote = in_quasiquote;
+    }
+
+    function wrap_in_hygiene_context(form)
+    {
+        // (let ((%%hygiene-context (%make-uuid))) ,form)
+        return make_let(new Lisp_identifier_form("%%hygiene-context"),
+                        new Lisp_compound_form([new Lisp_identifier_form("%make-uuid")]),
+                        form);
+    }
+
+    function make_let(var_form, init_form, body_form)
+    {
+        // (%%lambda (,var_form) ,body_form)
+        var lambda_form =
+            new Lisp_compound_form([new Lisp_identifier_form("%%lambda"),
+                                    new Lisp_compound_form([var_form]),
+                                    body_form]);
+        // (%%funcall ,lambda_form ,init_form)
+        return new Lisp_compound_form([new Lisp_identifier_form("%%funcall"),
+                                       lambda_form,
+                                       init_form]);
+    }
 }
 
 /* See heading ``Quasiquotation''.
@@ -1026,7 +1070,7 @@ function lisp_emit_vop_string_form(st, vop)
 function lisp_emit_vop_identifier_form(st, vop)
 {
     lisp_assert_string(vop.name, "Bad identifier name", vop);
-    return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + "))";
+    return "(new Lisp_identifier_form(" + JSON.stringify(vop.name) + ",_lisp_variable_NNhygiene_context))";
 }
 
 /* Creates a lexical closure.
