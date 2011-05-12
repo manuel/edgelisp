@@ -24,6 +24,11 @@ function lisp_read_unit_as_progn(string)
     return progn
 }
 
+function lisp_bif_read_unit_as_progn(_key_, string)
+{
+    return lisp_read_unit_as_progn(string);
+}
+
 function lisp_get_file(path)
 {
     lisp_note("Retrieving " + path);
@@ -86,6 +91,7 @@ function _lisp_function_print(_key_, object)
 lisp_export_function("%compile-file", "lisp_bif_compile_file");
 lisp_export_function("%load-file", "lisp_bif_load_file");
 lisp_export_function("%note", "lisp_bif_note");
+lisp_export_function("%read-unit-as-progn", "lisp_bif_read_unit_as_progn");
 
 // Additional interface functions:
 // - print

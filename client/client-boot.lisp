@@ -36,6 +36,9 @@
   "Returns user-entered string or nil."
   #{ prompt(~s) #})
 
+(defun read-unit-as-progn ((s string))
+  (%read-unit-as-progn s))
+
 ;;;; Document Object Model
 
 ;;; Document Elements

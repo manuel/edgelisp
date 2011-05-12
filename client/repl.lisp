@@ -36,7 +36,7 @@
          (value (.element-value input)))
     (dynamic-bind ((print-readably #f))
       (print value))
-    (print (repl-eval (read-from-string value)))
+    (print (repl-eval (read-unit-as-progn value)))
     (setf (.element-value input) "")
     (repl-history-add value)))
 
