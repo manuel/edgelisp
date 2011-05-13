@@ -19,6 +19,8 @@
 
 /*** Compilation and Evaluation ***/
 
+// Evaluates a form.  In order to evaluate a sequence of forms (such
+// as those in a file), wrap them in a %%progn.
 function lisp_eval(form)
 {
     var fasl = lisp_compile_unit(form);
@@ -30,9 +32,58 @@ function lisp_eval(form)
 function lisp_compile_unit(form)
 {
     var st = new Lisp_compilation_state();
-    var run_time_vop = lisp_compile(st, form);
-    return new Lisp_fasl({ "execute": lisp_emit(st, run_time_vop),
+    var run_time = lisp_compile(st, lisp_macro_prepass(st, form))
+    return new Lisp_fasl({ "execute": lisp_emit(st, run_time),
                            "compile": st.compile_time });
+}
+
+// Following R6RS, toplevel macro uses and macro definitions (and
+// eval-when-compile's) are processed in a pre-pass.  This ensures
+// that once proper compilation starts, all global definitions and
+// macros are known.  Returns the partially expanded toplevel
+// expressions as a progn.
+function lisp_macro_prepass(st, form)
+{
+    var results = [];
+    lisp_macro_prepass0(st, form, results);
+    return new Lisp_compound_form([new Lisp_identifier_form("%%progn")].concat(results));
+}
+
+function lisp_macro_prepass0(st, form, results)
+{
+    if (form.formt == "compound") {
+        var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
+
+        switch(op.name) {
+        case "%%progn":
+            form.elts.slice(1).map(function(subform) {
+                    lisp_macro_prepass0(st, subform, results);
+                });
+            return;
+        case "%%defsyntax":
+            lisp_compile_special_defsyntax(st, form);
+            return;
+        case "%%eval-when-compile":
+            lisp_compile_special_eval_when_compile(st, form);
+            return;
+        case "%%defparameter":
+            var cid = lisp_generalized_identifier_to_cid(form.elts[1]);
+            lisp_define_global(st, cid);
+            results.push(form);
+            return;
+        }
+
+        var cid = lisp_identifier_to_cid(op, "function");
+        var macro_function = lisp_macro_function(cid);
+        if (macro_function) {
+            // Since the macro function is a Lisp function, we need to
+            // call it with calling convention argument (null).
+            var expansion = macro_function(null, form);
+            lisp_macro_prepass0(st, expansion, results);
+            return;
+        }
+    }
+    results.push(form);
 }
 
 // Used by macro definition and eval-when-compile: evaluate form and
@@ -48,16 +99,28 @@ function lisp_compile_time_eval(st, form)
     return null;
 }
 
-// Threaded through a single form compilation.  Note that there's also
+// Threaded through a single compilation.  Note that there's also
 // global compiler state, such as the lisp_macros_table.
 function Lisp_compilation_state()
 {
+    // Maps mangled CIDs of globals to true
+    this.globals = {};
     // Whether we are in a quasiquote
     this.in_quasiquote = false;
     // Tracks lambdas
     this.contour = null;
     // JS code evaluated during compilation
     this.compile_time = undefined;
+}
+
+function lisp_define_global(st, cid)
+{
+    st.globals[lisp_mangle_cid(cid)] = cid;
+}
+
+function lisp_global_defined(st, cid)
+{
+    return st.globals[lisp_mangle_cid(cid)] !== undefined;
 }
 
 // A "rib" in the compile-time lexical environment.
@@ -121,32 +184,18 @@ function lisp_compile_compound_form(st, form)
 {
     var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
     var cid = lisp_identifier_to_cid(op, "function");
-    if (lisp_local_defined(st.contour, cid)) {
+    if (lisp_local_defined(st, cid)) {
         return lisp_compile_function_application(st, form);
     } else {
-        return global_call(st, form, cid);
-    }
-
-    function global_call(st, form, cid)
-    {
-        if (!cid.hygiene_context) {
-            var special_function = lisp_special_function(cid.name);
-            if (special_function) {
-                return special_function(st, form);
-            } else {
-                var macro_function = lisp_macro_function(cid.name);
-                if (macro_function) {
-                    return lisp_compile(st, macro_function(null, form));
-                } else {
-                    return lisp_compile_function_application(st, form);
-                }
-            }
+        var special_function = lisp_special_function(cid.name);
+        if (special_function) {
+            return special_function(st, form);
         } else {
-            if (lisp_global_defined(cid)) {
-                return lisp_compile_function_application(st, form);
+            var macro_function = lisp_macro_function(cid);
+            if (macro_function) {
+                return lisp_compile(st, macro_function(null, form));
             } else {
-                cid.hygiene_context = null;
-                return global_call(st, form, cid);
+                return lisp_compile_function_application(st, form);
             }
         }
     }
@@ -162,11 +211,16 @@ function lisp_compile_function_application(st, form)
 }
 
 /* Returns true if the CID is lexically bound. */
-function lisp_local_defined(contour, cid)
+function lisp_local_defined(st, cid)
+{
+    return lisp_local_defined_in_contour(st.contour, cid);
+}
+
+function lisp_local_defined_in_contour(contour, cid)
 {
     if (contour) {
         return (lisp_sig_contains_cid(contour.sig, cid))
-            || lisp_local_defined(contour.parent, cid);
+            || lisp_local_defined_in_contour(contour.parent, cid);
     } else {
         return false;
     }
@@ -231,8 +285,6 @@ function lisp_compile_special_identifier(st, form)
 function lisp_compile_special_defparameter(st, form)
 {
     var cid = lisp_generalized_identifier_to_cid(form.elts[1]);
-    //    lisp_note(cid.namespace + " " + cid.name);
-    lisp_define_global(cid);
     var value_form = lisp_assert_not_null(form.elts[2]);
     return { vopt: "defparameter", 
              cid: cid,
@@ -335,9 +387,12 @@ function lisp_compile_special_defsyntax(st, form)
 {
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);
+    var hygiene_context =
+        name_form.hygiene_context ? name_form.hygiene_context : "";
     var set_macro_form =
         new Lisp_compound_form([new Lisp_identifier_form("%set-macro-function"),
                                 new Lisp_string_form(name_form.name),
+                                new Lisp_string_form(hygiene_context),
                                 expander_form]);
     lisp_compile_time_eval(st, set_macro_form);
     return { vopt: "ref", cid: new Lisp_cid("nil", "variable") };
@@ -970,7 +1025,7 @@ function lisp_emit_vop_progn(st, vop)
    { vopt: "ref", cid: <cid> } */
 function lisp_emit_vop_ref(st, vop)
 {
-    if (!(lisp_global_defined(vop.cid) || lisp_local_defined(st.contour, vop.cid))) {
+    if (!(lisp_global_defined(st, vop.cid) || lisp_local_defined(st, vop.cid))) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -993,7 +1048,7 @@ function lisp_emit_vop_defparameter(st, vop)
    { vopt: "setq", cid: <cid>, value: <vop> } */
 function lisp_emit_vop_setq(st, vop)
 {
-    if (!(lisp_global_defined(vop.cid) || lisp_local_defined(st.contour, vop.cid))) {
+    if (!(lisp_global_defined(st, vop.cid) || lisp_local_defined(st, vop.cid))) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);
@@ -1005,7 +1060,7 @@ function lisp_emit_vop_setq(st, vop)
    { vopt: "defined?", cid: <cid> } */
 function lisp_emit_vop_definedp(st, vop)
 {
-    if (!lisp_global_defined(vop.cid)) {
+    if (!lisp_global_defined(st, vop.cid)) {
         vop.cid.hygiene_context = null;
     }
     var mname = lisp_mangle_cid(vop.cid);

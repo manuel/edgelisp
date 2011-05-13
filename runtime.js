@@ -112,19 +112,6 @@ function lisp_mangle_cid(cid)
     return lisp_mangle(cid.name, cid.namespace, cid.hygiene_context);
 }
 
-/* A set mapping mangled CIDs to CIDs. */
-var lisp_globals = {};
-
-function lisp_define_global(cid)
-{
-    lisp_globals[lisp_mangle_cid(cid)] = cid;
-}
-
-function lisp_global_defined(cid)
-{
-    return lisp_globals[lisp_mangle_cid(cid)] !== undefined;
-}
-
 function lisp_apropos(str)
 {
     var results = [];
@@ -965,24 +952,30 @@ function lisp_bif_has_slot(_key_, obj, name)
    macroexpand don't get an error. */
 var lisp_macros_table = {};
 
-function lisp_macro_function(name)
+function lisp_macro_function(cid)
 {
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);
-    return lisp_macros_table[mangled_name];
+    var macro_function = lisp_macros_table[lisp_mangle_cid(cid)];
+    if (macro_function) {
+        return macro_function;
+    } else {
+        var unhygienic_cid = new Lisp_cid(cid.name,
+                                          cid.namespace,
+                                          null);
+        return lisp_macros_table[lisp_mangle_cid(unhygienic_cid)];
+    }
 }
 
-function lisp_set_macro_function(name, expander)
+function lisp_set_macro_function(cid, expander)
 {
-    var name = lisp_assert_nonempty_string(name, "Bad macro name", name);
-    var mangled_name = lisp_mangle_function(name);    
+    var mangled_name = lisp_mangle_cid(cid);
     lisp_macros_table[mangled_name] = expander;
     return expander;
 }
 
-function lisp_bif_set_macro_function(_key_, name, fun)
+function lisp_bif_set_macro_function(_key_, name, hygiene_context, fun)
 {
-    return lisp_set_macro_function(name, fun);
+    var cid = new Lisp_cid(name, "function", hygiene_context);
+    return lisp_set_macro_function(cid, fun);
 }
 
 function lisp_macroexpand(form)
@@ -992,8 +985,9 @@ function lisp_macroexpand(form)
 }
 
 function lisp_macroexpand_1(form)
-{
-    var macro = lisp_macro_function(form.elts[0].name);
+{    
+    var cid = lisp_identifier_to_cid(form.elts[0], "function");
+    var macro = lisp_macro_function(cid);
     if (macro) {
         return macro(null, form);
     } else {
@@ -1153,8 +1147,10 @@ function lisp_mangle(name, namespace, hygiene_context)
 {
     lisp_assert_nonempty_string(name, "Bad name", name);
     lisp_assert_nonempty_string(namespace, "Bad namespace", namespace);
-    return "_lisp_" + lisp_do_mangle(namespace) + "_" + lisp_do_mangle(name) +
-        (hygiene_context ? ("_" + lisp_do_mangle(hygiene_context)) : "");
+    var mangled_hygiene_context = "";
+    if (hygiene_context)
+        mangled_hygiene_context = ("_" + lisp_do_mangle(hygiene_context));
+    return "_lisp_" + lisp_do_mangle(namespace) + "_" + lisp_do_mangle(name) + mangled_hygiene_context;
 }
 
 /* Additionally, the different namespaces (variable, function, slot,
@@ -1341,19 +1337,16 @@ lisp_export_function("%type-of", "lisp_bif_type_of");
 
 function lisp_export(lisp_name, js_object)
 {
-    lisp_define_global(new Lisp_cid(lisp_name, "variable"));
     eval(lisp_mangle_var(lisp_name) + " = " + js_object);
 }
 
 function lisp_export_function(lisp_name, js_function)
 {
-    lisp_define_global(new Lisp_cid(lisp_name, "function"));
     eval(lisp_mangle_function(lisp_name) + " = " + js_function);
 }
 
 function lisp_export_class(lisp_name, js_class)
 {
-    lisp_define_global(new Lisp_cid(lisp_name, "class"));
     var class_name = lisp_mangle_class(lisp_name);
     eval("(" + class_name + " = " + js_class + ", " +
          class_name + ".lisp_name = \"" + lisp_name + "\", " + 

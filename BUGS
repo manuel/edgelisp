@@ -19,4 +19,6 @@
 
   Need to turn string names into CIDs.
 
+* SETQ doesn't check whether binding exists.
+
 * Probably many more...
