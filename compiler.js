@@ -90,6 +90,10 @@ function lisp_macro_prepass0(st, form, results)
 // add code to compile-time.
 function lisp_compile_time_eval(st, form)
 {
+    // There's something of an asymmetry here in that toplevel forms
+    // are compiled using lisp_compile_unit (and thereby macro
+    // prepassed), whereas forms in a eval-when-compile are compiled
+    // using lisp_compile (which doesn't macro prepass).
     var js = lisp_emit(st, lisp_compile(st, form));
     eval(js);
     if (st.compile_time !== undefined)
