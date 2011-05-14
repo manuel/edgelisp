@@ -15,10 +15,6 @@
 
 * Replacing methods doesn't seem to work.
 
-* Macro names aren't hygienic.
-
-  Need to turn string names into CIDs.
-
 * SETQ doesn't check whether binding exists.
 
 * Probably many more...
