@@ -1,6 +1,3 @@
-EdgeLisp
-========
-
 EdgeLisp is a Lisp for JavaScript.
 
 Contact
@@ -18,39 +15,43 @@ Features
 * Runtime type-checked function parameters and results
 * Nonlocal exits; stack unwind protection
 * Condition system with restarts
+* Numerical tower
 * Hygienic `defmacro` (based on SRFI 72)
 * Slot access through (overridable) generic functions
 * (Slightly) Generalized references
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
 * Optional dynamically-scoped variables
-* Everything-is-an-object
 * In-browser REPL
-* Scheme numerical tower
 
-Planned Features
-----------------
+Features TBD
+------------
 
 * Multiple inheritance
 * Sequence protocol based on D's ranges
 * call-next-method; method advice
 
+Plan
+----
+
+* Implement missing features
+* Documentation and better test suite
+* Make faster, smaller
+
 Compatibility
 -------------
 
-EdgeLisp aspires to compile to EMCAScript, 3rd Edition (JavaScript
+EdgeLisp is intended to compile to EMCAScript, 3rd Edition (JavaScript
 1.5), but currently uses the nonstandard extensions __proto__ (for
 inheritance) and function.caller (for debugging).
 
 License
 -------
 
-You choose the license for Lisp code *you write* in EdgeLisp.
-(EdgeLisp-compiled programs are not considered derived works of the
-EdgeLisp compiler, runtime, and included Lisp files.)
+If you modify EdgeLisp, you must make the modified version available
+to your users under the AGPL.  See file COPYING.
 
-If you *modify* EdgeLisp itself (the compiler, runtime, or Lisp code),
-you must make the modified version available to your users under the
-AGPL.  See file COPYING.
+(Using EdgeLisp for your programs does not place them under the AGPL.
+You are free to choose any license for your Lisp code.)
 
 Thanks
 ------
