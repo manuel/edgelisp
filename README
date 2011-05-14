@@ -8,27 +8,44 @@ EdgeLisp is developed by Manuel Simoni <msimoni@gmail.com>
 Features
 --------
 
-* Classes integrated with the JS types
+* Class-based object system
+  (currently only single inheritance)
+
 * Multiple-dispatching generic functions
+  (using Cecil-style symmetric method lookup)
+
 * Separate function and variable namespaces (Lisp-2)
-* Optional, keyword, and rest parameters
+
+* &OPTIONAL, &KEY, &REST, &AUX parameters
+  as well as &ALL-KEYS receiving keyword args as dictionary
+
 * Runtime type-checked function parameters and results
-* Nonlocal exits; stack unwind protection
+  (using same syntax as DEFMETHOD)
+
+* Nonlocal exits (BLOCK/RETURN-FROM, CATCH/THROW),
+  UNWIND-PROTECT
+
 * Condition system with restarts
-* Numerical tower
-* Hygienic `defmacro` (based on SRFI 72)
-* Slot access through (overridable) generic functions
+
+* Numerical tower: real, rational, integer
+  (small integers are represented as Number)
+
+* Hygienic DEFMACRO (based on SRFI 72)
+
+* Slot access through (overridable) generic functions;
+  slots may be defined outside classes, like methods.
+
 * (Slightly) Generalized references
+
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
-* Optional dynamically-scoped variables
-* In-browser REPL
+  using #{ ... JavaScript code ... #} reader syntax.
 
 Features TBD
 ------------
 
 * Multiple inheritance
 * Sequence protocol based on D's ranges
-* call-next-method; method advice
+* call-next-method; before-, after-, around-methods
 
 Plan
 ----
