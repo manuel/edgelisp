@@ -1,51 +1,65 @@
 EdgeLisp is a Lisp for JavaScript.
 
-Contact
--------
+There's no formal definition of the language at the moment, so your
+best bet is to look at the Lisp files in the lisp/ and client/
+directories.
 
-EdgeLisp is developed by Manuel Simoni <msimoni@gmail.com>
+A slow-loading REPL (because it compiles the boot code on-the-fly)
+is online at:
+
+   http://manuel.github.com/edgelisp/repl.html
 
 Features
 --------
 
-* Class-based object system
+* Class-based object system (DEFCLASS)
   (currently only single inheritance)
 
-* Multiple-dispatching generic functions
+* Multiple-dispatching generic functions (DEFGENERIC, DEFMETHOD)
   (using Cecil-style symmetric method lookup)
 
 * Separate function and variable namespaces (Lisp-2)
+  DEFPARAMETER, DEFVAR, DEFUN, LET, LET*, FUNCALL, APPLY
+  (FLET and LABELS currently missing)
 
 * &OPTIONAL, &KEY, &REST, &AUX parameters
   as well as &ALL-KEYS receiving keyword args as dictionary
 
-* Runtime type-checked function parameters and results
-  (using same syntax as DEFMETHOD)
+* Runtime type-checked function parameters and results (using same
+  syntax as DEFMETHOD for parameters and -> arrow syntax for result)
 
-* Nonlocal exits (BLOCK/RETURN-FROM, CATCH/THROW),
-  UNWIND-PROTECT
+* Basic control flow (IF, PROGN, LOOP),
+  Nonlocal exits (BLOCK/RETURN-FROM, CATCH/THROW), UNWIND-PROTECT
 
 * Condition system with restarts
+  HANDLER-BIND, RESTART-BIND, SIGNAL, INVOKE-RESTART
 
 * Numerical tower: real, rational, integer
   (small integers are represented as Number)
 
-* Hygienic DEFMACRO (based on SRFI 72)
+* Hygienic DEFMACRO (based on SRFI 72) with basic destructuring;
+  #` and #' for hygienic code quotation, analogous to ` and '
 
 * Slot access through (overridable) generic functions;
-  slots may be defined outside classes, like methods.
+  slots may be defined outside classes, with DEFSLOT.
 
 * (Slightly) Generalized references
+  SETF (appends "-setter")
 
 * Inline JavaScript, with escaping back into Lisp, (and back into JS...)
   using #{ ... JavaScript code ... #} reader syntax.
+
+* Dynamically-scoped (fluid-bound, actually) variables
+  DEFDYNAMIC, DYNAMIC, DYNAMIC-BIND
 
 Features TBD
 ------------
 
 * Multiple inheritance
+* FLET, LABELS, TAGBODY, DESTRUCTURING-BIND, MACROLET, CASE, COND
+* CALL-NEXT-METHOD; before-, after-, around-methods
 * Sequence protocol based on D's ranges
-* call-next-method; before-, after-, around-methods
+* Package system
 
 Plan
 ----
