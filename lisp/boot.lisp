@@ -847,7 +847,11 @@
 
 (defparameter \original-no-applicable-method \no-applicable-method)
 (defun no-applicable-method (generic arguments)
-  (note (string-concat "No applicable method for " (show generic)))
+  (note (string-concat "No applicable method for " (show generic) " called with arguments:"))
+  (let ((i 1))
+    (while (< i (arguments-len arguments))
+      (note (arguments-elt arguments i))
+      (incf i)))
   (original-no-applicable-method generic arguments))
 
 (defparameter \original-no-most-specific-method \no-most-specific-method)
