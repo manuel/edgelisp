@@ -102,19 +102,21 @@
                              (dom-set-attribute element attr-name (get attrs attr-name)))
                            attrs)
           (each (lambda (child)
-                  (dom-append-child element child))
+                  (dom-append-child element (markup child)))
                 children)
           element))))
 
 (define-markup-tag button)
 (define-markup-tag div)
+(define-markup-tag em)
 (define-markup-tag form)
 (define-markup-tag input)
+(define-markup-tag li)
+(define-markup-tag ol)
 (define-markup-tag script)
 (define-markup-tag span)
+(define-markup-tag strong)
 (define-markup-tag ul)
-(define-markup-tag ol)
-(define-markup-tag li)
 
 (defgeneric markup (object -> native)
   (:documentation "Returns DOM element for object, analogous to string
@@ -123,6 +125,8 @@
   (markup (show o)))
 (defmethod markup ((s string) -> native)
   (dom-text s))
+(defmethod markup ((n native) -> native)
+  n)
 
 ;;;; Hypertext Transfer Protocol
 

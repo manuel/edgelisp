@@ -908,6 +908,9 @@
 (defmethod add ((list list) elt)
   (list-add list elt))
 
+(defmethod empty? ((l list) -> boolean)
+  (list-empty? l))
+
 (defclass iter)
 
 (defmethod iter ((iter iter))

@@ -32,7 +32,7 @@
 
 (defun base:list-repos (-> list)
   "Returns locally stored repositories."
-  (list (base:make-repo "default")))
+  (list))
 
 ;;;; User Interface
 
@@ -46,13 +46,16 @@
   (dom-append-child
    (window-element w)
    (<div>
-    (markup "Repositories")
-    (markup-repos))))
+    (<div> (<strong> "Repositories"))
+    (base:markup-repos))))
 
-(defun markup-repos (-> native)
-  (apply \<ul> (map (lambda (repo)
-                      (<li> (markup repo)))
-                    (base:list-repos))))
+(defun base:markup-repos (-> native)
+  (let ((repos (base:list-repos)))
+    (if (empty? repos)
+        (<em> "none")
+        (apply \<ul> (map (lambda (repo)
+                            (<li> (markup repo)))
+                          repos)))))
 
 (defdynamic base:tracker-window (make-window (dynamic window-manager)
                                              nil
