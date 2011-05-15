@@ -97,12 +97,12 @@
   (set-window-title w "REPL")
   (dom-append-child
    (window-element w)
-   (html-div
-    (html-div :data-wid "output")
-    (html-form :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
-               (let ((input (html-input :id "input" :type "text" :autocomplete "off")))
-                 (dom-keydown input \repl-input-keydown)
-                 input)))))
+   (<div>
+    (<div> :data-wid "output")
+    (<form> :onsubmit "try{_lisp_function_repl(null);}finally{return false;}"
+            (let ((input (<input> :id "input" :type "text" :autocomplete "off")))
+              (dom-keydown input \repl-input-keydown)
+              input)))))
 
 (defun repl-input-keydown ((event native))
   (if (= (.event-which event) +key-up-arrow+)
@@ -114,7 +114,7 @@
 
 (defun print ((a object))
   (dom-append-child (window-find *repl-window* "output")
-                    (html-div (html-text (show a))))
+                    (<div> (html-text (show a))))
   (repl-scroll-to-bottom))
 
 (dom-focus (window-find *repl-window* "output"))

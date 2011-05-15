@@ -90,9 +90,9 @@
 
 ;;;; Hypertext Markup Language
 
-(defmacro define-html-tag (name &optional (prefix #'html-))
+(defmacro define-html-tag (name)
   (let ((fun-name (string-to-identifier 
-                   (string-concat (identifier-name prefix) name))))
+                   (string-concat "<" name ">"))))
     #`(defun ,fun-name (&all-keys attrs &rest children)
         (let ((element (dom-create-element ,(string-to-form (identifier-name name)))))
           (string-dict-map (lambda (attr-name)
@@ -109,6 +109,9 @@
 (define-html-tag input)
 (define-html-tag script)
 (define-html-tag span)
+(define-html-tag ul)
+(define-html-tag ol)
+(define-html-tag li)
 
 (defun html-text ((s string) -> native)
   (dom-text s))
