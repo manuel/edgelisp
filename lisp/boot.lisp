@@ -978,10 +978,21 @@ can be used to supply a different collection to hold the results."
           (each \next iters))))
   into)
 
-(defun string-join ((separator string) &rest strings)
+(defun find-if ((pred function) (seq list) -> object)
+  (block found
+    (let ((iter (iter seq)))
+      (while (has-next iter)
+        (when (funcall pred (now iter))
+          (return-from found (now iter)))
+        (next iter)))))
+
+(defun find ((item object) (seq list) -> object)
+  (find-if (lambda (i) (= i item)) seq))
+
+(defun string-join ((separator string) &rest strings -> string)
   (string-join-list separator strings))
 
-(defun string-join-list ((separator string) (strings list))
+(defun string-join-list ((separator string) (strings list) -> string)
   (let ((iter (iter strings)))
     (if (has-next iter)
         (let ((result (now iter)))
@@ -1016,9 +1027,20 @@ can be used to supply a different collection to hold the results."
         (ct (elt var-and-ct 1)))
     #`(each (lambda (,var) ,@body) ,ct)))
 
-(defun provide ((what string))
-  "This is really a joke atm as there is no module system."
-  (note (string-concat "Loaded " what)))
+;;;
+
+(defclass requirement-error (error))
+
+(defvar *provisions* (list))
+
+(defun provide ((provision string))
+  (unless (find provision *provisions*)
+    (add *provisions* provision))
+  (note (string-concat "Loaded " provision)))
+
+(defun require ((provision string))
+  (unless (find provision *provisions*)
+    (error (make requirement-error))))
 
 ;;; Loading
 

@@ -47,6 +47,8 @@
     (error (make local-storage-error)))
   #{ localStorage.key((~i)) #})
 
+(provide "local-storage")
+
 ;;;; IndexedDB
 
 (defclass indexed-db-error (error))

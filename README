@@ -2,7 +2,7 @@ EdgeLisp is a Lisp for JavaScript.
 
 There's no formal definition of the language at the moment, so your
 best bet is to look at the Lisp files in the lisp/ and client/
-directories.
+directories.  EdgeLisp should feel familiar to Common Lisp programmers.
 
 A slow-loading REPL (because it compiles the boot code on-the-fly)
 is online at:
