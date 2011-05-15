@@ -110,7 +110,7 @@
       (if (= (.event-which event) +key-down-arrow+)
           (repl-history-next-item))))
 
-(defvar *repl-window* (make-window *window-manager* :mode (make-repl-mode)))
+(defvar *repl-window* (make-window (dynamic window-manager) :mode (make-repl-mode)))
 
 (defun print ((a object))
   (dom-append-child (window-find *repl-window* "output")

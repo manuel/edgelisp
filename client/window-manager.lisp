@@ -83,4 +83,4 @@
 (defmethod window-find ((w jwim-window) (id string) -> object)
   #{ ~(.native w).getElement(~id) #})
 
-(defvar *window-manager* (make-jwim-window-manager))
+(defdynamic window-manager (make-jwim-window-manager))
