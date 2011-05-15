@@ -1,7 +1,7 @@
 ;;;; Local Storage
 
 ;;; Thanks to Mark Pilgrim for docs
-;;; http://diveintohtml5.org/storage.html
+;;; http://diveintomarkup5.org/storage.html
 
 (defclass local-storage-error (error))
 

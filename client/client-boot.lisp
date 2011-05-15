@@ -81,7 +81,7 @@
 ;;; Scripts
 
 (defun dom-load-script ((url string) &optional (type "text/javascript"))
-  (dom-append (html-script :src url :type type)))
+  (dom-append (<script> :src url :type type)))
 
 ;;; Events
 
@@ -90,7 +90,10 @@
 
 ;;;; Hypertext Markup Language
 
-(defmacro define-html-tag (name)
+(defmacro define-markup-tag (name)
+  "Given unevaluated identifier NAME, constructs a function called
+  <NAME> that constructs a DOM element with the NAME as tag.  Keyword
+  arguments to the function are attached as DOM attributes."
   (let ((fun-name (string-to-identifier 
                    (string-concat "<" name ">"))))
     #`(defun ,fun-name (&all-keys attrs &rest children)
@@ -103,17 +106,22 @@
                 children)
           element))))
 
-(define-html-tag button)
-(define-html-tag div)
-(define-html-tag form)
-(define-html-tag input)
-(define-html-tag script)
-(define-html-tag span)
-(define-html-tag ul)
-(define-html-tag ol)
-(define-html-tag li)
+(define-markup-tag button)
+(define-markup-tag div)
+(define-markup-tag form)
+(define-markup-tag input)
+(define-markup-tag script)
+(define-markup-tag span)
+(define-markup-tag ul)
+(define-markup-tag ol)
+(define-markup-tag li)
 
-(defun html-text ((s string) -> native)
+(defgeneric markup (object -> native)
+  (:documentation "Returns DOM element for object, analogous to string
+  for SHOW"))
+(defmethod markup ((o object) -> native)
+  (markup (show o)))
+(defmethod markup ((s string) -> native)
   (dom-text s))
 
 ;;;; Hypertext Transfer Protocol

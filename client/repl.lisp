@@ -92,7 +92,6 @@
 (defclass repl-mode (mode))
 (defun make-repl-mode (-> repl-mode)
   (make repl-mode))
-(defmethod show-object ((m repl-mode)) "REPL")
 (defmethod mode-init-window ((m repl-mode) (w window))
   (set-window-title w "REPL")
   (dom-append-child
@@ -110,11 +109,13 @@
       (if (= (.event-which event) +key-down-arrow+)
           (repl-history-next-item))))
 
-(defvar *repl-window* (make-window (dynamic window-manager) :mode (make-repl-mode)))
+(defvar *repl-window* (make-window (dynamic window-manager)
+                                   nil
+                                   :mode (make-repl-mode)))
 
 (defun print ((a object))
   (dom-append-child (window-find *repl-window* "output")
-                    (<div> (html-text (show a))))
+                    (<div> (markup a)))
   (repl-scroll-to-bottom))
 
 (dom-focus (window-find *repl-window* "output"))

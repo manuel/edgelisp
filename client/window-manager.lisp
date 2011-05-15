@@ -2,15 +2,16 @@
 
 (defclass window-manager)
 (defclass window ()
-  (buffer
-   mode))
-(defgeneric make-window (wm -> window))
+  (buffer ; the buffer is an object associated with the window
+   mode)) ; mode displays the buffer
+(defgeneric make-window (wm buffer -> window))
+(defun window-buffer ((w window)) (.buffer w))
+(defun window-mode ((w window)) (.mode w))
 (defgeneric set-window-content (window content))
 (defgeneric set-window-title (window title))
 (defgeneric set-window-position (window x y))
 (defgeneric set-window-size (window w h))
 (defgeneric window-element (window -> native))
-(defgeneric window-buffer (window -> buffer))
 (defgeneric window-find (window id -> native))
 
 (defclass mode)
@@ -20,11 +21,6 @@
 (defclass fundamental-mode (mode))
 (defun make-fundamental-mode (-> fundamental-mode)
   (make fundamental-mode))
-
-(defclass buffer ()
-  (entries))
-(defun make-buffer ()
-  (make buffer :entries (list)))
 
 ;;; Window manager implementation based on JWIM
 
@@ -41,7 +37,7 @@
   (make jwim-window-manager
         :native
         #{ new jwim.Manager({
-                            showMaximizer:false,
+                            showMaximizer:true,
                             showClose:false,
                             showResizer:true
                             })
@@ -49,9 +45,9 @@
         :windows (list)))
 
 (defmethod make-window ((wm jwim-window-manager)
+                        (buffer object)
                         &key 
                         (mode (make-fundamental-mode))
-                        (buffer (make-buffer))
                         (container (dom-document-body))
                         -> jwim-window)
   (let ((w (make jwim-window
