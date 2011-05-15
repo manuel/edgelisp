@@ -56,9 +56,6 @@
 (defun dom-create-element ((tag string) -> native)
   #{ document.createElement((~tag)) #})
 
-(defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
-  #{ (~element).setAttribute((~attr-name), (~value)), null #})
-
 (defun dom-focus ((element native))
   #{ (~element).focus(), null #})
 
@@ -76,7 +73,20 @@
 (define-native-slot element-scroll-top "scrollTop")
 (define-native-slot element-value "value")
 (define-native-slot event-which "which")
+(define-native-slot event-target "target")
 (define-native-slot node-value "nodeValue")
+
+(defun dom-set-attribute ((element native) (attr-name string) (value object) -> nil)
+  #{ (~element).setAttribute((~attr-name), (~value)), null #})
+
+(defun dom-get-attribute ((element native) (attr-name string) -> object)
+  #{ (~element).getAttribute((~attr-name)) #})
+
+(defun dom-set-data ((element native) (attr-name string) (value object) -> nil)
+  #{ $(~element).data((~attr-name), (~value)), null #})
+
+(defun dom-get-data ((element native) (attr-name string) -> object)
+  #{ $(~element).data((~attr-name)) #})
 
 ;;; Scripts
 
@@ -87,6 +97,9 @@
 
 (defun dom-keydown ((element native) (callback function))
   #{ $(~element).keydown(~(native-callback callback)), null #})
+
+(defun dom-onclick ((element native) (callback function))
+  #{ $(~element).click(~(native-callback callback)), null #})
 
 ;;;; Hypertext Markup Language
 
