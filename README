@@ -75,6 +75,23 @@ EdgeLisp is intended to compile to EMCAScript, 3rd Edition (JavaScript
 1.5), but currently uses the nonstandard extensions __proto__ (for
 inheritance) and function.caller (for debugging).
 
+EdgeLisp is tested on Chrome 11, Firefox 4, and Opera 11.10.
+
+Files
+-----
+
+The major files are runtime.js, compiler.js, and lisp/boot.lisp.
+
+runtime.js (together with reader.js) provides basic support such as
+object model, forms, multiple dispatch engine, and many built-in
+functions.
+
+compiler.js translates Lisp to JavaScript, and also evaluates Lisp
+expressions at compile-time (DEFMACRO and EVAL-WHEN-COMPILE).
+
+lisp/boot.lisp builds up the language from the special forms and
+built-in functions.
+
 License
 -------
 
