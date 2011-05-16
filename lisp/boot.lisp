@@ -1057,18 +1057,22 @@ can be used to supply a different collection to hold the results."
 
 ;;;
 
-(defclass requirement-error (error))
+(defclass requirement-error (error)
+  (requirement))
+
+(defmethod show-object ((re requirement-error))
+  (.requirement re))
 
 (defvar *provisions* (list))
 
 (defun provide ((provision string))
   (unless (find provision *provisions*)
     (add *provisions* provision))
-  (note (string-concat "Loaded " provision)))
+  (note (string-concat "Provide " provision)))
 
 (defun require ((provision string))
   (unless (find provision *provisions*)
-    (error (make requirement-error))))
+    (error (make requirement-error :requirement provision))))
 
 ;;; Loading
 
