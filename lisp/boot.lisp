@@ -425,6 +425,9 @@
 (defmacro dynamic (name)
   #`(identifier ,name dynamic))
 
+(defmacro dynamic-setter (name value)
+  #`(setq (identifier ,name dynamic) ,value))
+
 (defmacro defdynamic (name &optional (value #'nil))
   #`(defvar (dynamic ,name) ,value))
 
@@ -1068,7 +1071,7 @@ can be used to supply a different collection to hold the results."
 (defun provide ((provision string))
   (unless (find provision *provisions*)
     (add *provisions* provision))
-  (note (string-concat "Provide " provision)))
+  (note (string-concat "Providing " provision)))
 
 (defun require ((provision string))
   (unless (find provision *provisions*)
