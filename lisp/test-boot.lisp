@@ -123,4 +123,9 @@
 (assert (= 2 (if-option (x none) 1 2)))
 (assert (= 1 (if-option (x (option 1)) x 2)))
 
+;;; SHA1
+
+(assert (= "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33"
+           (sha1 "foo")))
+
 (provide "test-boot")
