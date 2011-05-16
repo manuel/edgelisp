@@ -595,6 +595,9 @@
 (defun to-json ((a object))
   #{ JSON.stringify(~a) #})
 
+(defun from-json ((json string))
+  #{ JSON.parse(~json) #})
+
 (defmethod show-object ((a fasl))
   #{ (~a).toString() #})
 

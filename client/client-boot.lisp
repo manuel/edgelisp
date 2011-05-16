@@ -67,6 +67,9 @@
 (defun dom-text ((s string) -> native)
   #{ document.createTextNode((~s)) #})
 
+(defun dom-empty ((element native))
+  #{ $(~element).empty() #})
+
 (define-native-slot element-id "id")
 (define-native-slot element-inner-html "innerHTML")
 (define-native-slot element-scroll-height "scrollHeight")
