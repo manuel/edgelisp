@@ -505,6 +505,27 @@
         (defmethod ,(string-to-identifier setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
 
+;;;; Option types
+
+(defclass option ()
+  (supplied?
+   value))
+
+(defparameter \option-supplied? \.supplied?)
+(defparameter \option-value \.value)
+
+(defvar none (make option :supplied? #f :value nil))
+(defun option ((value object) -> option)
+  (make option :supplied? #t :value value))
+
+(defmacro if-option (binding if-supplied &optional if-absent)
+  "binding ::= (var option)"
+  #`(let ((option ,(compound-elt binding 1)))
+      (if (option-supplied? option)
+          (let ((,(compound-elt binding 0) (option-value option)))
+            ,if-supplied)
+          ,if-absent)))
+
 ;;;; Equality
 
 (defgeneric = (a b))
