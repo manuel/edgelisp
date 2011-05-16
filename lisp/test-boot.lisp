@@ -105,6 +105,15 @@
 ;(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
 ;(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
 
+;;; Dynamic Variables
+
+(defdynamic test:dyn1)
+(setf (dynamic test:dyn1) 12)
+(assert (= 12 (dynamic test:dyn1)))
+(dynamic-bind ((test:dyn1 13))
+  (assert (= 13 (dynamic test:dyn1))))
+(assert (= 12 (dynamic test:dyn1)))
+
 ;;; Hygiene
 
 (defmacro test-boot:swap (a b)
