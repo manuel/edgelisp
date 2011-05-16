@@ -1,6 +1,6 @@
 (require "base")
 
-(defclass base-mode (mode))
+(defclass base-mode (fundamental-mode))
 
 (defmethod mode-init-window ((m base-mode) (w window))
   (set-window-title w (window-buffer w))
