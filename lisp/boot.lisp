@@ -294,6 +294,9 @@
 (defun set-superclass ((class class) (superclass class) -> class)
   (%set-superclass class superclass))
 
+(defun sha1 ((s string) -> string)
+  (%sha1 s))
+
 (defun runtime-error-message ((e runtime-error) -> string)
   (%runtime-error-message e))
 
