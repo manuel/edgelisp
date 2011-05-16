@@ -96,10 +96,16 @@
 ;;; Events
 
 (defun dom-keydown ((element native) (callback function))
-  #{ $(~element).keydown(~(native-callback callback)), null #})
+  #{ $(~element).keydown(~(native-callback callback)) #}
+  element)
 
 (defun dom-onclick ((element native) (callback function))
-  #{ $(~element).click(~(native-callback callback)), null #})
+  #{ $(~element).click(~(native-callback callback)) #}
+  element)
+
+(defun dom-onsubmit ((element native) (callback function))
+  #{ $(~element).submit(~(native-callback callback)) #}
+  element)
 
 ;;;; Hypertext Markup Language
 
@@ -123,9 +129,11 @@
 (define-markup-tag div)
 (define-markup-tag em)
 (define-markup-tag form)
+(define-markup-tag iframe)
 (define-markup-tag input)
 (define-markup-tag li)
 (define-markup-tag ol)
+(define-markup-tag p)
 (define-markup-tag script)
 (define-markup-tag span)
 (define-markup-tag strong)
