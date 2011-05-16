@@ -31,7 +31,6 @@ function lisp_bif_read_unit_as_progn(_key_, string)
 
 function lisp_get_file(path)
 {
-    lisp_note("Retrieving " + path);
     var req = new XMLHttpRequest();
     // Append UUID to file path to bypass browser cache.
     req.open("GET", path + "?" + uuid(), false);
@@ -55,7 +54,10 @@ function lisp_bif_compile_file(_key_, path)
 
 function lisp_load_file(path)
 {
-    return lisp_eval(lisp_read_unit_as_progn(lisp_get_file(path)));
+    lisp_note("Loading " + path);
+    var res = lisp_eval(lisp_read_unit_as_progn(lisp_get_file(path)));
+    lisp_note("done");
+    return res;
 }
 
 function lisp_bif_load_file(_key_, path)
