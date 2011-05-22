@@ -17,4 +17,6 @@
 
 * SETQ doesn't check whether binding exists.
 
+* Printing of strings is broken.
+
 * Probably many more...
