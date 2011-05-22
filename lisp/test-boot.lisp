@@ -102,8 +102,8 @@
 (assert (= (funcall (lambda (a &key (k 3) (j k)) j) 10 :j 1) 1))
 (assert (= (funcall (lambda (a &key (k 3) (j k)) j) 10) 3))
 
-;(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
-;(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
+(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
+(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
 
 ;;; AND
 
