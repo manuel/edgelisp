@@ -396,22 +396,26 @@
          (unless ,test (return-from exit))
          ,@body)))
 
+;;; Adapted from SBCL.  Doesn't preserve non-toplevelness.
 (defmacro or (&rest forms)
-  (if (list-empty? forms) ; heck, need destructuring-bind
-      #'#f ; heck, need to rethink #' syntax
-      #`(let ((%%or-res ,(list-elt forms 0))) ; heck, need hygiene
-          (if %%or-res
-              %%or-res
-              (or ,@(list-slice forms 1))))))
+  (cond ((list-empty? forms) #'#f)
+        ((= 1 (list-len forms))
+         (list-elt forms 0))
+        (#t
+         #`(let ((res ,(list-elt forms 0)))
+             (if res
+                 res
+                 (or ,@(list-slice forms 1)))))))
 
+;;; Adapted from SBCL.  Doesn't preserve non-toplevelness.
 (defmacro and (&rest forms)
-  ;; same hecks as above apply
-  ;; fixme: should return value of last subform
-  (if (list-empty? forms)
-      #'#t
-      #`(if (not ,(list-elt forms 0))
-            #f
-            (and ,@(list-slice forms 1)))))
+  (cond ((list-empty? forms) #'#t)
+        ((= 1 (list-len forms))
+         (list-elt forms 0))
+        (#t
+         #`(if ,(list-elt forms 0)
+               (and ,@(list-slice forms 1))
+               #f))))
 
 (defun not ((x object))
   (if x #f #t))

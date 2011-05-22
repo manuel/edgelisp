@@ -105,6 +105,28 @@
 ;(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
 ;(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
 
+;;; AND
+
+(assert (= #t (and)))
+(assert (= #t (and #t)))
+(assert (= #f (and #f)))
+(assert (= #f (and #t #f)))
+(assert (= #f (and #f #t)))
+(assert (= #t (and #t #t)))
+(assert (= 1 (and 1)))
+(assert (= 3 (and 1 2 3)))
+
+;;; OR
+
+(assert (= #f (or)))
+(assert (= #f (or #f)))
+(assert (= #t (or #t)))
+(assert (= #t (or #f #t)))
+(assert (= #t (or #t #f)))
+(assert (= #t (or #t #t #f)))
+(assert (= 1 (or 1 #t #f)))
+(assert (= 3 (or #f #f 3)))
+
 ;;; COND
 
 (assert (= nil (cond)))
