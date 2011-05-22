@@ -540,7 +540,7 @@
 (defun option ((value object) -> option)
   (make option :supplied? #t :value value))
 
-(defmacro if-option (binding if-supplied &optional if-absent)
+(defmacro if-option (binding if-supplied &optional (if-absent #'nil))
   "binding ::= (var option)"
   #`(let ((option ,(compound-elt binding 1)))
       (if (option-supplied? option)
