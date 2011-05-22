@@ -133,6 +133,7 @@
 (assert (= 1 (cond (#t 1))))
 (assert (= 2 (cond (#f 1) (#t 2))))
 (assert (= #f (cond (#f 1) (#f 2))))
+(assert (= 1 (cond (#t 1) (#t 2))))
 
 ;;; Dynamic Variables
 
