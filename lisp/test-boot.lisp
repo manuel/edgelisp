@@ -105,6 +105,13 @@
 ;(assert (= (funcall (lambda (&key k (j "foo") &all-keys keys) (get keys "k")) :k 1) 1))
 ;(assert (= (funcall (lambda (&key (k 3) (j k) &all-keys keys) (get keys "j"))) nil))
 
+;;; COND
+
+(assert (= nil (cond)))
+(assert (= 1 (cond (#t 1))))
+(assert (= 2 (cond (#f 1) (#t 2))))
+(assert (= nil (cond (#f 1) (#f 2))))
+
 ;;; Dynamic Variables
 
 (defdynamic test:dyn1)

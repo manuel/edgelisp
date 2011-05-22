@@ -355,6 +355,21 @@
 (defmacro unless (test &rest alternative)
   #`(if ,test nil (progn ,@alternative)))
 
+;;; Adapted from code by Nick Levine.
+(defmacro cond (&rest clauses)
+  (if (list-empty? clauses)
+      #'nil
+      ;;; Here again we have the uglyness caused by the absence of a
+      ;;; real DESTRUCTURING-BIND: CLAUSES, being passed in via &REST
+      ;;; is a list, but its elements are forms.
+      (let* ((this (list-elt clauses 0))
+             (others (list-slice clauses 1))
+             (test (compound-elt this 0))
+             (forms (compound-slice this 1)))
+        #`(if ,test
+              (progn ,@forms)
+              (cond ,@others)))))
+
 (defmacro loop (&rest body)
   #`(call-forever (lambda () ,@body)))
 
