@@ -129,10 +129,10 @@
 
 ;;; COND
 
-(assert (= nil (cond)))
+(assert (= #f (cond)))
 (assert (= 1 (cond (#t 1))))
 (assert (= 2 (cond (#f 1) (#t 2))))
-(assert (= nil (cond (#f 1) (#f 2))))
+(assert (= #f (cond (#f 1) (#f 2))))
 
 ;;; Dynamic Variables
 
