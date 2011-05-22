@@ -973,7 +973,10 @@ function lisp_bif_set_macro_function(_key_, name, hygiene_context, fun)
 function lisp_macroexpand(form)
 {
     var exp = lisp_macroexpand_1(form);
-    return exp;
+    if (exp === form)
+        return exp;
+    else
+        return lisp_macroexpand(exp);
 }
 
 function lisp_macroexpand_1(form)
