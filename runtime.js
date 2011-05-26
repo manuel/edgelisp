@@ -25,6 +25,7 @@ function Lisp_fasl(times)
     this.times = times;
 }
 
+// Printing a FASL prints its code.
 Lisp_fasl.prototype.toString = function()
 {
     var res = "\n";
@@ -34,7 +35,8 @@ Lisp_fasl.prototype.toString = function()
         });
     return res;
 }
-    
+
+// Creates an empty FASL.
 function lisp_bif_make_fasl(_key_)
 {
     return new Lisp_fasl({});
