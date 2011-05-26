@@ -13,6 +13,8 @@
 ; You should have received a copy of the GNU Affero General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; ``An adequate bootstrap is a contradiction in terms.'' -- Alan Perlis
+
 ;;;; Bootstrap defmacro
 
 (%%defsyntax defmacro
