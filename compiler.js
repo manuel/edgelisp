@@ -57,17 +57,16 @@ function lisp_macro_prepass0(st, form, results)
         /* Cheating here a little: ignoring both the hygiene contexts
            and operator namespaces of these built-in forms, which
            means their treatment is not really in the Scheme spirit of
-           "there are no reserved words". */
-
-
+           "there are no reserved words": it makes shadowing these
+           identifiers buggy. */
         switch(op.name) {
         case "%%progn":
             form.elts.slice(1).map(function(subform) {
                     lisp_macro_prepass0(st, subform, results);
                 });
             return;
-        case "%%defsyntax":
-            lisp_compile_special_defsyntax(st, form);
+        case "%%defmacro":
+            lisp_compile_special_defmacro(st, form);
             return;
         case "%%eval-when-compile":
             lisp_compile_special_eval_when_compile(st, form);
@@ -193,7 +192,7 @@ function lisp_compile_identifier_form(st, form, namespace)
 function lisp_compile_compound_form(st, form)
 {
     var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
-    var cid = lisp_identifier_to_cid(op, "function");
+    var cid = lisp_identifier_to_cid(op, lisp_operator_namespace);
     if (lisp_local_defined(st, cid)) {
         return lisp_compile_function_application(st, form);
     } else {
@@ -213,7 +212,7 @@ function lisp_compile_compound_form(st, form)
 
 function lisp_compile_function_application(st, form)
 {
-    var fun = lisp_compile_identifier_form(st, form.elts[0], "function");
+    var fun = lisp_compile_identifier_form(st, form.elts[0], lisp_operator_namespace);
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
@@ -245,8 +244,8 @@ function lisp_local_defined_in_contour(contour, cid)
 
 var lisp_specials_table = {
     "%%defined?": lisp_compile_special_definedp,
+    "%%defmacro": lisp_compile_special_defmacro,
     "%%defparameter": lisp_compile_special_defparameter,
-    "%%defsyntax": lisp_compile_special_defsyntax,
     "%%eval-when-compile": lisp_compile_special_eval_when_compile,
     "%%funcall": lisp_compile_special_funcall,
     "%%identifier": lisp_compile_special_identifier,
@@ -392,8 +391,8 @@ function lisp_compile_special_funcall(st, form)
 /* Registers a macro expander function.  An expander function takes a
    form as input and returns a form.  The expander-function argument
    is evaluated at compile-time.
-   (%%defsyntax name expander-function) -> nil */
-function lisp_compile_special_defsyntax(st, form)
+   (%%defmacro name expander-function) -> nil */
+function lisp_compile_special_defmacro(st, form)
 {
     var name_form = lisp_assert_identifier_form(form.elts[1], "Bad syntax name", form);
     var expander_form = lisp_assert_not_null(form.elts[2], "Bad syntax expander", form);

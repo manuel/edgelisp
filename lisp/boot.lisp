@@ -17,9 +17,9 @@
 
 ;;;; Bootstrap defmacro
 
-(%%defsyntax defmacro
+(%%defmacro defmacro
   (%%lambda (defmacro-form)
-    #`(%%defsyntax ,(%compound-elt defmacro-form 1)
+    #`(%%defmacro ,(%compound-elt defmacro-form 1)
         (%%lambda (%%form)
           (%compound-apply
            (%%lambda ,(%compound-elt defmacro-form 2)
@@ -34,9 +34,6 @@
 
 (defmacro defparameter (name value)
   #`(%%defparameter ,name ,value))
-
-(defmacro defsyntax (name transformer)
-  #`(%%defsyntax ,name ,transformer))
 
 (defmacro eval-when-compile (&rest forms)
   #`(%%eval-when-compile (%%progn ,@forms)))
