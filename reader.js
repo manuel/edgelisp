@@ -107,7 +107,7 @@ function lisp_string_syntax_action(ast)
 
 var lisp_identifier_special_char =
     // Needs to be in sync with `lisp_mangle_table'.
-    choice("-", "&", ":", ".", "=", ">","<", "%", "+", "?", "/", "*", "#");
+    choice("-", "&", "!", ":", ".", "=", ">","<", "%", "+", "?", "/", "*", "#");
 
 var lisp_identifier_syntax =
     action(join_action(repeat1(choice(range("a", "z"),
@@ -157,13 +157,13 @@ function lisp_native_escape_action(ast)
 
 function lisp_native_snippet_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_identifier_form("native-snippet"),
+    return new Lisp_compound_form([ new Lisp_identifier_form("%%native-snippet"),
                                     new Lisp_string_form(ast) ]);
 }
 
 function lisp_native_action(ast)
 {
-    return new Lisp_compound_form([ new Lisp_identifier_form("native") ]
+    return new Lisp_compound_form([ new Lisp_identifier_form("%%native") ]
                                   .concat(ast[1]));
 }
 
