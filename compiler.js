@@ -682,7 +682,6 @@ function lisp_compile_special_native_snippet(st, form)
 
 var lisp_optional_sig_keyword = "&optional";
 var lisp_key_sig_keyword = "&key";
-var lisp_rest_sig_keyword = "&rest";
 var lisp_all_keys_sig_keyword = "&all-keys";
 var lisp_aux_sig_keyword = "&aux";
 var lisp_fast_sig_keyword = "&fast";
