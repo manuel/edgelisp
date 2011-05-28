@@ -191,28 +191,44 @@ function lisp_compile_identifier_form(st, form, namespace)
 
 function lisp_compile_compound_form(st, form)
 {
-    var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
-    var cid = lisp_identifier_to_cid(op, lisp_operator_namespace);
-    if (lisp_local_defined(st, cid)) {
-        return lisp_compile_function_application(st, form);
-    } else {
-        var special_function = lisp_special_function(cid.name);
-        if (special_function) {
-            return special_function(st, form);
+    var op = form.elts[0];
+    switch(op.formt) {
+    case "identifier":
+        var cid = lisp_identifier_to_cid(op, lisp_operator_namespace);
+        if (lisp_local_defined(st, cid)) {
+            return lisp_compile_function_application(st, form);
         } else {
-            var macro_function = lisp_macro_function(cid);
-            if (macro_function) {
-                return lisp_compile(st, macro_function(null, form));
+            var special_function = lisp_special_function(cid.name);
+            if (special_function) {
+                return special_function(st, form);
             } else {
-                return lisp_compile_function_application(st, form);
+                var macro_function = lisp_macro_function(cid);
+                if (macro_function) {
+                    return lisp_compile(st, macro_function(null, form));
+                } else {
+                    return lisp_compile_function_application(st, form);
+                }
             }
         }
+    case "compound":
+        return lisp_compile_function_application(st, form);
     }
+    lisp_error("Bad compound form", form);
 }
 
 function lisp_compile_function_application(st, form)
 {
-    var fun = lisp_compile_identifier_form(st, form.elts[0], lisp_operator_namespace);
+    var fun = null;
+    var op = form.elts[0];
+    switch(op.formt) {
+    case "identifier":
+        fun = lisp_compile_identifier_form(st, op, lisp_operator_namespace);
+        break;
+    case "compound":
+        fun = lisp_compile(st, op);
+        break;
+    }
+    if (fun === null) lisp_error("Bad function application form", form);
     var call_site = lisp_compile_call_site(st, form.elts.slice(1));
     return { vopt: "funcall", 
              fun: fun, 
