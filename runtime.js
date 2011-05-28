@@ -498,7 +498,7 @@ function lisp_bif_append_compounds(_key_)
         if (elt.formt === "compound") {
             elts = elts.concat(elt.elts);
         } else {
-            lisp_assert(elt.length != null, "append-compounds", elt);
+            lisp_assert(elt.length !== undefined, "append-compounds", elt);
             elts = elts.concat(elt);
         }
     }
@@ -1015,7 +1015,7 @@ function lisp_macroexpand(form)
 
 function lisp_macroexpand_1(form)
 {    
-    var cid = lisp_identifier_to_cid(form.elts[0], lisp_op);
+    var cid = lisp_identifier_to_cid(form.elts[0], lisp_operator_namespace);
     var macro = lisp_macro_function(cid);
     if (macro) {
         return macro(null, form);
@@ -1072,6 +1072,11 @@ function lisp_bif_list(_key_)
         elts.push(arguments[i]);
     }
     return elts;
+}
+
+function lisp_bif_listp(_key_, obj)
+{
+    return obj.length !== undefined;
 }
 
 function lisp_bif_list_elt(_key_, list, i)
@@ -1327,6 +1332,7 @@ lisp_export_function("%list-elt", "lisp_bif_list_elt");
 lisp_export_function("%list-empty?", "lisp_bif_list_emptyp");
 lisp_export_function("%list-len", "lisp_bif_list_len");
 lisp_export_function("%list-slice", "lisp_bif_list_slice");
+lisp_export_function("%list?", "lisp_bif_listp");
 lisp_export_function("%literal-identifier-equal?", "lisp_bif_literal_identifier_equalp");
 lisp_export_function("%load-fasl", "lisp_bif_load_fasl");
 lisp_export_function("%macroexpand-1", "lisp_bif_macroexpand_1");
