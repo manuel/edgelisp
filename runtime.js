@@ -218,6 +218,18 @@ function Lisp_identifier_form(name, hygiene_context)
     this.hygiene_context = hygiene_context;
 }
 
+function lisp_bif_literal_identifier_equalp(_key_, a, b)
+{
+    return lisp_literal_identifier_equalp(a, b);
+}
+
+function lisp_literal_identifier_equalp(a, b)
+{
+    lisp_assert_identifier_form(a);
+    lisp_assert_identifier_form(b);
+    return a.name === b.name;
+}
+
 Lisp_identifier_form.prototype.toString = function() {
     return this.name + (this.hygiene_context ? "\\" + this.hygiene_context : "");
 }
@@ -1315,6 +1327,7 @@ lisp_export_function("%list-elt", "lisp_bif_list_elt");
 lisp_export_function("%list-empty?", "lisp_bif_list_emptyp");
 lisp_export_function("%list-len", "lisp_bif_list_len");
 lisp_export_function("%list-slice", "lisp_bif_list_slice");
+lisp_export_function("%literal-identifier-equal?", "lisp_bif_literal_identifier_equalp");
 lisp_export_function("%load-fasl", "lisp_bif_load_fasl");
 lisp_export_function("%macroexpand-1", "lisp_bif_macroexpand_1");
 lisp_export_function("%macroexpand", "lisp_bif_macroexpand");
