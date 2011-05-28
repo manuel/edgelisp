@@ -1,13 +1,8 @@
-;;;; Simple Scheme compatibility mode for EdgeLisp
-
-;;; Of course, this is no real Scheme, as EdgeLisp has neither
-;;; multi-shot continuations nor tail call elimination, but for some
-;;; examples it works.
-;;;
+;;; A stupid Scheme compatibility mode for SRFI 72 examples and tests.
 ;;; Using it requires loading the file lisp-1.js before runtime.js.
 
-;;; (define-syntax ( name &rest args) &rest body)
-;;;  0             1 0          1           2
+;; (define-syntax ( name . args) . body)
+;;  0             1 0      1       2
 (%%defmacro define-syntax
   (%%lambda (ds)
     #`(%%defmacro ,(%compound-elt (%compound-elt ds 1) 0)
@@ -21,13 +16,13 @@
 (define-syntax (define name value)
   #`(%%defparameter ,name ,value))
 
-(define-syntax (begin &rest forms)
+(define-syntax (begin . forms)
   #`(%%progn ,@forms))
 
-(define-syntax (lambda sig &rest body)
+(define-syntax (lambda sig . body)
   #`(%%lambda ,sig (begin ,@body)))
 
-(define-syntax (funcall function &rest arguments)
+(define-syntax (funcall function . arguments)
   #`(%%funcall ,function ,@arguments))
 
 (define-syntax (if test consequent &optional (alternative #'nil))
@@ -36,7 +31,7 @@
 (define-syntax (set! name value)
   #`(%%setq ,name ,value))
 
-(define-syntax (let bindings &rest body)
+(define-syntax (let bindings . body)
   #`(funcall (lambda ,(%compound-map (lambda (b)
                                        (if (%compound? b)
                                            (%compound-elt b 0)
@@ -49,12 +44,41 @@
                                     #'nil))
                               bindings)))
 
+(define-syntax (begin-for-syntax . forms)
+  #`(%%eval-when-compile (begin ,@forms)))
+
 (define alert
   (lambda (message)
     #{ alert(~message) #}))
+
+(begin-for-syntax
+ (define car
+   (lambda (form)
+     (%compound-elt form 0)))
+ 
+ (define cdr
+   (lambda (form)
+     (%compound-slice form 1)))
+ 
+ (define null?
+   (lambda (list)
+     (%list-empty? list)))
+ 
+ (define literal-identifier=?
+   (lambda (a b)
+     (%literal-identifier-equal? a b))))
 
 (define-syntax (swap! a b)
   #`(let ((temp ,a))
       (set! ,a ,b)
       (set! ,b temp)))
+
+(define-syntax (my-cond c . cs)
+  (if (literal-identifier=? (car c) #'else)
+      #`(begin ,@(cdr c))
+      (if (null? cs)    
+          #`(if ,(car c) (begin ,@(cdr c)))
+          #`(if ,(car c)
+                (begin ,@(cdr c))
+                (my-cond ,@cs)))))
 
