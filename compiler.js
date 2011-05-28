@@ -54,6 +54,12 @@ function lisp_macro_prepass0(st, form, results)
     if (form.formt == "compound") {
         var op = lisp_assert_identifier_form(form.elts[0], "Bad operator", form);
 
+        /* Cheating here a little: ignoring both the hygiene contexts
+           and operator namespaces of these built-in forms, which
+           means their treatment is not really in the Scheme spirit of
+           "there are no reserved words". */
+
+
         switch(op.name) {
         case "%%progn":
             form.elts.slice(1).map(function(subform) {
@@ -73,7 +79,7 @@ function lisp_macro_prepass0(st, form, results)
             return;
         }
 
-        var cid = lisp_identifier_to_cid(op, "function");
+        var cid = lisp_identifier_to_cid(op, lisp_operator_namespace);
         var macro_function = lisp_macro_function(cid);
         if (macro_function) {
             // Since the macro function is a Lisp function, we need to

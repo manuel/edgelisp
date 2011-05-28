@@ -16,7 +16,25 @@
 /* Lisp runtime: this file contains all types and functions needed to
    run compiled Lisp code.
 
-   Lisp code that uses `eval' will need to include the compiler, too. */
+   Lisp code that uses functions like `eval' and `macroexpand' will
+   need to include the compiler, too.
+
+   This file has grown in a haphazard way, and is in serious need of a
+   cleanup.  Also, it contains some data types and functions that
+   should probably be moved back into the compiler. */
+
+/* Determines into which namespace the compiler puts identifiers in
+   the operator (first) position of a compound form.  "function" for
+   Lisp-2, "variable" for Lisp-1.  The variable
+   `lisp_operator_namespace' is defined in the files lisp-1.js and
+   lisp-2.js. */
+function lisp_bif_set_operator_namespace(namespace)
+{
+    lisp_assert_string(namespace, "Bad operator namespace", namespace);
+    lisp_operator_namespace = namespace;
+}
+
+/*** Fasls ***/
 
 // Fast-loadable, contains compiled JS code for a Lisp unit.
 function Lisp_fasl(times)
@@ -54,6 +72,8 @@ function lisp_load_fasl(fasl, time)
     lisp_assert_not_null(fasl.times[time]);
     return eval(fasl.times[time]);
 }
+
+/*** Compiler identifiers ***/
 
 /* A compiler identifier (CID) is the fully explicit form of
    identifier used inside the compiler.
@@ -968,7 +988,7 @@ function lisp_set_macro_function(cid, expander)
 
 function lisp_bif_set_macro_function(_key_, name, hygiene_context, fun)
 {
-    var cid = new Lisp_cid(name, "function", hygiene_context);
+    var cid = new Lisp_cid(name, lisp_operator_namespace, hygiene_context);
     return lisp_set_macro_function(cid, fun);
 }
 
@@ -983,7 +1003,7 @@ function lisp_macroexpand(form)
 
 function lisp_macroexpand_1(form)
 {    
-    var cid = lisp_identifier_to_cid(form.elts[0], "function");
+    var cid = lisp_identifier_to_cid(form.elts[0], lisp_op);
     var macro = lisp_macro_function(cid);
     if (macro) {
         return macro(null, form);
@@ -1163,7 +1183,7 @@ function lisp_mangle_var(name, hygiene_context)
 
 function lisp_mangle_function(name, hygiene_context)
 {
-    return lisp_mangle(name, "function", hygiene_context);
+    return lisp_mangle(name, lisp_operator_namespace, hygiene_context);
 }
 
 function lisp_mangle_class(name, hygiene_context)
