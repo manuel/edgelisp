@@ -1,5 +1,6 @@
-;;; A stupid Scheme compatibility mode for SRFI 72 examples and tests.
-;;; Using it requires loading the file lisp-1.js before runtime.js.
+;;; A stupid Scheme compatibility mode for running SRFI 72 examples
+;;; and tests.  Using it requires loading the file lisp-1.js before
+;;; runtime.js.
 
 ;; (define-syntax ( name . args) . body)
 ;;  0             1 0      1       2
@@ -32,17 +33,17 @@
   #`(%%setq ,name ,value))
 
 (define-syntax (let bindings . body)
-  #`(funcall (lambda ,(%compound-map (lambda (b)
-                                       (if (%compound? b)
-                                           (%compound-elt b 0)
-                                           b))
-                                     bindings)
-               ,@body)
-             ,@(%compound-map (lambda (b)
-                                (if (%compound? b)
-                                    (%compound-elt b 1)
-                                    #'nil))
-                              bindings)))
+  #`((lambda ,(%compound-map (lambda (b)
+                               (if (%compound? b)
+                                   (%compound-elt b 0)
+                                   b))
+                             bindings)
+       ,@body)
+     ,@(%compound-map (lambda (b)
+                        (if (%compound? b)
+                            (%compound-elt b 1)
+                            #'nil))
+                      bindings)))
 
 (define-syntax (begin-for-syntax . forms)
   #`(%%eval-when-compile (begin ,@forms)))
@@ -63,7 +64,9 @@
  (define null?
    (lambda (list)
      (%list-empty? list)))
- 
+
+ (define list %list)
+
  (define literal-identifier=?
    (lambda (a b)
      (%literal-identifier-equal? a b))))
@@ -82,3 +85,11 @@
                 (begin ,@(cdr c))
                 (my-cond ,@cs)))))
 
+(define-syntax (main)
+  (let ((make-swap (lambda (x y)
+                     #`(let ((t ,x))
+                         (set! ,x ,y)
+                         (set! ,y t)))))
+    #`(let ((s 1) (t 2))
+        ,(make-swap #'s #'t)
+        (list s t))))
