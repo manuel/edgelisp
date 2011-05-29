@@ -1,0 +1,12 @@
+(define-syntax (let-in-order ies . body)
+  (let ((f (lambda (ies its)
+             (if (null? ies)
+                 #`(let ,its ,@body)
+                 (let* ((ie (car ies))
+                        (i (car ie))
+                        (e (cadr ie)))
+                   #`(let ((t ,e))
+                       ,(f (cdr ies)
+                           #`((,i t) ,@its))))))))
+    (f ies #'())))
+
