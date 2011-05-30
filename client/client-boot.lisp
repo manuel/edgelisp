@@ -30,7 +30,7 @@
   (load-file what))
 
 (defun alert (&optional (s "Lisp alert"))
-  #{ alert(~s) #})
+  #{ alert(~s), null #})
 
 (defun prompt (&optional (s "Lisp prompt"))
   "Returns user-entered string or nil."
