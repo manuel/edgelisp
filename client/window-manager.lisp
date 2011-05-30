@@ -39,7 +39,9 @@
         #{ new jwim.Manager({
                             showMaximizer:true,
                             showClose:false,
-                            showResizer:true
+                            showResizer:true,
+                            defaultX: 100,
+                            defaultY: 100
                             })
         #}
         :windows (list)))

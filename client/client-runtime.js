@@ -60,6 +60,13 @@ function lisp_load_file(path)
     return res;
 }
 
+function lisp_load_js_file(path)
+{
+    lisp_note("Loading " + path);
+    eval(lisp_get_file(path));
+    lisp_note("done");
+}
+
 function lisp_bif_load_file(_key_, path)
 {
     return lisp_load_file(path);
