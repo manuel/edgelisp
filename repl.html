@@ -5,7 +5,7 @@
 <script type="text/javascript" src="lib/jsparse.js"></script>
 <script type="text/javascript" src="lib/js-numbers.js"></script>
 <script type="text/javascript" src="lib/uuid.js"></script>
-<script type="text/javascript" src="lisp-1.js"></script>
+<script type="text/javascript" src="lisp-2.js"></script>
 <script type="text/javascript" src="runtime.js"></script>
 <script type="text/javascript" src="client/client-runtime.js"></script>
 <script type="text/javascript" src="reader.js"></script>
@@ -16,12 +16,12 @@
 <script type="text/javascript">
 function lisp_repl_onload()
 {
-    lisp_load_file("scheme/boot.scm");
-//    lisp_load_file("client/client-boot.lisp");
-//    lisp_load_file("lisp/test-boot.lisp");
-//    lisp_load_file("client/html5.lisp");
-//    lisp_load_file("client/window-manager.lisp");
-//    lisp_load_file("client/repl.lisp");
+    lisp_load_file("lisp/boot.lisp");
+    lisp_load_file("client/client-boot.lisp");
+    lisp_load_file("lisp/test-boot.lisp");
+    lisp_load_file("client/html5.lisp");
+    lisp_load_file("client/window-manager.lisp");
+    lisp_load_file("client/repl.lisp");
 }
 </script>
 <style type="text/css">

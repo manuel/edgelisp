@@ -31,13 +31,13 @@
 (assert (defined? (identifier test-boot:var2 testns)))
 (assert (= (identifier test-boot:var2 testns) "bar"))
 
-;;; defsyntax
+;;; defmacro
 
-(defsyntax test-boot:defsyntax-test 
+(%%defmacro test-boot:defmacro-test 
   (lambda ((form form)) (compound-elt form 1)))
 
 (let ((foo #`foo))
-  (assert (eq (macroexpand-1 #`(test-boot:defsyntax-test ,foo))
+  (assert (eq (macroexpand-1 #`(test-boot:defmacro-test ,foo))
               foo)))
 
 ;;; eval-when-compile
