@@ -212,6 +212,9 @@
 (defun eval ((form form) -> object)
   (%eval form))
 
+(defun fasl-to-data-uri ((f fasl) &optional (time "execute"))
+  (%fasl-to-data-uri f time))
+
 (defparameter \fast-apply \%fast-apply) ; fishy?
 
 (defparameter \find-method \%find-method) ; fishy

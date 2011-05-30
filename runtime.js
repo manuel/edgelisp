@@ -73,6 +73,11 @@ function lisp_load_fasl(fasl, time)
     return eval(fasl.times[time]);
 }
 
+function lisp_bif_fasl_to_data_uri(_key_, fasl, time)
+{
+    return "data:text/javascript," + escape(fasl.times[time]);
+}
+
 /*** Compiler identifiers ***/
 
 /* A compiler identifier (CID) is the fully explicit form of
@@ -1322,6 +1327,7 @@ lisp_export_function("%compound-slice", "lisp_bif_compound_slice");
 lisp_export_function("%compound?", "lisp_bif_compoundp");
 lisp_export_function("%eq", "lisp_bif_eq");
 lisp_export_function("%eval", "lisp_bif_eval");
+lisp_export_function("%fasl-to-data-uri", "lisp_bif_fasl_to_data_uri");
 lisp_export_function("%fast-apply", "lisp_bif_fast_apply");
 lisp_export_function("%find-method", "lisp_bif_find_method");
 lisp_export_function("%generic-name", "lisp_bif_generic_name");
