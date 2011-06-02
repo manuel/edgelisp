@@ -68,7 +68,9 @@
 
  (define literal-identifier=?
    (lambda (a b)
-     (%literal-identifier-equal? a b))))
+     (%literal-identifier-equal? a b)))
+
+ (define destructuring-apply %compound-apply))
 
 (define-syntax (let bindings . body)
   #`((lambda ,(%compound-map (lambda (b)
@@ -110,4 +112,14 @@
     #`(let ((s 1) (t 2))
         ,(make-swap #'s #'t)
         (list s t))))
+
+(define-syntax if-it
+  (lambda (x)
+    (destructuring-apply
+     (lambda (k e1 e2 e3)
+       (let ((it (datum->syntax k 'it)))
+         #`(let ((,it ,e1))
+             (if ,it ,e2 ,e3))))
+     x)))
+
 
