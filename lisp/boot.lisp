@@ -212,7 +212,7 @@
 (defun eval ((form form) -> object)
   (%eval form))
 
-(defun fasl-to-data-uri ((f fasl) &optional (time "execute"))
+(defun fasl-to-data-uri ((f fasl) &key (time "execute"))
   (%fasl-to-data-uri f time))
 
 (defparameter \fast-apply \%fast-apply) ; fishy?
