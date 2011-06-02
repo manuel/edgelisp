@@ -1040,7 +1040,7 @@ function lisp_emit_vop_progn(st, vop)
 {
     lisp_assert_list(vop.vops, "Bad progn", vop);
     if (vop.vops.length > 0)
-        return "(" + vop.vops.map(lisp_emit_curry(st)).join(", ") + ")";
+        return "(" + vop.vops.map(lisp_emit_curry(st)).join(",\n") + ")";
     else
         return "null";
 }
