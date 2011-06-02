@@ -92,7 +92,7 @@ function lisp_note(object)
 
 function _lisp_function_print(_key_, object)
 {
-    if (console.log)
+    if ((typeof console !== "undefined") && console.log)
         console.log(object);
     return null;
 }
