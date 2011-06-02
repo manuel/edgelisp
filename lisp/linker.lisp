@@ -11,6 +11,9 @@
 
 (defun link (&key (time "execute") &rest fasls)
   "Combines the effects (at time TIME) of the given fasls into a single fasl."
+  (link-list-of-fasls fasls :time time))
+
+(defun link-list-of-fasls ((fasls list) &key (time "execute"))
   (let ((result (make-fasl)))
     (each (lambda (fasl)
             (let ((times (.fasl-times fasl)))
