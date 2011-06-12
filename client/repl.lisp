@@ -34,11 +34,11 @@
 (defun repl ()
   (let* ((input (dom-id "input"))
          (value (.element-value input)))
+    (repl-history-add value)
     (dynamic-bind ((print-readably #f))
       (print value))
     (print (repl-eval (read-unit-as-progn value)))
-    (setf (.element-value input) "")
-    (repl-history-add value)))
+    (setf (.element-value input) "")))
 
 (defun repl-scroll-to-bottom ()
   (let ((e (window-element *repl-window*)))
