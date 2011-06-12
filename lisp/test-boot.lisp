@@ -137,6 +137,7 @@
 
 ;;; CASE
 
+(assert (= #f (case 1)))
 (assert (= 2 (case 1 ((1) 2))))
 (assert (= 2 (case 1
                    ((0) 1)
@@ -147,6 +148,20 @@
 ;; test hygiene of variable KEY introduced in CASE macro expansion:
 (let ((key 12))
   (assert (= 12 (case 1 ((1) key)))))
+
+;; ELSE
+(assert (= 0 (case 1 (else 0))))
+(assert (= 0 (case 1
+                   ((2) 4)
+                   (else 0))))
+
+;; ECASE
+(assert (= 1 (block x (handler-bind ((case-error (lambda (e)
+                                                   (assert (= 2 (.datum e)))
+                                                   (return-from x 1))))
+                        (ecase 2 ((57) 100))))))
+
+(assert (= 1 (ecase 5 ((5) 1))))
 
 ;;; Dynamic Variables
 

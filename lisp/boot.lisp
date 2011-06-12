@@ -372,15 +372,6 @@
               (progn ,@forms)
               (cond ,@others)))))
 
-(defmacro case (keyform &rest clauses)
-  #`(let ((key ,keyform))
-      (cond ,@(map (lambda (clause)
-                     #`((or ,@(map (lambda (testkey)
-                                     #`(= key ,testkey))
-                                   (elt clause 0)))
-                        (progn ,@(slice clause 1))))
-                   clauses))))
-
 (defmacro loop (&rest body)
   #`(call-forever (lambda () ,@body)))
 
