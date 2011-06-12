@@ -539,7 +539,7 @@
 (defparameter \option-value \.value)
 
 (defvar none (make option :supplied? #f :value nil))
-(defun option ((value object) -> option)
+(defun some ((value object) -> option)
   (make option :supplied? #t :value value))
 
 (defmacro if-option (binding if-supplied &optional (if-absent #'nil))

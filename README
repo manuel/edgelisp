@@ -27,7 +27,7 @@ Features
 * Runtime type-checked function parameters and results (using same
   syntax as DEFMETHOD for parameters and -> arrow syntax for result)
 
-* Basic control flow (IF, PROGN, LOOP, COND),
+* Basic control flow (IF, PROGN, LOOP, COND, CASE, ECASE),
   Nonlocal exits (BLOCK/RETURN-FROM, CATCH/THROW), UNWIND-PROTECT
 
 * Condition system with restarts
@@ -55,7 +55,7 @@ Features TBD
 ------------
 
 * Multiple inheritance
-* FLET, LABELS, TAGBODY, DESTRUCTURING-BIND, MACROLET, CASE
+* FLET, LABELS, TAGBODY, DESTRUCTURING-BIND, MACROLET
 * CALL-NEXT-METHOD; before-, after-, around-methods
 * Sequence protocol based on D's ranges
 * Package system

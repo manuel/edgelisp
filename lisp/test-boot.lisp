@@ -188,7 +188,7 @@
 ;;; Options
 
 (assert (= 2 (if-option (x none) 1 2)))
-(assert (= 1 (if-option (x (option 1)) x 2)))
+(assert (= 1 (if-option (x (some 1)) x 2)))
 (assert (= nil (if-option (x none) x)))
 
 ;;; SHA1
