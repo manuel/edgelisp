@@ -529,33 +529,6 @@
         (defmethod ,(string-to-identifier setter-name) ((obj ,class) value)
           (set-slot-value obj ,slot-name-form value)))))
 
-;;;; Option types
-
-(defclass option ()
-  (supplied?
-   value))
-
-(defparameter \option-supplied? \.supplied?)
-(defparameter \option-value \.value)
-
-(defvar none (make option :supplied? #f :value nil))
-(defun some ((value object) -> option)
-  (make option :supplied? #t :value value))
-
-(defmacro if-option (binding if-supplied &optional (if-absent #'nil))
-  "binding ::= (var option)"
-  #`(let ((option ,(compound-elt binding 1)))
-      (the option option)
-      (if (option-supplied? option)
-          (let ((,(compound-elt binding 0) (option-value option)))
-            ,if-supplied)
-          ,if-absent)))
-
-(defun nil-to-option (object -> option)
-  (if (nil? object)
-      none
-      (some object)))
-
 ;;;; Equality
 
 (defgeneric = (a b))
@@ -644,6 +617,40 @@
   (define-jsnums-binop * "multiply")
   (define-jsnums-binop + "add")
   (define-jsnums-binop - "subtract"))
+
+;;;; Option types
+
+(defclass option ()
+  (supplied?
+   value))
+
+(defclass none (option))
+(defclass some (option))
+
+(defparameter \option-supplied? \.supplied?)
+(defparameter \option-value \.value)
+
+(defvar none
+  (make none :supplied? #f :value nil))
+(defun some ((value object) -> option)
+  (make some :supplied? #t :value value))
+
+(defmacro if-option (binding if-supplied &optional (if-absent #'nil))
+  "binding ::= (var option)"
+  #`(let ((option ,(compound-elt binding 1)))
+      (the option option)
+      (if (option-supplied? option)
+          (let ((,(compound-elt binding 0) (option-value option)))
+            ,if-supplied)
+          ,if-absent)))
+
+(defun nil-to-option (object -> option)
+  (if (nil? object)
+      none
+      (some object)))
+
+(defmethod show ((a none)) "none")
+(defmethod show-object ((a some)) (show (option-value a)))
 
 ;;;; Condition system
 
