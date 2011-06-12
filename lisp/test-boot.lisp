@@ -135,6 +135,19 @@
 (assert (= #f (cond (#f 1) (#f 2))))
 (assert (= 1 (cond (#t 1) (#t 2))))
 
+;;; CASE
+
+(assert (= 2 (case 1 ((1) 2))))
+(assert (= 2 (case 1
+                   ((0) 1)
+                   ((1) 2))))
+(assert (= 1 (case 0
+                   ((0) 1)
+                   ((1) 2))))
+;; test hygiene of variable KEY introduced in CASE macro expansion:
+(let ((key 12))
+  (assert (= 12 (case 1 ((1) key)))))
+
 ;;; Dynamic Variables
 
 (defdynamic test:dyn1)
