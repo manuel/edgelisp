@@ -15,36 +15,32 @@
     }
     #}))
 
-(defun local-storage-get-item ((key string) -> object)
-  "Returns the local storage data associated with key, or nil."
-  (unless (local-storage-supported?)
-    (error (make local-storage-error)))
-  #{ localStorage.getItem((~key)) #})
+(defmacro define-local-storage-function (name sig &rest body)
+  #`(defun ,name ,sig
+      (unless (local-storage-supported?)
+        (error (make local-storage-error)))
+      ,@body))
 
-(defun local-storage-set-item ((key string) (data string) -> nil)
+(define-local-storage-function local-storage-get-item ((key string) -> option)
+  "Returns the local storage data associated with key as an option."
+  (nil-to-option #{ localStorage.getItem((~key)) #}))
+
+(define-local-storage-function local-storage-set-item ((key string) (data string) -> nil)
   "Updates the local storage data associated with key."
-  (unless (local-storage-supported?)
-    (error (make local-storage-error)))
   #{ localStorage.setItem((~key), (~data)) #}
   nil)
 
-(defun local-storage-remove-item ((key string) -> nil)
+(define-local-storage-function local-storage-remove-item ((key string) -> nil)
   "Deletes the local storage data associated with key."
-  (unless (local-storage-supported?)
-    (error (make local-storage-error)))
   #{ localStorage.removeItem((~key)) #}
   nil)
 
-(defun local-storage-length (-> small-integer)
+(define-local-storage-function local-storage-length (-> small-integer)
   "Returns the number of local storage items."
-  (unless (local-storage-supported?)
-    (error (make local-storage-error)))
   #{ localStorage.length #})
 
-(defun local-storage-key ((i small-integer) -> string)
+(define-local-storage-function local-storage-key ((i small-integer) -> string)
   "Returns the key of the local storage item with the given index."
-  (unless (local-storage-supported?)
-    (error (make local-storage-error)))
   #{ localStorage.key((~i)) #})
 
 (provide "local-storage")

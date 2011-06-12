@@ -53,10 +53,9 @@
 (defvar *repl-offset* 0)
 
 (defun repl-history-count (-> number)
-  (let ((ct-str (local-storage-get-item "repl-history-count")))
-    (if ct-str
-        (eval (read-from-string ct-str))
-        0)))  
+  (if-option (ct-str (local-storage-get-item "repl-history-count"))
+    (eval (read-from-string ct-str))
+    0))
 
 (defun repl-history-item-name ((ct number) -> string)
   (string-concat "repl-history-item-" (show ct)))
@@ -76,9 +75,8 @@
     (when (< *repl-offset* (repl-history-count))
       (incf *repl-offset*)
       (let ((i (- (repl-history-count) *repl-offset*)))
-        (when (and (> i -1) (< i (repl-history-count)))
-          (setf (.element-value (dom-id "input"))
-                (local-storage-get-item (repl-history-item-name i))))))))
+        (if-option (item (local-storage-get-item (repl-history-item-name i)))
+          (setf (.element-value (dom-id "input")) item))))))
 
 (defun repl-history-next-item ()
   (when (and (defined? \local-storage-supported?)
@@ -86,8 +84,8 @@
     (decf *repl-offset*)
     (let ((i (- (repl-history-count) *repl-offset*)))
       (when (and (> i -1) (< i (repl-history-count)))
-        (setf (.element-value (dom-id "input"))
-              (local-storage-get-item (repl-history-item-name i)))))))
+        (if-option (item (local-storage-get-item (repl-history-item-name i)))
+          (setf (.element-value (dom-id "input")) item))))))
 
 (defclass repl-mode (mode))
 (defun make-repl-mode (-> repl-mode)

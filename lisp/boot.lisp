@@ -545,10 +545,16 @@
 (defmacro if-option (binding if-supplied &optional (if-absent #'nil))
   "binding ::= (var option)"
   #`(let ((option ,(compound-elt binding 1)))
+      (the option option)
       (if (option-supplied? option)
           (let ((,(compound-elt binding 0) (option-value option)))
             ,if-supplied)
           ,if-absent)))
+
+(defun nil-to-option (object -> option)
+  (if (nil? object)
+      none
+      (some object)))
 
 ;;;; Equality
 
