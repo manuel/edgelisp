@@ -40,7 +40,7 @@
   (base-provider-read (dynamic base-provider) id))
 
 (defun base-root (-> base-tree)
-g  (base-provider-root (dynamic base-provider)))
+  (base-provider-root (dynamic base-provider)))
 
 (defun base-set-root ((id string))
   (base-provider-set-root (dynamic base-provider) id))
