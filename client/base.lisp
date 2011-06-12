@@ -2,6 +2,16 @@
 
 ;;;; Content Tracker, modelled after Git but much simpler
 
+;;; A base stores blobs and trees.  The ID of a blob or tree is its
+;;; SHA1 hash.
+;;; 
+;;; A blob is stored as ["blob", "... contents here ..."].
+;;;
+;;; A tree is stored as ["tree", ... dentries ...], where dentries is
+;;; a list of pairs of the form ["name", "cafe8329827..."].
+;;;
+;;; A base has a root pointing to the ID of a tree.
+
 (defclass base-object)
 
 (defclass base-blob (base-object)
@@ -30,7 +40,7 @@
   (base-provider-read (dynamic base-provider) id))
 
 (defun base-root (-> base-tree)
-  (base-provider-root (dynamic base-provider)))
+g  (base-provider-root (dynamic base-provider)))
 
 (defun base-set-root ((id string))
   (base-provider-set-root (dynamic base-provider) id))
