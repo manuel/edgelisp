@@ -538,7 +538,7 @@
 
 ;;;; Printing
 
-(defdynamic print-readably #t)
+(defdynamic print-readably #f)
 
 ;;; Save built-in show impl for default method on show-object
 (defparameter \original-show \show)
@@ -549,9 +549,8 @@
   (let ((details (show-object a)))
     (string-concat "#["
                    (class-name (type-of a)) 
-                   (if (> (string-len details) 0) " [" "")
+                   (if (> (string-len details) 0) " " "")
                    details
-                   (if (> (string-len details) 0) "]" "")
                    "]")))
 
 (defmethod show ((a literal))
@@ -580,7 +579,7 @@
 
 (defmethod show-object ((a string))
   (if (dynamic print-readably)
-      (original-show a)
+      (to-json a)
       #{ (~a).toString() #}))
 
 (defmethod show-object ((a function))

@@ -8,6 +8,9 @@ A REPL is online at:
 
    http://manuel.github.com/edgelisp/repl.html
 
+This REPL runs a stable version of EdgeLisp that lags behind the
+master branch.  For a REPL with the newest code see INSTALL.
+
 Features
 --------
 

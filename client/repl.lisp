@@ -35,8 +35,7 @@
   (let* ((input (dom-id "input"))
          (value (.element-value input)))
     (repl-history-add value)
-    (dynamic-bind ((print-readably #f))
-      (print value))
+    (print value)
     (print (repl-eval (read-unit-as-progn value)))
     (setf (.element-value input) "")))
 

@@ -1,6 +1,10 @@
-If you want to use EdgeLisp from your own computer, serve it with a
-HTTP server.
+If you want to use EdgeLisp from your own computer, serve the edgelisp
+directory with a HTTP server and access repl.html.
 
-I use annyong, a simple Ruby HTTPD that serves a single directory.
+If you have Python installed:
 
-https://github.com/remiprev/annyong
+  python -m SimpleHTTPServer
+
+Or you can use Annyong, a simple Ruby HTTPD that serves a single directory:
+
+  https://github.com/remiprev/annyong

@@ -23,21 +23,32 @@
 (defun base-make-dentry ((name object) (id string) -> base-dentry)
   (make base-dentry :name name :id id))
 
-(defclass base-provider)
-(defgeneric base-provider-store (provider base-object -> id))
-(defgeneric base-provider-read (provider id -> base-object-option))
-(defdynamic base-provider)
-
 (defun base-store ((obj base-object) -> string)
   (base-provider-store (dynamic base-provider) obj))
 
 (defun base-read ((id string) -> option)
   (base-provider-read (dynamic base-provider) id))
 
+(defun base-root (-> base-tree)
+  (base-provider-root (dynamic base-provider)))
+
+(defun base-set-root ((id string))
+  (base-provider-set-root (dynamic base-provider) id))
+
 (defun base-object-id ((obj base-object) -> string)
   (base-hash (to-json (base-object-canonical-content obj))))
 
 ;;;; Internal
+
+(defmethod show-object ((obj base-object) -> string)
+  (show-object (base-object-content obj)))
+
+(defclass base-provider)
+(defgeneric base-provider-store (provider base-object -> id))
+(defgeneric base-provider-read (provider id -> base-object-option))
+(defgeneric base-provider-root (provider -> base-tree))
+(defgeneric base-provider-set-root (provider id))
+(defdynamic base-provider)
 
 (defun base-hash ((s string) -> string)
   (sha1 s))
@@ -107,6 +118,19 @@
                                         (("tree") (class base-tree))))))
         (some (base-init-from-object-content obj object-content)))
       none)))
+
+(defun base-local-provider-root-key ((p base-local-provider))
+  (string-concat "/provider/" (.prefix p) "/root"))
+
+(defmethod base-provider-root ((p base-local-provider) -> base-tree)
+  (if-option (root-id (local-storage-get-item (base-local-provider-root-key p)))
+    (if-option (root (base-provider-read p root-id))
+      root
+      (error "Cannot read root"))
+    (base-make-tree (list))))
+
+(defmethod base-provider-set-root ((p base-local-provider) (id string))
+  (local-storage-set-item (base-local-provider-root-key p) id))
 
 (setf (dynamic base-provider) (base-make-local-provider "default"))
 

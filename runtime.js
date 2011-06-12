@@ -315,7 +315,7 @@ function lisp_show(obj)
 
 function _lisp_function_show(_key_, obj)
 {
-    return String(JSON.stringify(obj));
+    return JSON.stringify(obj);
 }
 
 function lisp_array_contains(array, elt)
