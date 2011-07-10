@@ -398,6 +398,10 @@
          (unless ,test (return-from exit))
          ,@body)))
 
+(defmacro until (test &rest body)
+  #`(while (not ,test)
+      ,@body))
+
 ;;; Adapted from SBCL.  Doesn't preserve non-toplevelness.
 (defmacro or (&rest forms)
   (cond ((list-empty? forms) #'#f)

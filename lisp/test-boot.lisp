@@ -127,6 +127,16 @@
 (assert (= 1 (or 1 #t #f)))
 (assert (= 3 (or #f #f 3)))
 
+;;; UNTIL
+
+(let ((x 0))
+  (until #t
+    (setq x 1))
+  (assert (= x 0))
+  (until (= x 10)
+    (incf x))
+  (assert (= x 10)))
+
 ;;; COND
 
 (assert (= #f (cond)))
