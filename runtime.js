@@ -689,7 +689,7 @@ function lisp_make_method_entry(method, specializers)
 
 function lisp_bif_put_method(_key_, generic, specializers, method)
 {
-    for (var i = 0, len = generic.method_entries; i < len; i++) {
+    for (var i = 0, len = generic.method_entries.length; i < len; i++) {
         var me = generic.method_entries[i];
         if (lisp_lists_equal(me.specializers, specializers)) {
             me.method = method;

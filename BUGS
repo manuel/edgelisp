@@ -13,8 +13,6 @@
   1) parses parameters -> produces sig
   2) compiles optional parameter init forms in contour with sig
 
-* Replacing methods doesn't seem to work.
-
 * SETQ doesn't check whether binding exists.
 
 * Printing of strings is broken.

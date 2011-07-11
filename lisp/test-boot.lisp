@@ -201,4 +201,13 @@
 (assert (= 1 (if-option (x (some 1)) x 2)))
 (assert (= nil (if-option (x none) x)))
 
+;;; Methods
+
+;; Redefining methods
+(defclass test-x)
+(defmethod test-m ((x test-x)) "x")
+(assert (= "x" (test-m (make test-x))))
+(defmethod test-m ((x test-x)) "y")
+(assert (= "y" (test-m (make test-x))))
+
 (provide "test-boot")
