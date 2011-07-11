@@ -332,14 +332,14 @@
 (defun string-to-number ((s string) -> number)
   (%string-to-number s))
 
-(defun subtype? ((class class) (possible-superclass class) -> boolean)
-  (%subtype? class possible-superclass))
+(defun subclass? ((class class) (possible-superclass class) -> boolean)
+  (%subclass? class possible-superclass))
 
 (defun superclass ((c class) -> class)
   (%superclass c))
 
-(defun type-of ((a object) -> class)
-  (%type-of a))
+(defun class-of ((a object) -> class)
+  (%class-of a))
 
 (defmacro the (class object)
   #`(%the (class ,class) ,object))
@@ -549,7 +549,7 @@
 (defmethod show ((a object))
   (let ((details (show-object a)))
     (string-concat "#["
-                   (class-name (type-of a)) 
+                   (class-name (class-of a)) 
                    (if (> (string-len details) 0) " " "")
                    details
                    "]")))
@@ -832,10 +832,10 @@
 (defgeneric condition-applicable? (condition handler))
 
 (defmethod condition-applicable? ((c condition) (h handler))
-  (subtype? (type-of c) (.handler-class h)))
+  (subclass? (class-of c) (.handler-class h)))
 
 (defmethod condition-applicable? ((r restart) (h handler))
-  (and (subtype? (type-of r) (.handler-class h))
+  (and (subclass? (class-of r) (.handler-class h))
        (or (nil? (.associated-condition r))
            (nil? (.associated-condition h))
            (eq (.associated-condition r) (.associated-condition h)))))

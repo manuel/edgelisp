@@ -304,7 +304,7 @@ function lisp_rest_param(_arguments, max) {
 /* Used inside lambdas for checking arguments against their types, if any. */
 function lisp_check_type(obj, type)
 {
-    if (!lisp_subtypep(lisp_type_of(obj), type))
+    if (!lisp_subclassp(lisp_class_of(obj), type))
         return lisp_error("Type error", [obj, lisp_show(type)]);
 }
 
@@ -740,7 +740,7 @@ function lisp_find_applicable_method_entries(generic, arguments)
     var actual_specializers = [];
     // start at 1 to skip over calling convention argument
     for (var i = 1, len = arguments.length; i < len; i++)
-        actual_specializers.push(lisp_type_of(arguments[i]));
+        actual_specializers.push(lisp_class_of(arguments[i]));
     var applicable_mes = [];
     var mes = generic.method_entries;
     for (var i = 0, len = mes.length; i < len; i++) {
@@ -756,7 +756,7 @@ function lisp_specializer_lists_agree(actuals, formals)
 {
     if (actuals.length != formals.length) return false;
     for (var i = 0, len = actuals.length; i < len; i++)
-        if (!lisp_subtypep(actuals[i], formals[i]))
+        if (!lisp_subclassp(actuals[i], formals[i]))
             return false;
     return true;
 }
@@ -789,7 +789,7 @@ function lisp_smaller_method_entry(me1, me2)
     for (var i = 0, len = me1.specializers.length; i < len; i++)
         if ((!lisp_classes_comparable(me1.specializers[i],
                                       me2.specializers[i])) ||
-            (!lisp_subtypep(me1.specializers[i],
+            (!lisp_subclassp(me1.specializers[i],
                             me2.specializers[i])))
             return false;
     return true;
@@ -797,8 +797,8 @@ function lisp_smaller_method_entry(me1, me2)
 
 function lisp_classes_comparable(class1, class2)
 {
-    return ((lisp_subtypep(class1, class2)) ||
-            (lisp_subtypep(class2, class1)))
+    return ((lisp_subclassp(class1, class2)) ||
+            (lisp_subclassp(class2, class1)))
 }
 
 function lisp_no_applicable_method(generic, arguments)
@@ -843,7 +843,7 @@ Lisp_native.prototype.toString = function()
     return "JS object";
 }
 
-function lisp_type_of(obj)
+function lisp_class_of(obj)
 {
     if (obj === undefined)
         return lisp_error("segfault");
@@ -860,14 +860,14 @@ function lisp_type_of(obj)
     }
 }
 
-function lisp_bif_type_of(_key_, obj) 
+function lisp_bif_class_of(_key_, obj) 
 {
-    return lisp_type_of(obj);
+    return lisp_class_of(obj);
 }
 
 function lisp_bif_the(_key_, klass, object)
 {
-    if (lisp_subtypep(lisp_type_of(object), klass)) {
+    if (lisp_subclassp(lisp_class_of(object), klass)) {
         return object;
     } else {
         lisp_error(lisp_show(object) + " is not of expected type", lisp_show(klass));
@@ -885,12 +885,12 @@ function lisp_show_type_sensibly(type)
     }
 }
 
-/* Returns true iff type1 is a general subtype of type2, meaning
-   either equal to type2, or a subtype of type2. */
-function lisp_subtypep(type1, type2)
+/* Returns true iff type1 is a general subclass of type2, meaning
+   either equal to type2, or a subclass of type2. */
+function lisp_subclassp(type1, type2)
 {
     if ((!type1) || (!type2))
-        lisp_error("subtype?", [lisp_show_type_sensibly(type1),
+        lisp_error("subclass?", [lisp_show_type_sensibly(type1),
                                 lisp_show_type_sensibly(type2)]);
 
     if (type1 === type2) 
@@ -898,19 +898,19 @@ function lisp_subtypep(type1, type2)
 
     var supertype = type1.lisp_superclass;
     if (supertype)
-        return lisp_subtypep(supertype, type2);
+        return lisp_subclassp(supertype, type2);
     
     return false;
 }
 
-function lisp_bif_subtypep(_key_, type1, type2)
+function lisp_bif_subclassp(_key_, type1, type2)
 {
-    return lisp_subtypep(type1, type2);
+    return lisp_subclassp(type1, type2);
 }
 
 function Lisp_class()
 {
-    /* Classes set this property, which identifies them to TYPE-OF as
+    /* Classes set this property, which identifies them to CLASS-OF as
        such.  The rationale is that we don't want to go ahead and muck
        with the prototype structure of non-Lisp, built-in classes.
        Lest they completely fall apart. */
@@ -1362,13 +1362,13 @@ lisp_export_function("%string-len", "lisp_bif_string_len");
 lisp_export_function("%string-to-form", "lisp_bif_string_to_form");
 lisp_export_function("%string-to-number", "lisp_bif_string_to_number");
 lisp_export_function("%string-to-identifier", "lisp_bif_string_to_identifier");
-lisp_export_function("%subtype?", "lisp_bif_subtypep");
+lisp_export_function("%subclass?", "lisp_bif_subclassp");
 lisp_export_function("%superclass", "lisp_bif_superclass");
 lisp_export_function("%identifier-name", "lisp_bif_identifier_name");
 lisp_export_function("%identifier?", "lisp_bif_identifierp");
 lisp_export_function("%the", "lisp_bif_the");
 lisp_export_function("%throw", "lisp_bif_throw");
-lisp_export_function("%type-of", "lisp_bif_type_of");
+lisp_export_function("%class-of", "lisp_bif_class_of");
 
 // Additional interface functions
 // - show 
