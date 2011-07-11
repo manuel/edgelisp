@@ -25,9 +25,10 @@
 
 /* Determines into which namespace the compiler puts identifiers in
    the operator (first) position of a compound form.  "function" for
-   Lisp-2, "variable" for Lisp-1.  The variable
-   `lisp_operator_namespace' is defined in the files lisp-1.js and
-   lisp-2.js. */
+   Lisp-2, "variable" for Lisp-1. */
+
+var lisp_operator_namespace = "function";
+
 function lisp_bif_set_operator_namespace(namespace)
 {
     lisp_assert_string(namespace, "Bad operator namespace", namespace);
@@ -1242,11 +1243,6 @@ function lisp_bif_compile(_key_, form)
 }
 
 
-function lisp_bif_sha1(_key_, string)
-{
-    return Sha1.hash(string, true);
-}
-
 /*** Export to Lisp ***/
 
 lisp_export("#t", "true");
@@ -1356,7 +1352,6 @@ lisp_export_function("%set-slot-value", "lisp_bif_set_slot_value");
 lisp_export_function("%set-superclass", "lisp_bif_set_superclass");
 lisp_export_function("%runtime-error-message", "lisp_bif_runtime_error_message");
 lisp_export_function("%runtime-error-arg", "lisp_bif_runtime_error_arg");
-lisp_export_function("%sha1", "lisp_bif_sha1");
 lisp_export_function("%slot-value", "lisp_bif_slot_value");
 lisp_export_function("%string-concat", "lisp_bif_string_concat");
 lisp_export_function("%string-dict-get", "lisp_bif_string_dict_get");
