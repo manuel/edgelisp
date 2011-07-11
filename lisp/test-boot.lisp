@@ -201,6 +201,16 @@
 (assert (= 1 (if-option (x (some 1)) x 2)))
 (assert (= nil (if-option (x none) x)))
 
+;;; Classes
+
+(defclass test-a)
+(assert (= (class-of (make test-a)) (class test-a)))
+(defclass test-b (test-a))
+(defclass test-c (test-b))
+(assert (subclass? (class test-b) (class test-a)))
+(assert (subclass? (class test-c) (class test-b)))
+(assert (subclass? (class test-c) (class test-a)))
+
 ;;; Methods
 
 ;; Redefining methods
