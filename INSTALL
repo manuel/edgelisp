@@ -9,5 +9,5 @@ Or you can use Annyong, a simple Ruby HTTPD that serves a single directory:
 
   https://github.com/remiprev/annyong
 
-Note that the REPL is currently much slower than the online REPL
-because it compiles all Lisp code on-the-fly.
+Note that the REPL currently loads much slower than the online REPL
+because it compiles all Lisp code on-the-fly.  I'm working on this.
